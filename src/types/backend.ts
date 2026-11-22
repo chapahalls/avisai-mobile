@@ -176,7 +176,7 @@ export interface ApiRouteResponse {
   unloadWindow?: string | null;
   origin: { name: string; lat: number; lng: number };
   destination: { name: string; lat: number; lng: number };
-  polyline: { lat: number; lng: number }[];
+  polyline: ({ lat: number; lng: number } | [number, number])[];
   receiver: { company: string; name: string; phone: string };
   driverId: number | null;
   assignedAt: string | null;

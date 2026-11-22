@@ -190,6 +190,23 @@ function computeProgressFromPosition(pos: LatLng, route: RouteMock): number {
   return Math.max(0, Math.min(1, 1 - leftKm / totalKm));
 }
 
+function normalizePolylinePoint(point: unknown): LatLng | null {
+  if (Array.isArray(point) && point.length >= 2) {
+    const [lat, lng] = point;
+    if (typeof lat === 'number' && typeof lng === 'number' && Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat, lng };
+    }
+    return null;
+  }
+  if (point && typeof point === 'object') {
+    const { lat, lng } = point as { lat?: unknown; lng?: unknown };
+    if (typeof lat === 'number' && typeof lng === 'number' && Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat, lng };
+    }
+  }
+  return null;
+}
+
 const initial = {
   phase: 'idle' as TripPhase,
   progress: 0,
@@ -645,18 +662,18 @@ export const useTrip = create<TripState>((set, get) => ({
         apiCfg.setRotaId(parsedRotaId);
       }
 
-      const originPos: LatLng = {
-        lat: apiRoute.origin.lat,
-        lng: apiRoute.origin.lng,
-      };
-      const destPos: LatLng = {
-        lat: apiRoute.destination.lat,
-        lng: apiRoute.destination.lng,
-      };
-      const path: LatLng[] =
-        Array.isArray(apiRoute.polyline) && apiRoute.polyline.length >= 2
-          ? apiRoute.polyline.map((p) => ({ lat: p.lat, lng: p.lng }))
-          : [originPos, destPos];
+      const originPos: LatLng =
+        Number.isFinite(apiRoute.origin?.lat) && Number.isFinite(apiRoute.origin?.lng)
+          ? { lat: apiRoute.origin.lat, lng: apiRoute.origin.lng }
+          : s.activeRoute.origin.position;
+      const destPos: LatLng =
+        Number.isFinite(apiRoute.destination?.lat) && Number.isFinite(apiRoute.destination?.lng)
+          ? { lat: apiRoute.destination.lat, lng: apiRoute.destination.lng }
+          : s.activeRoute.destination.position;
+      const parsedPolyline = Array.isArray(apiRoute.polyline)
+        ? apiRoute.polyline.map(normalizePolylinePoint).filter((p): p is LatLng => p !== null)
+        : [];
+      const path: LatLng[] = parsedPolyline.length >= 2 ? parsedPolyline : [originPos, destPos];
       const receiverLabel =
         apiRoute.receiver?.company && apiRoute.receiver?.name
           ? `${apiRoute.receiver.company} · ${apiRoute.receiver.name}`

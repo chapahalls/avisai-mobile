@@ -244,4 +244,33 @@ describe('backend integration & stream events', () => {
     expect(useTrip.getState().phase).toBe('unloaded');
     expect(useTrip.getState().timeline.length).toBeGreaterThanOrEqual(4);
   });
+
+  it('normaliza polyline em formato de tupla [lat, lng] do backend real em syncRouteFromBackend', async () => {
+    const baseRoute = await mockApiClient.getAssignedRoute({ tripId: '1', driverId: 1 });
+    expect(baseRoute).not.toBeNull();
+
+    const tuplePolyline: [number, number][] = [
+      [-23.1857, -46.8978],
+      [-23.31, -46.72],
+      [-23.4543, -46.5337],
+    ];
+    const spy = vi.spyOn(mockApiClient, 'getAssignedRoute').mockResolvedValueOnce({
+      ...baseRoute!,
+      polyline: tuplePolyline,
+    });
+
+    await useTrip.getState().syncRouteFromBackend(1);
+    spy.mockRestore();
+
+    const { path } = useTrip.getState().activeRoute;
+    expect(path).toEqual([
+      { lat: -23.1857, lng: -46.8978 },
+      { lat: -23.31, lng: -46.72 },
+      { lat: -23.4543, lng: -46.5337 },
+    ]);
+    for (const pt of path) {
+      expect(Number.isFinite(pt.lat)).toBe(true);
+      expect(Number.isFinite(pt.lng)).toBe(true);
+    }
+  });
 });

@@ -46,6 +46,8 @@ const phaseDotColor: Record<TripPhase, string> = {
 };
 
 const toCoord = (p: LatLng) => ({ latitude: p.lat, longitude: p.lng });
+const isValidCoord = (c: { latitude: number; longitude: number }) =>
+  Number.isFinite(c.latitude) && Number.isFinite(c.longitude);
 
 export function RouteMapGoogle({
   onFallback,
@@ -97,7 +99,9 @@ export function RouteMapGoogle({
   const originCoord = toCoord(activeRoute.origin.position);
   const destCoord = toCoord(activeRoute.destination.position);
   const truckCoord = toCoord(position);
-  const routeCoords = activeRoute.path.map(toCoord);
+  const routeCoords = activeRoute.path.map(toCoord).filter(isValidCoord);
+  const validRouteCoords =
+    routeCoords.length >= 2 ? routeCoords : [originCoord, destCoord].filter(isValidCoord);
 
   const midLat = (activeRoute.origin.position.lat + activeRoute.destination.position.lat) / 2;
   const midLng = (activeRoute.origin.position.lng + activeRoute.destination.position.lng) / 2;
@@ -123,7 +127,9 @@ export function RouteMapGoogle({
             longitudeDelta: lngDelta,
           }}
         >
-          <Polyline coordinates={routeCoords} strokeColor="#099DFD" strokeWidth={4} />
+          {validRouteCoords.length >= 2 && (
+            <Polyline coordinates={validRouteCoords} strokeColor="#099DFD" strokeWidth={4} />
+          )}
           <Circle
             center={originCoord}
             radius={BUSINESS.geofenceMeters}
@@ -189,10 +195,12 @@ export function RouteMapGoogle({
           <Pressable
             onPress={() => {
               hapticTap();
-              mapRef.current?.fitToCoordinates?.(routeCoords, {
-                edgePadding: { top: 48, right: 48, bottom: 48, left: 48 },
-                animated: true,
-              });
+              if (validRouteCoords.length >= 2) {
+                mapRef.current?.fitToCoordinates?.(validRouteCoords, {
+                  edgePadding: { top: 48, right: 48, bottom: 48, left: 48 },
+                  animated: true,
+                });
+              }
             }}
             accessibilityRole="button"
             className="bg-ink-950/90 border border-ink-700 rounded-full px-3 py-1.5 active:opacity-80"
