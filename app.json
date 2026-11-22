@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "AvisAI",
+    "slug": "avisai-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B1220",
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.chapahalls.avisai" },
+    "android": { "package": "com.chapahalls.avisai", "permissions": ["RECORD_AUDIO", "ACCESS_FINE_LOCATION"] },
+    "plugins": ["expo-sqlite", "expo-localization"]
+  }
+}

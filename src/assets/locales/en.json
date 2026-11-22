@@ -1,0 +1,110 @@
+{
+  "auth": {
+    "title": "Sign in to see your route",
+    "subtitle": "The agent warns the receiver, counts the wait and proves every stopped hour.",
+    "sso": "Sign in with SSO",
+    "loading": "Signing in…",
+    "mockNotice": "Simulated SSO for the demo.",
+    "logout": "Sign out"
+  },
+  "tabs": {
+    "trip": "Trip",
+    "documents": "Documents",
+    "outbox": "Queue"
+  },
+  "trip": {
+    "start": "Start trip",
+    "restart": "New trip",
+    "mapMock": "simulated map",
+    "left": "{{km}} km to go",
+    "receiver": "Receiver:",
+    "phase": {
+      "idle": "Ready to leave",
+      "pickup": "At origin",
+      "driving": "On the road",
+      "approaching": "Approaching",
+      "arrived": "At destination",
+      "waiting": "Waiting to unload",
+      "unloaded": "Unloaded"
+    },
+    "receiverStatus": {
+      "pending": "not notified",
+      "calling": "calling…",
+      "confirmed": "dock {{dock}}, {{time}}",
+      "not_today": "not receiving today",
+      "no_answer": "no answer"
+    }
+  },
+  "stay": {
+    "waiting": "Time stopped",
+    "value": "Detention so far: {{value}}",
+    "franchiseLeft": "Free time left: {{left}}",
+    "ccoAck": "Control center took the case",
+    "ccoAttempts": "Control center alerts: {{n}}/{{max}}"
+  },
+  "voice": {
+    "title": "Agent",
+    "talk": "Talk",
+    "listening": "Listening",
+    "interrupt": "Interrupt",
+    "state": {
+      "idle": "ready",
+      "listening": "listening",
+      "thinking": "thinking",
+      "speaking": "speaking",
+      "interrupted": "interrupted"
+    }
+  },
+  "documents": {
+    "title": "Trip documents",
+    "hint": "Ask by voice: “what is the invoice weight?”",
+    "viewer": "Document",
+    "mockNotice": "Simulated viewer (fictitious PDF).",
+    "page": "Page {{n}} of {{total}}"
+  },
+  "outbox": {
+    "title": "Send queue",
+    "hint": "Everything the app sends goes through here. Offline, it waits and resends without duplicates.",
+    "empty": "Queue is empty.",
+    "attempts": "{{n}} attempts",
+    "retry": "Retry failed items",
+    "status": {
+      "pending": "queued",
+      "sending": "sending",
+      "sent": "sent",
+      "failed": "failed"
+    }
+  },
+  "network": {
+    "online": "Syncing",
+    "weak": "Weak signal: critical events only",
+    "offline": "Offline",
+    "queue": "{{count}} queued"
+  },
+  "demo": {
+    "title": "Demo controls (simulation)",
+    "net": {
+      "real": "Real network",
+      "weak": "Weak signal",
+      "offline": "Offline"
+    },
+    "ccoResponds": "Control center answers on 2nd alert",
+    "skipHour": "+1 h on the clock"
+  },
+  "events": {
+    "RouteAssigned": "Route received",
+    "PickupConfirmed": "Pickup confirmed",
+    "ReportSubmitted": "Report",
+    "ReportFieldMissing": "Missing field",
+    "OccurrenceCreated": "Incident",
+    "ApproachDetected": "Approaching",
+    "ReceiverNotified": "Receiver notified",
+    "ReceiverCallResult": "Receiver answer",
+    "ArrivalRegistered": "Arrival",
+    "TaskCreated": "Control center task",
+    "TaskEscalated": "Control center alert",
+    "TaskAcknowledged": "Control center took it",
+    "UnloadConfirmed": "Unloaded",
+    "DocumentQuestionAnswered": "Document question"
+  }
+}

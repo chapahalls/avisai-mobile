@@ -1,0 +1,110 @@
+{
+  "auth": {
+    "title": "Entre para ver sua rota",
+    "subtitle": "O agente avisa o recebedor, conta a espera e prova cada hora parada.",
+    "sso": "Entrar com SSO",
+    "loading": "Entrando…",
+    "mockNotice": "SSO simulado para a demo.",
+    "logout": "Sair"
+  },
+  "tabs": {
+    "trip": "Viagem",
+    "documents": "Documentos",
+    "outbox": "Fila"
+  },
+  "trip": {
+    "start": "Iniciar viagem",
+    "restart": "Nova viagem",
+    "mapMock": "mapa simulado",
+    "left": "Faltam {{km}} km",
+    "receiver": "Recebedor:",
+    "phase": {
+      "idle": "Pronto para sair",
+      "pickup": "Na origem",
+      "driving": "Em viagem",
+      "approaching": "Chegando",
+      "arrived": "No destino",
+      "waiting": "Aguardando descarga",
+      "unloaded": "Descarga concluída"
+    },
+    "receiverStatus": {
+      "pending": "não avisado",
+      "calling": "ligando…",
+      "confirmed": "doca {{dock}}, {{time}}",
+      "not_today": "não recebe hoje",
+      "no_answer": "não atendeu"
+    }
+  },
+  "stay": {
+    "waiting": "Tempo parado",
+    "value": "Estadia acumulada: {{value}}",
+    "franchiseLeft": "Franquia restante: {{left}}",
+    "ccoAck": "CCO assumiu o caso",
+    "ccoAttempts": "Avisos ao CCO: {{n}}/{{max}}"
+  },
+  "voice": {
+    "title": "Agente",
+    "talk": "Falar",
+    "listening": "Ouvindo",
+    "interrupt": "Interromper",
+    "state": {
+      "idle": "pronto",
+      "listening": "ouvindo",
+      "thinking": "pensando",
+      "speaking": "falando",
+      "interrupted": "interrompido"
+    }
+  },
+  "documents": {
+    "title": "Documentos da viagem",
+    "hint": "Pergunte por voz: “qual o peso da nota?”",
+    "viewer": "Documento",
+    "mockNotice": "Visualizador simulado (PDF fictício).",
+    "page": "Página {{n}} de {{total}}"
+  },
+  "outbox": {
+    "title": "Fila de envio",
+    "hint": "Tudo o que o app manda passa por aqui. Sem rede, espera e reenvia sem duplicar.",
+    "empty": "Nada na fila.",
+    "attempts": "{{n}} tentativas",
+    "retry": "Tentar de novo os que falharam",
+    "status": {
+      "pending": "na fila",
+      "sending": "enviando",
+      "sent": "enviado",
+      "failed": "falhou"
+    }
+  },
+  "network": {
+    "online": "Sincronizando",
+    "weak": "Rede fraca: só eventos críticos",
+    "offline": "Sem conexão",
+    "queue": "{{count}} na fila"
+  },
+  "demo": {
+    "title": "Controles da demo (simulação)",
+    "net": {
+      "real": "Rede real",
+      "weak": "Rede fraca",
+      "offline": "Sem rede"
+    },
+    "ccoResponds": "CCO responde na 2ª tentativa",
+    "skipHour": "+1 h no relógio"
+  },
+  "events": {
+    "RouteAssigned": "Rota recebida",
+    "PickupConfirmed": "Retirada confirmada",
+    "ReportSubmitted": "Relatório",
+    "ReportFieldMissing": "Campo faltante",
+    "OccurrenceCreated": "Ocorrência",
+    "ApproachDetected": "Aproximação",
+    "ReceiverNotified": "Aviso ao recebedor",
+    "ReceiverCallResult": "Resposta do recebedor",
+    "ArrivalRegistered": "Chegada",
+    "TaskCreated": "Task no CCO",
+    "TaskEscalated": "Aviso ao CCO",
+    "TaskAcknowledged": "CCO assumiu",
+    "UnloadConfirmed": "Descarga",
+    "DocumentQuestionAnswered": "Pergunta sobre documento"
+  }
+}
