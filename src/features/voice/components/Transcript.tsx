@@ -8,7 +8,32 @@ export function Transcript() {
   const { t } = useTranslation();
   const lines = useVoice((s) => s.transcript);
   const liveTranscript = useVoice((s) => s.liveTranscript);
+  const preferredMode = useVoice((s) => s.preferredMode);
+  const activeMode = useVoice((s) => s.activeMode);
   const scrollRef = useRef<ScrollView>(null);
+
+  if (preferredMode === 'agora' || activeMode === 'agora') {
+    return (
+      <View className="bg-ink-950/60 border border-ink-800 rounded-xl px-4 py-5 my-1 items-center">
+        <View className="w-9 h-9 rounded-full bg-brand-500/15 border border-brand-500/40 items-center justify-center mb-2">
+          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"
+              stroke="#099DFD"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          </Svg>
+        </View>
+        <Text className="text-ink-50 text-xs font-semibold text-center">
+          {t('voice.directVoiceTitle')}
+        </Text>
+        <Text className="text-ink-300 text-xs text-center mt-0.5 leading-4">
+          {t('voice.directVoiceHint')}
+        </Text>
+      </View>
+    );
+  }
 
   if (lines.length === 0 && !liveTranscript) {
     return (

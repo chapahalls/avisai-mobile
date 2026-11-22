@@ -1,5 +1,6 @@
 import type {
   ApiDocumentResponse,
+  ApiRouteFile,
   ApiRouteResponse,
   DemoProfile,
   PosicaoOut,
@@ -82,6 +83,7 @@ export interface ApiClient {
   getRoute(rotaId: number): Promise<Rota | null>;
   getAssignedRoute(params?: { tripId?: string; driverId?: number }): Promise<ApiRouteResponse | null>;
   getDocuments(tripId?: string): Promise<ApiDocumentResponse[]>;
+  getRouteFiles(rotaId: number): Promise<ApiRouteFile[]>;
   getCentralRequests(rotaId?: number): Promise<SolicitacaoCentral[]>;
   sendPosition(rotaId: number, body: SendPositionBody): Promise<PosicaoOut>;
   registerArrival(rotaId: number): Promise<void>;

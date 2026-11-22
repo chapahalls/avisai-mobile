@@ -22,7 +22,7 @@ export interface VoiceSessionCallbacks {
  * Contrato de sessão de voz:
  * - `mock`: TTS local via `expo-speech` + falas rápidas (chips) + barge-in.
  * - `agora`: canal RTC real via `react-native-agora` + Conversational AI Engine da Agora.
- * Respeita estritamente `VOICE_PRIVACY = { recordAudio: false, transcriptionOnly: true }`.
+ * O cliente não grava áudio nem consome/mostra legendas do canal RTC.
  */
 export interface VoiceSession {
   readonly mode: VoiceMode;

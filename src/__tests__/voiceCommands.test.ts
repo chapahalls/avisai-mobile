@@ -37,6 +37,10 @@ describe('voiceCommands automation', () => {
     expect(useVoiceCommandToast.getState().message).toBe('Comando de voz: Abrindo Documentos');
 
     useVoiceCommandToast.getState().clear();
+    expect(tryExecuteVoiceCommand('Abrir os arquivos anexados')).toBe(true);
+    expect(useVoiceCommandToast.getState().message).toBe('Comando de voz: Abrindo Documentos');
+
+    useVoiceCommandToast.getState().clear();
     await i18n.changeLanguage('en');
     expect(tryExecuteVoiceCommand('Show documents')).toBe(true);
     expect(useVoiceCommandToast.getState().message).toBe('Voice command: Opening Documents');

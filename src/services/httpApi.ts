@@ -1,6 +1,7 @@
 import { ENV } from '../lib/config';
 import type {
   ApiDocumentResponse,
+  ApiRouteFile,
   ApiRouteResponse,
   DemoProfile,
   Ligacao,
@@ -35,6 +36,12 @@ function getBaseUrl(): string {
   } catch {
     return ENV.apiBaseUrl;
   }
+}
+
+function absoluteApiUrl(pathOrUrl: string): string {
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  const path = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+  return `${getBaseUrl()}${path}`;
 }
 
 function getRotaId(): number {
@@ -205,6 +212,19 @@ export const httpApiClient: ApiClient = {
     );
     if (!res.ok) throw new NetworkError(`HTTP ${res.status}`);
     return (await res.json()) as ApiDocumentResponse[];
+  },
+
+  async getRouteFiles(rotaId: number): Promise<ApiRouteFile[]> {
+    const res = await fetchWithTimeout(`/rotas/${encodeURIComponent(String(rotaId))}/arquivos`, {
+      method: 'GET',
+    });
+    if (!res.ok) throw new NetworkError(`HTTP ${res.status}`);
+    const files = (await res.json()) as ApiRouteFile[];
+    if (!Array.isArray(files)) return [];
+    return files.map((file) => ({
+      ...file,
+      url_download: absoluteApiUrl(file.url_download),
+    }));
   },
 
   async getCentralRequests(rotaId = getRotaId()): Promise<SolicitacaoCentral[]> {

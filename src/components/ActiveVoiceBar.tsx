@@ -18,7 +18,7 @@ function navigateToTrip(): void {
 
 /**
  * Mini-barra persistente de Voz em todas as abas (A3):
- * Mostra ponto verde `Agora Live` (ou `AvisAI falando`), mini indicador de volume,
+ * Mostra ponto verde `GPT-Live` (ou `AvisAI falando`), mini indicador de volume,
  * botão compacto Mudo, botão Ir p/ Voz e botão Encerrar.
  */
 export function ActiveVoiceBar() {

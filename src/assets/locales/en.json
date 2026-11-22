@@ -68,7 +68,8 @@
       "openDocuments": "Voice command: Opening Documents",
       "openOutbox": "Voice command: Opening Queue",
       "backToTrip": "Voice command: Returning to Trip",
-      "startTrip": "Voice command: Trip started"
+      "startTrip": "Voice command: Trip started",
+      "startGps": "Voice command: GPS enabled"
     }
   },
   "trip": {
@@ -192,9 +193,11 @@
     "talk": "Talk",
     "listening": "Listening",
     "interrupt": "Interrupt",
-    "privacyBadge": "Transcription only · no audio recorded",
+    "privacyBadge": "Direct voice · no audio recorded",
     "emptyTitle": "Voice copilot ready",
     "emptyHint": "Tap the microphone below to talk to AvisAI or report an incident.",
+    "directVoiceTitle": "Direct voice is active",
+    "directVoiceHint": "Say “AvisAI” before the command. To leave: “AvisAI, end session”.",
     "agentTag": "AvisAI",
     "driverTag": "You",
     "liveStreamingTag": "live",
@@ -202,7 +205,7 @@
     "bargeInBanner": "⚡ Interrupted · listening to you",
     "tapToSpeakHint": "Tap to talk to the agent",
     "selectQuickHint": "Pick a simulated utterance below or tap mic to cancel",
-    "agoraLiveHint": "Agora session live · speak freely or tap to mute",
+    "agoraLiveHint": "GPT-Live session active · speak freely or tap to mute",
     "unmuteHint": "Microphone muted · tap to unmute",
     "muted": "Muted",
     "muteButton": "Mute",
@@ -216,7 +219,8 @@
     "cabinMode": {
       "openButton": "Cabin Mode",
       "exitButton": "Exit Cabin Mode",
-      "lastAgentSpeech": "AvisAI · Last speech"
+      "lastAgentSpeech": "AvisAI · Last speech",
+      "directVoice": "AvisAI · Direct voice"
     },
     "activeBar": {
       "agentSpeaking": "AvisAI speaking",
@@ -234,7 +238,7 @@
     "agoraWaitingAgent": "Waiting for agent…",
     "agoraWaitingAgentHint": "Channel connected · waiting for agent (9001)…",
     "modePill": {
-      "agoraLive": "Agora Live",
+      "agoraLive": "GPT-Live",
       "agoraWaitingAgent": "Waiting for agent (9001)…",
       "agoraDisconnected": "Agora · Disconnected",
       "mock": "Simulated Voice"
@@ -263,6 +267,12 @@
         "free": ""
       },
       "occurrenceRecorded": "Understood, I logged the incident and notified the control center.",
+      "occurrenceStart": "Sure. What is the problem? Then tell me the kilometer and which highway you are on.",
+      "occurrenceAsk": {
+        "problema": "What is the problem?",
+        "km": "Which kilometer did it happen at?",
+        "br": "Which highway are you on?"
+      },
       "returningToTopic": " Back to check-in: {{question}}",
       "freePrompt": "I'm here. You can report an incident or ask about the invoice.",
       "gotItPrefix": "Got it. ",
@@ -274,6 +284,11 @@
     "hint": "Ask by voice: “what is the invoice weight?”",
     "viewer": "Document",
     "mockNotice": "Simulated viewer (fictitious PDF).",
+    "realFileReady": "Real route attachment ready to open",
+    "realFileNotice": "This is a real attachment linked to the route. Open it in your device viewer.",
+    "openRealFileButton": "Open file",
+    "openFileErrorTitle": "Could not open file",
+    "openFileError": "Check your connection and that a compatible app is installed.",
     "page": "Page {{n}} of {{total}}",
     "extractedFields": "{{count}} extracted fields",
     "countBadge": "{{count}} docs",
@@ -285,6 +300,7 @@
     "answerByField": "According to {{title}}: {{field}} {{value}}.",
     "answerByChunk": "Found in {{title}}: {{excerpt}}",
     "notFound": "I couldn't find that in the trip documents.",
+    "listAnswer": "The available documents are: {{documents}}.",
     "fieldLabels": {
       "peso": "weight",
       "peso_kg": "weight",
@@ -301,7 +317,10 @@
       "origem": "origin",
       "destino": "destination",
       "placa": "plate",
-      "janela": "window"
+      "janela": "window",
+      "arquivo": "file",
+      "tipo": "type",
+      "descricao": "description"
     }
   },
   "outbox": {

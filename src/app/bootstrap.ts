@@ -1,10 +1,11 @@
 import { migrate } from '../lib/db';
 import { loadPersistedLanguage } from '../lib/i18n';
-import { loadPersistedApiConfig } from '../services/api';
+import { loadPersistedApiConfig, useApiConfig } from '../services/api';
 import { startBackendStreamWatcher } from '../services/backendStream';
+import '../services/deviceGps';
 import { startNetworkWatcher } from '../services/network';
 import { resetStuckSending, startSyncEngine, useOutboxStore } from '../features/outbox';
-import { startTripSimulator, wireTripToVoice, ROUTE } from '../features/trip';
+import { startTripSimulator, useTrip, wireTripToVoice, ROUTE } from '../features/trip';
 import { loadPersistedVoiceMode, wireVoiceToBus } from '../features/voice';
 import { indexDocuments } from '../features/documents';
 
@@ -14,6 +15,9 @@ export function bootstrap() {
   loadPersistedLanguage();
   loadPersistedApiConfig();
   loadPersistedVoiceMode();
+  if (useApiConfig.getState().mode === 'http') {
+    void useTrip.getState().syncRouteFromBackend();
+  }
   resetStuckSending();
   indexDocuments(ROUTE.tripId);
   useOutboxStore.getState().refresh();

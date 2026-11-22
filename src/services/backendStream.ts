@@ -3,7 +3,7 @@ import { useTrip } from '../features/trip/hooks/useTrip';
 import { useVoice } from '../features/voice/hooks/useVoice';
 import type { EventoStream, MensagensStream } from '../types/backend';
 import { useApiConfig } from './api';
-import { tryExecuteVoiceCommand } from './voiceCommands';
+import { executeClientAction } from './voiceCommands';
 
 export type WsConnectionStatus = 'disconnected' | 'connecting' | 'connected';
 
@@ -24,6 +24,25 @@ export const useBackendStream = create<BackendStreamState>(() => ({
 type StreamEnvelope = {
   [K in keyof MensagensStream]: { canal: K; dado: MensagensStream[K] };
 }[keyof MensagensStream];
+
+export function buildBackendWebSocketUrl(
+  baseUrl: string,
+  rotaId: number,
+  driverId: number | null,
+): string | null {
+  try {
+    const url = new URL(baseUrl.trim());
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    url.pathname = `${url.pathname.replace(/\/+$/, '')}/ws`;
+    url.search = driverId !== null ? `motorista_id=${driverId}` : `rota_id=${rotaId}`;
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
 
 export function handleStreamMessage(raw: string) {
   let parsed: StreamEnvelope;
@@ -60,8 +79,22 @@ export function handleStreamMessage(raw: string) {
       break;
     }
     case 'fala': {
-      if (dado?.papel === 'motorista' && dado.texto) {
-        useVoice.getState().pushTranscript('agent', dado.texto);
+      // `fala` é evidência de backend; a transcrição do motorista/agente já é
+      // recebida pelo canal de voz ou pelo evento persistido. Não duplicar no chat.
+      break;
+    }
+    case 'chamado': {
+      const chamado = dado?.chamado;
+      if (chamado?.resposta) {
+        useVoice.getState().pushTranscript('agent', chamado.resposta);
+      } else if (chamado?.status === 'timeout') {
+        useVoice.getState().pushTranscript('agent', 'Não recebi resposta do CCO após cinco tentativas.');
+      }
+      break;
+    }
+    case 'acao_cliente': {
+      if (dado?.acao) {
+        executeClientAction(dado.acao);
       }
       break;
     }
@@ -69,25 +102,6 @@ export function handleStreamMessage(raw: string) {
       useBackendStream.setState((s) => ({
         eventos: [dado, ...s.eventos].slice(0, MAX_EVENTOS),
       }));
-      if (dado.tipo === 'fala_motorista' && dado.mensagem) {
-        useVoice.getState().pushTranscript('driver', dado.mensagem);
-        tryExecuteVoiceCommand(dado.mensagem);
-      } else if (dado.tipo === 'fala_agente' && dado.mensagem) {
-        const destino = (dado.dados as { destino?: string } | undefined)?.destino ?? 'motorista';
-        if (destino === 'motorista') {
-          useVoice.getState().pushTranscript('agent', dado.mensagem);
-        }
-      } else if (dado.tipo === 'pergunta_documento') {
-        const d = dado.dados as { pergunta?: string; resposta?: string } | undefined;
-        if (typeof d?.pergunta === 'string' && d.pergunta.trim()) {
-          useVoice.getState().pushTranscript('driver', d.pergunta);
-        }
-        if (typeof d?.resposta === 'string' && d.resposta.trim()) {
-          useVoice.getState().pushTranscript('agent', d.resposta);
-        } else if (dado.mensagem) {
-          useVoice.getState().pushTranscript('agent', dado.mensagem);
-        }
-      }
       useTrip.getState().applyBackendEvento(dado);
       break;
     }
@@ -145,9 +159,12 @@ export function startBackendStreamWatcher(): () => void {
       return;
     }
 
-    const cleanBase = baseUrl.replace(/\/+$/, '');
-    const filtro = driverId !== null ? `motorista_id=${driverId}` : `rota_id=${rotaId}`;
-    const wsUrl = `${cleanBase.replace(/^http/, 'ws')}/ws?${filtro}`;
+    const wsUrl = buildBackendWebSocketUrl(baseUrl, rotaId, driverId);
+    if (!wsUrl) {
+      disconnect();
+      useBackendStream.setState({ lastError: 'invalid_ws_url' });
+      return;
+    }
 
     if (ws && activeUrl === wsUrl) {
       return;

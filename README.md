@@ -2,6 +2,51 @@
 
 App do motorista do **AvisAI**: o agente de voz que avisa o recebedor, conta a espera e prova cada hora parada. Hackathon UNMUTE by Agora (22/11/2026).
 
+O foco é a operação na cabine: o motorista consulta a viagem atribuída, acompanha a rota, fala com o agente, registra ocorrências e acessa documentos. O app mantém uma fila local para funcionar sem rede, mas **não** transforma o login MOCK, o GPS simulado, os documentos fiscais MOCK ou a voz de demonstração em recursos de produção.
+
+| Repositório | Responsabilidade |
+|---|---|
+| [`chapahalls/avisai`](https://github.com/chapahalls/avisai) | backend FastAPI, regras de operação, agente Agora, streams e persistência |
+| **este repositório** | aplicativo React Native/Expo do motorista |
+| [`chapahalls/avisai-web`](https://github.com/chapahalls/avisai-web) | painel web do CCO para monitorar, responder e publicar rotas |
+
+## Arquitetura de arquivos
+
+```text
+src/
+├── app/                 bootstrap, providers e navegação
+├── pages/               Login, Viagem, Mapa, Documentos, Visualizador e Fila
+├── features/
+│   ├── auth/            seleção de perfil e SSO MOCK
+│   ├── trip/            rota, geocerca, estadia, escalonamento e mapa
+│   ├── voice/           sessões Mock/Agora, transcrição e microfone
+│   ├── documents/       documentos, busca local e respostas por campo
+│   ├── report/          campos obrigatórios do reporte por voz
+│   └── outbox/          fila offline FIFO e sincronização
+├── services/            clientes HTTP/mock, WebSocket, GPS do aparelho e rede
+├── components/          componentes de interface reutilizáveis
+├── lib/                 configuração, SQLite, i18n e IDs
+├── types/               eventos, rota e contratos do backend
+├── utils/               geografia, formatação, haptics e texto
+└── __tests__/           testes Vitest das regras e integrações de cliente
+```
+
+`pages → features → components/lib/services/utils/types` é a direção desejada das dependências. As features expõem somente o seu `index.ts`; `trip` e `voice` trocam eventos por `src/services/agentBus.ts`, evitando importação circular. Veja o detalhamento em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
+
+## Telas do aplicativo
+
+Capturas do Android fornecidas para a documentação. Elas mostram a navegação do motorista, mapa, documentos, fila offline e modo de cabine; nomes de rota, documentos e estados operacionais pertencem à demonstração e não comprovam conexão Agora, GPS ou documentos reais.
+
+<p align="center">
+  <img src="docs/assets/trip-agent.jpg" alt="Tela de viagem com status da rota e agente de voz" width="180" />
+  <img src="docs/assets/route-map.jpg" alt="Tela de mapa da rota entre Jundiaí e Campinas" width="180" />
+  <img src="docs/assets/documents.jpg" alt="Tela de documentos da viagem e anexos" width="180" />
+</p>
+<p align="center">
+  <img src="docs/assets/outbox.jpg" alt="Tela da fila offline com eventos enviados" width="180" />
+  <img src="docs/assets/voice-cabin.jpg" alt="Modo de cabine com controles de voz e prova de estadia" width="180" />
+</p>
+
 ---
 
 ## Como rodar
@@ -63,7 +108,7 @@ npm run start:go
 
 ---
 
-## Como plugar Google Maps e o Backend Oficial (`chapahalls/avisai` `v1.0-entrega` / `ccb36e7` + Agora Conversational AI)
+## Como plugar Google Maps e o Backend Oficial (`chapahalls/avisai` + Agora Conversational AI)
 
 Configure as variáveis no arquivo `.env` (nunca versionado no git — **E7**) ou altere **em tempo real** pelo Bottom Sheet **Demo** no app (sem reiniciar o Metro):
 
@@ -87,13 +132,24 @@ GOOGLE_MAPS_API_KEY_ANDROID=sua_chave_aqui
    - Cole a URL pública do túnel (`https://xxxx.trycloudflare.com`) no campo **URL do Backend** e toque em **Testar** (`GET /health` → badge verde `Online` e `WS conectado`).
 3. Toque no botão do microfone (`MicButton`) para iniciar a sessão real (`POST /sessions`) e conversar ao vivo com o agente no canal RTC (`uid 1001` motorista ↔ `uid 9001` agente).
 
-### Contratos e Endpoints Oficiais Integrados (`src/types/backend.ts` & `src/services/httpApi.ts`)
-- **Healthcheck:** `GET /health`
-- **Sessão de Voz (Agora ConvoAI):** `POST /sessions` (`{ rota_id }`), `DELETE /sessions/{id}`, `POST /sessions/{id}/speak`, `GET /token?channel=...&uid=...`
-- **Rota, GPS e Geocerca:** `GET /rotas/{id}`, `POST /rotas/{id}/posicao`, `POST /rotas/{id}/chegada`, `POST /rotas/{id}/descarga`, `POST /rotas/{id}/ligar-recebedor`, `POST /rotas/{id}/reset`
-- **Estado CCO e Tempo Real:** `GET /cco/estado?rota_id={id}` e WebSocket `WS /ws?rota_id={id}` (`src/services/backendStream.ts`) sincronizando automaticamente `snapshot`, `posicao`, `contador` (estadia ao vivo a cada 1 s), `task`, `fala`, `evento` e `reset`.
+### Contratos e Endpoints Oficiais Integrados
+
+`src/services/httpApi.ts`, `src/services/backendStream.ts` e `src/types/backend.ts` concentram o contrato HTTP/WS. A URL configurada aponta para a raiz do backend, sem acrescentar `/api`.
+
+| Grupo | Rotas consumidas pelo app | Finalidade |
+|---|---|---|
+| Disponibilidade e perfil | `GET /health`, `GET /usuarios?role=driver`, `POST /auth/sso` | verifica a API, lista perfis de demonstração e seleciona a identidade do motorista |
+| Rota atribuída | `GET /api/route?driverId={id}` ou `?tripId={id}`; `GET /rotas/{id}` | consulta autoritativa da viagem e seu detalhe |
+| Tempo real | `WS /ws?motorista_id={id}` e `WS /ws?rota_id={id}` | recebe novas atribuições e atualizações de rota; após reconectar, o app faz refetch |
+| Voz Agora | `POST /sessions`, `DELETE /sessions/{id}`, `POST /sessions/{id}/speak`, `GET /token?channel=&uid=` | cria/encerra a sessão e renova o token RTC |
+| GPS e operação | `POST /rotas/{id}/posicao`, `/chegada`, `/descarga` | envia posição e registra os marcos operacionais autorizados pelo motorista |
+| Documentos | `GET /api/documents?tripId={id}`, `GET /rotas/{id}/arquivos`, `/arquivos/{arquivoId}/download` | separa NF-e/CT-e MOCK dos anexos reais recebidos do CCO |
+| Histórico | `GET /events?tripId={id}&since=...` | recupera a timeline normalizada para sincronização |
+
+O mobile **não** publica rota, atribui motorista, confirma Task do CCO, chama o recebedor nem chama reset para obter sua viagem. Os endpoints operacionais atuais ainda não validam o token MOCK como autorização; essa proteção é obrigatória antes de qualquer uso produtivo.
+
 - **Google Maps (`GOOGLE_MAPS_API_KEY_ANDROID`):** lida em tempo de build pelo `app.config.ts` para injetar `android.config.googleMaps.apiKey` somente quando não-vazia, expondo apenas o booleano `extra.hasGoogleMapsKey` para o runtime JS. Se a chave ou o módulo nativo não estiverem presentes, `RouteMap` faz fallback automático para `RouteMapSvg`.
-- **Voz Agora (`EXPO_PUBLIC_VOICE_MODE=agora`):** `AgoraVoiceSession` (`react-native-agora@4.6.4`) aplica os parâmetros `aplicarAudioIA` recomendados pela Agora (`AudioScenarioAiClient`, `ChannelProfileLiveBroadcasting`, AEC/AINS baixa latência), decodifica em tempo real o datastream oficial em chunks base64 da Agora ConvoAI (`AgoraStreamParser`: `user.transcription`, `assistant.transcription`, `message.state`, `message.interrupt`, `message.metrics`) exibindo legendas parciais ao vivo (`liveTranscript`), e é compatível tanto com `ARES + Custom LLM + TTS` quanto com `Agora ConvoAI MLLM / Realtime` (`llm_mode`). Solicita permissão `RECORD_AUDIO`, renova token via `GET /token`, detecta barge-in por volume/fala local e expõe controles de **Mudo** e **Encerrar sessão**.
+- **Voz Agora (`EXPO_PUBLIC_VOICE_MODE=agora`):** `AgoraVoiceSession` (`react-native-agora@4.6.4`) aplica os parâmetros `aplicarAudioIA` recomendados pela Agora (`AudioScenarioAiClient`, `ChannelProfileLiveBroadcasting`, AEC/AINS baixa latência), conecta o RTC ao agente configurado no backend, processa eventos de estado/interrupção/métricas e evita TTS local. Solicita permissão `RECORD_AUDIO`, renova token via `GET /token`, detecta barge-in por volume/fala local e expõe controles de **Mudo** e **Encerrar sessão**.
 
 ---
 
@@ -118,7 +174,7 @@ Todos os controles de simulação ficam isolados no componente `DemoControls` (i
   - `MockVoiceSession`: frases rápidas bilíngues (`pt-BR` / `en`) + síntese de voz `expo-speech` + barge-in + medição de latência.
   - `AgoraVoiceSession`: conexão RTC via `react-native-agora` integrada ao Conversational AI Engine via `agent-server` (com fallback automático para mock caso offline/sem backend).
 - **Recebedor:** em modo `mock`, respostas simuladas (confirma doca/horário, não recebe hoje, não atende); em modo `http`, delega para `POST /rotas/{id}/ligar-recebedor` e recebe a confirmação em tempo real via WebSocket (`resposta_recebedor`).
-- **Documentos:** NF-e (`000.482.913` — 28 paletes de bebidas, 28 t, `Mercadão Campinas, CD Norte`, veículo `RST-4B21`) e CT-e (`000.987`) fictícios alinhados ao `seed.py` do backend; visualizador de PDF simulado (`MockPdfViewer`); busca vetorial local em SQLite (embedding determinístico de 64 dimensões + similaridade cosseno) e resposta estrita por campos extraídos (**R7**).
+- **Documentos:** NF-e e CT-e sincronizados da rota, mais anexos reais baixados pelo CCO; visualizador local/nativo, indexação vetorial local em SQLite (embedding determinístico de 64 dimensões + similaridade cosseno) e resposta estrita por campos extraídos (**R7**). O agente também informa os nomes dos documentos disponíveis. A voz real usa Agora RTC com o agente GPT-Live configurado no backend.
 - **Servidor e SSO:** fila offline-first real em SQLite (`outbox` + `events` + `settings`) com `idempotencyKey` e ordem estrita FIFO; transporte plugável entre `mockApi.ts` e `httpApi.ts` + stream tempo real `backendStream.ts` (`/ws`).
 - **Rota, placa, empresas e telefones:** 100% fictícios (`Carlos Andrade`, `Transportadora Rota Sul`, `RST-4B21`, `CD Jundiaí` → `Mercadão Campinas, CD Norte`).
 

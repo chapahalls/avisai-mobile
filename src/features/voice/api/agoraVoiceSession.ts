@@ -87,8 +87,8 @@ const noopCallbacks: VoiceSessionCallbacks = {
 
 /**
  * Sessão de voz real usando `react-native-agora` + Agora Conversational AI Engine.
- * - Somente transcrição (`VOICE_PRIVACY = { recordAudio: false, transcriptionOnly: true }`).
- * - NUNCA invoca APIs de gravação de áudio bruto (`startAudioRecording`).
+ * - Voz RTC direta, sem legendas ou comandos baseados em transcrição no cliente.
+ * - Nunca invoca APIs de gravação de áudio bruto (`startAudioRecording`).
  */
 export class AgoraVoiceSession implements VoiceSession {
   readonly mode = 'agora' as const;
@@ -100,37 +100,12 @@ export class AgoraVoiceSession implements VoiceSession {
   private sessao: Sessao | null = null;
   private muted = false;
   private agentPresent = false;
-  private lastDriverSpeechEndAt: number | null = null;
-  private interruptTimer: ReturnType<typeof setTimeout> | null = null;
-  private agentSilenceTimer: ReturnType<typeof setTimeout> | null = null;
+  private stopping = false;
   private readonly parser = new AgoraStreamParser();
 
   private setState(state: VoiceState) {
     this.currentState = state;
     this.callbacks.onStateChange(state);
-  }
-
-  private clearTimers() {
-    if (this.interruptTimer) {
-      clearTimeout(this.interruptTimer);
-      this.interruptTimer = null;
-    }
-    if (this.agentSilenceTimer) {
-      clearTimeout(this.agentSilenceTimer);
-      this.agentSilenceTimer = null;
-    }
-  }
-
-  private scheduleAgentSilenceToListening() {
-    if (this.agentSilenceTimer) {
-      clearTimeout(this.agentSilenceTimer);
-    }
-    this.agentSilenceTimer = setTimeout(() => {
-      this.agentSilenceTimer = null;
-      if (this.currentState === 'speaking' && !this.muted) {
-        this.setState('listening');
-      }
-    }, 800);
   }
 
   setCallbacks(callbacks: VoiceSessionCallbacks) {
@@ -139,9 +114,9 @@ export class AgoraVoiceSession implements VoiceSession {
 
   async start(_channel: string, callbacks?: VoiceSessionCallbacks): Promise<void> {
     if (callbacks) this.callbacks = callbacks;
-    this.clearTimers();
     this.parser.reset();
     this.agentPresent = false;
+    this.stopping = false;
 
     try {
       const agora = loadAgoraModule();
@@ -221,8 +196,9 @@ export class AgoraVoiceSession implements VoiceSession {
         onUserOffline: (_connection, uid) => {
           if (uid === this.sessao?.agent_uid) {
             this.agentPresent = false;
-            this.callbacks.onAgoraStage?.('waiting_agent', this.sessao?.canal);
-            this.setState('thinking');
+            // O agente encerrou pelo backend (por exemplo, após "AvisAI, encerrar sessão").
+            // Fecha só o RTC local: não chama DELETE novamente.
+            void this.close(false);
           }
         },
         onTokenPrivilegeWillExpire: () => {
@@ -270,33 +246,10 @@ export class AgoraVoiceSession implements VoiceSession {
                 peakVol = vol;
                 peakSpeaker = 'agent';
               }
-              if (vol > 25) {
-                if (!this.agentPresent) {
-                  this.agentPresent = true;
-                  this.callbacks.onAgoraStage?.('live', this.sessao?.canal);
-                }
-                if (this.lastDriverSpeechEndAt !== null) {
-                  const latency = Math.max(50, Date.now() - this.lastDriverSpeechEndAt);
-                  this.callbacks.onLatency(latency);
-                  this.lastDriverSpeechEndAt = null;
-                }
-                if (this.currentState !== 'speaking') {
-                  this.setState('speaking');
-                }
-                this.scheduleAgentSilenceToListening();
-              }
             } else if (sp.uid === 0) {
               if (vol > peakVol && vol > 10 && !this.muted) {
                 peakVol = vol;
                 peakSpeaker = 'driver';
-              }
-              if (vol > 35) {
-                this.lastDriverSpeechEndAt = Date.now();
-                if (this.currentState === 'speaking') {
-                  void this.interrupt();
-                } else if (this.currentState === 'idle' && !this.muted) {
-                  this.setState('listening');
-                }
               }
             }
           }
@@ -313,65 +266,21 @@ export class AgoraVoiceSession implements VoiceSession {
                 this.agentPresent = true;
                 this.callbacks.onAgoraStage?.('live', this.sessao?.canal);
               }
-              if (ev.state === 'idle' && !this.muted && this.agentPresent) {
-                this.setState('listening');
-              } else {
-                this.setState(ev.state);
-              }
-              if (ev.state === 'speaking') {
-                this.scheduleAgentSilenceToListening();
-              }
+              this.setState(ev.state);
               break;
             }
             case 'interrupt': {
-              void this.interrupt();
+              // A Agora é a fonte de verdade para interrupções. Não desmutamos nem
+              // reativamos o microfone local por causa de um evento remoto.
+              this.setState('interrupted');
               break;
             }
             case 'metrics': {
               this.callbacks.onLatency(ev.latencyMs);
-              this.lastDriverSpeechEndAt = null;
               break;
             }
             case 'transcript': {
-              if (ev.who === 'agent' && !this.agentPresent) {
-                this.agentPresent = true;
-                this.callbacks.onAgoraStage?.('live', this.sessao?.canal);
-              }
-
-              if (!ev.isFinal) {
-                this.callbacks.onPartialTranscript?.(ev.who, ev.text, ev.turnId);
-                if (ev.who === 'driver') {
-                  this.lastDriverSpeechEndAt = Date.now();
-                  if (!this.muted) {
-                    this.setState('listening');
-                  }
-                } else {
-                  this.setState('speaking');
-                  this.scheduleAgentSilenceToListening();
-                }
-                break;
-              }
-
-              if (ev.who === 'driver') {
-                this.lastDriverSpeechEndAt = Date.now();
-                this.setState('thinking');
-                this.callbacks.onTranscript('driver', ev.text);
-              } else {
-                if (typeof ev.latencyMs === 'number') {
-                  this.callbacks.onLatency(ev.latencyMs);
-                  this.lastDriverSpeechEndAt = null;
-                } else if (this.lastDriverSpeechEndAt !== null) {
-                  this.callbacks.onLatency(Math.max(50, Date.now() - this.lastDriverSpeechEndAt));
-                  this.lastDriverSpeechEndAt = null;
-                }
-                this.callbacks.onTranscript('agent', ev.text);
-                if (ev.interrupted) {
-                  this.setState(this.muted ? 'idle' : 'listening');
-                } else {
-                  this.setState('speaking');
-                  this.scheduleAgentSilenceToListening();
-                }
-              }
+              // Não exibe, armazena nem aciona comportamento a partir de transcrições.
               break;
             }
           }
@@ -423,14 +332,12 @@ export class AgoraVoiceSession implements VoiceSession {
   }
 
   async listen(): Promise<void> {
-    this.clearTimers();
     this.muted = false;
     this.engine?.muteLocalAudioStream(false);
     this.setState('listening');
   }
 
   async stopListening(): Promise<void> {
-    this.clearTimers();
     this.muted = true;
     this.engine?.muteLocalAudioStream(true);
     this.callbacks.onVolume?.(0, 'none');
@@ -441,30 +348,30 @@ export class AgoraVoiceSession implements VoiceSession {
     if (!text) return;
     if (this.sessao) {
       const mode = this.sessao.llm_mode?.toLowerCase() ?? '';
-      if (mode === 'realtime' || mode === 'mllm') {
+      if (mode === 'live' || mode === 'realtime' || mode === 'mllm') {
         return;
       }
       await getApiClient()
         .speak(this.sessao.id, text, 'APPEND')
         .catch(() => undefined);
     } else {
-      this.callbacks.onTranscript('agent', text);
+      this.callbacks.onError('sessão de voz direta não conectada');
     }
   }
 
   async interrupt(): Promise<void> {
-    this.clearTimers();
-    this.muted = false;
-    this.engine?.muteLocalAudioStream(false);
+    // Não força microfone aberto nem retorna automaticamente a "listening".
+    // O próximo estado vem do agente, evitando o loop por eco/volume.
     this.setState('interrupted');
-    this.interruptTimer = setTimeout(() => {
-      this.interruptTimer = null;
-      this.setState('listening');
-    }, 400);
   }
 
   async stop(): Promise<void> {
-    this.clearTimers();
+    await this.close(true);
+  }
+
+  private async close(deleteRemote: boolean): Promise<void> {
+    if (this.stopping) return;
+    this.stopping = true;
     this.parser.reset();
     const sessao = this.sessao;
     this.sessao = null;
@@ -489,12 +396,16 @@ export class AgoraVoiceSession implements VoiceSession {
     this.callbacks.onAgoraStage?.('disconnected');
     this.setState('idle');
 
-    if (sessao) {
-      try {
-        await getApiClient().deleteSession(sessao.id);
-      } catch {
-        // Ignora falha de rede ao encerrar sessão remota
+    try {
+      if (deleteRemote && sessao) {
+        try {
+          await getApiClient().deleteSession(sessao.id);
+        } catch {
+          // Ignora falha de rede ao encerrar sessão remota
+        }
       }
+    } finally {
+      this.stopping = false;
     }
   }
 }

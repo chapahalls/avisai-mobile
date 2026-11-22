@@ -31,10 +31,11 @@ export type BusinessConfig = {
 /** Relógio simulado: 1 s real = TIME_SCALE s simulados (60 = 1 s vira 1 min). */
 export const TIME_SCALE = 60;
 
-/** Política de privacidade de voz: apenas transcrição, zero gravação de áudio bruto. */
+/** Voz RTC direta: sem gravação nem legendas/transcrição consumidas pelo cliente. */
 export const VOICE_PRIVACY = {
   recordAudio: false,
-  transcriptionOnly: true,
+  showTranscript: false,
+  clientTranscriptCommands: false,
 } as const;
 
 export type ApiMode = 'mock' | 'http';
@@ -57,12 +58,15 @@ function readHasGoogleMapsKey(): boolean {
 }
 
 const rawApiMode = process.env.EXPO_PUBLIC_API_MODE?.trim().toLowerCase();
+const rawApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 const rawVoiceMode = process.env.EXPO_PUBLIC_VOICE_MODE?.trim().toLowerCase();
 const parsedRotaId = Number(process.env.EXPO_PUBLIC_ROTA_ID || 1);
 
 export const ENV = {
   apiMode: (rawApiMode === 'http' ? 'http' : 'mock') as ApiMode,
-  apiBaseUrl: (process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || 'http://localhost:8000').replace(/\/+$/, ''),
+  apiModeConfigured: rawApiMode === 'http' || rawApiMode === 'mock',
+  apiBaseUrl: (rawApiBaseUrl || 'http://localhost:8000').replace(/\/+$/, ''),
+  apiBaseUrlConfigured: Boolean(rawApiBaseUrl),
   rotaId: Number.isFinite(parsedRotaId) && parsedRotaId > 0 ? parsedRotaId : 1,
   voiceMode: (rawVoiceMode === 'agora' ? 'agora' : 'mock') as VoiceMode,
   hasGoogleMapsKey: readHasGoogleMapsKey(),

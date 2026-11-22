@@ -12,8 +12,14 @@ export interface AgentTurn {
   reply: string;
   collected: Partial<Record<FieldKey, string>>;
   completed: boolean;
+  startOccurrence?: boolean;
   missingFields?: FieldKey[];
-  occurrence?: string;
+  occurrence?: {
+    text: string;
+    descricao: string;
+    km: number | null;
+    rodovia: string | null;
+  };
   documentAnswer?: {
     question: string;
     answer: string;
@@ -25,6 +31,8 @@ export interface AgentTurn {
 
 const OCCURRENCE_RE =
   /(acidente|bloqueio|pneu|fiscalizacao|roubo|interdicao|accident|roadblock|flat tire|inspection|theft|crash|hazard)/;
+const REPORT_OCCURRENCE_RE =
+  /(?:report(ar|e|a)|registr(ar|e|a)|abr(ir|e|a)|quero|preciso|tenho).*(ocorr[eê]ncia|incident|problem)/;
 
 const DOCUMENT_RE =
   /(nota|nf|nfe|nf-e|ct-?e|peso|valor|destinatario|documento|invoice|weight|value|amount|recipient|document)/;
@@ -42,12 +50,59 @@ function nextQuestion(context: ReportContext, collected: Partial<Record<FieldKey
   return m.length ? askQuestion(m[0]) : undefined;
 }
 
+function extractOccurrenceFields(
+  utterance: string,
+  collected: Partial<Record<FieldKey, string>>,
+): Partial<Record<FieldKey, string>> {
+  const normalized = normalize(utterance);
+  const next = { ...collected };
+  if (!next.problema && !REPORT_OCCURRENCE_RE.test(normalized)) next.problema = utterance;
+  const km = normalized.match(/\bkm\s*(\d+(?:[.,]\d+)?)\b/);
+  if (km) next.km = km[1].replace(',', '.');
+  const br = normalized.match(/\b(br[-\s]?\d{1,3}|rodovia\s+[a-z0-9-]+)/i);
+  if (br) next.br = br[1].replace(/\s+/g, '-').toUpperCase();
+  return next;
+}
+
 export function agentRespond(
   context: ReportContext,
   utterance: string,
   collected: Partial<Record<FieldKey, string>>,
 ): AgentTurn {
   const text = normalize(utterance);
+
+  if (REPORT_OCCURRENCE_RE.test(text) && context !== 'occurrence') {
+    return {
+      reply: i18n.t('voice.agent.occurrenceStart'),
+      collected,
+      completed: false,
+      startOccurrence: true,
+    };
+  }
+
+  if (context === 'occurrence') {
+    const merged = extractOccurrenceFields(utterance, collected);
+    const missing = missingFields(context, merged);
+    if (missing.length > 0) {
+      return {
+        reply: i18n.t(`voice.agent.occurrenceAsk.${missing[0]}`),
+        collected: merged,
+        completed: false,
+        missingFields: missing,
+      };
+    }
+    return {
+      reply: i18n.t('voice.agent.occurrenceRecorded'),
+      collected: {},
+      completed: false,
+      occurrence: {
+        text: utterance,
+        descricao: merged.problema ?? utterance,
+        km: merged.km ? Number(merged.km) : null,
+        rodovia: merged.br ?? null,
+      },
+    };
+  }
 
   // Ocorrência a qualquer momento: registra e volta ao assunto.
   if (OCCURRENCE_RE.test(text)) {
@@ -57,7 +112,7 @@ export function agentRespond(
       reply: i18n.t('voice.agent.occurrenceRecorded') + suffix,
       collected,
       completed: false,
-      occurrence: utterance,
+      occurrence: { text: utterance, descricao: utterance, km: null, rodovia: null },
     };
   }
 
@@ -115,6 +170,7 @@ export const QUICK_UTTERANCES_BY_LANG: Record<AppLanguage, Record<ReportContext,
     pickup: ['Peguei a carga, caminhão ok', 'Peguei a carga', 'Tudo certo'],
     checkin: ['Cheguei, carga ok', 'Sem avaria, viagem tranquila', 'Carga inteira, sem avaria, sem ocorrência'],
     unload: ['Descarreguei', 'Terminou a descarga'],
+    occurrence: ['Pneu furado, km 230, BR-381', 'Estou em uma fila no km 120 da BR-116'],
     free: [
       'Abrir mapa',
       'Abrir nota fiscal',
@@ -127,6 +183,7 @@ export const QUICK_UTTERANCES_BY_LANG: Record<AppLanguage, Record<ReportContext,
     pickup: ['Picked up the cargo, truck ok', 'Picked up the cargo', 'All good'],
     checkin: ['Arrived, cargo ok', 'No damage, smooth trip', 'Cargo intact, no damage, no incident'],
     unload: ['Unloaded', 'Finished unloading'],
+    occurrence: ['Flat tire, km 230, BR-381', 'I am in a queue at km 120 on BR-116'],
     free: [
       'Open map',
       'Open invoice',

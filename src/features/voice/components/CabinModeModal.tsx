@@ -1,8 +1,9 @@
 import { Modal, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 import { hapticTap } from '../../../utils/haptics';
 import { useVoice } from '../hooks/useVoice';
+import { AuroraVoiceOrb } from './AuroraVoiceOrb';
 import { VoiceStateIndicator } from './VoiceStateIndicator';
 import { VoiceWaveform } from './VoiceWaveform';
 
@@ -31,16 +32,21 @@ export function CabinModeModal({
   const transcript = useVoice((s) => s.transcript);
   const liveTranscript = useVoice((s) => s.liveTranscript);
   const preferredMode = useVoice((s) => s.preferredMode);
+  const activeMode = useVoice((s) => s.activeMode);
   const agoraStage = useVoice((s) => s.agoraStage);
   const sessionConnected = useVoice((s) => s.sessionConnected);
   const muted = useVoice((s) => s.muted);
+  const audioLevel = useVoice((s) => s.audioLevel);
+  const audioSpeaker = useVoice((s) => s.audioSpeaker);
   const audioRoute = useVoice((s) => s.audioRoute);
   const bargeInBanner = useVoice((s) => s.bargeInBanner);
   const listen = useVoice((s) => s.listen);
   const toggleMute = useVoice((s) => s.toggleMute);
+  const stop = useVoice((s) => s.stop);
 
   const isListening = state === 'listening' && !muted;
   const isSpeaking = state === 'speaking';
+  const directVoice = preferredMode === 'agora' || activeMode === 'agora';
 
   const lastAgentLine = [...transcript].reverse().find((l) => l.who === 'agent');
   const lastDriverLine = [...transcript].reverse().find((l) => l.who === 'driver');
@@ -147,13 +153,17 @@ export function CabinModeModal({
         {/* Centro: Última fala do agente em fonte gigante + Waveform ampliado */}
         <View className="items-center justify-center px-2 my-4">
           <Text className="text-brand-500 text-xs font-bold uppercase tracking-widest mb-2">
-            {t('voice.cabinMode.lastAgentSpeech')}
+            {directVoice ? t('voice.cabinMode.directVoice') : t('voice.cabinMode.lastAgentSpeech')}
           </Text>
           <Text className="text-ink-50 text-2xl font-bold text-center leading-8">
-            {agentCaption ? `“${agentCaption}”` : t('voice.emptyHint')}
+            {directVoice
+              ? t('voice.directVoiceHint')
+              : agentCaption
+                ? `“${agentCaption}”`
+                : t('voice.emptyHint')}
           </Text>
 
-          {driverCaption ? (
+          {!directVoice && driverCaption ? (
             <Text
               numberOfLines={2}
               className="text-ink-300 text-sm font-medium text-center mt-3"
@@ -175,7 +185,7 @@ export function CabinModeModal({
           )}
         </View>
 
-        {/* Base: Microfone gigante (128x128) + Mudo + Sair do Modo Cabine */}
+        {/* Base: superfície de voz aurora + Mudo + Sair do Modo Cabine */}
         <View className="items-center gap-5">
           <Pressable
             onPress={() => {
@@ -184,44 +194,25 @@ export function CabinModeModal({
             }}
             accessibilityRole="button"
             accessibilityLabel={micLabel}
+            accessibilityHint={directVoice ? t('voice.agoraLiveHint') : t('voice.tapToSpeakHint')}
+            accessibilityState={{ selected: isListening || isSpeaking }}
             style={{
-              width: 128,
-              height: 128,
+              width: 154,
+              height: 154,
               borderRadius: 999,
             }}
-            className={`items-center justify-center active:opacity-85 ${
-              isListening
-                ? 'bg-brand-500 border-4 border-brand-50'
-                : isSpeaking
-                  ? 'bg-ok-500 border-4 border-ink-50'
-                  : 'bg-ink-800 border-4 border-brand-500'
-            }`}
+            className="items-center justify-center active:opacity-85"
           >
-            {isSpeaking ? (
-              <Svg width={46} height={46} viewBox="0 0 24 24" fill="none">
-                <Rect x={6} y={6} width={4.5} height={12} rx={1.5} fill="#0B1220" />
-                <Rect x={13.5} y={6} width={4.5} height={12} rx={1.5} fill="#0B1220" />
-              </Svg>
-            ) : (
-              <Svg width={46} height={46} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"
-                  fill={isListening ? '#F4F6FA' : 'none'}
-                  stroke="#F4F6FA"
-                  strokeWidth={2}
-                />
-                <Path
-                  d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"
-                  stroke="#F4F6FA"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
-            )}
+            <AuroraVoiceOrb
+              state={state}
+              muted={muted}
+              audioLevel={audioLevel}
+              audioSpeaker={audioSpeaker}
+              size={146}
+            />
           </Pressable>
 
-          <Text className="text-ink-50 text-base font-bold uppercase tracking-wider">
+          <Text className="text-ink-50 text-base font-semibold">
             {micLabel}
           </Text>
 
@@ -260,6 +251,22 @@ export function CabinModeModal({
               </Text>
             </Pressable>
           </View>
+
+          {sessionConnected ? (
+            <Pressable
+              onPress={() => {
+                hapticTap();
+                stop();
+                onClose();
+              }}
+              accessibilityRole="button"
+              className="w-full py-4 rounded-2xl border border-alert-500/70 bg-alert-500/15 items-center justify-center active:opacity-80"
+            >
+              <Text className="text-alert-500 text-sm font-bold">
+                {t('voice.endSessionButton')}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </Modal>

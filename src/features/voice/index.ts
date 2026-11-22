@@ -1,5 +1,6 @@
 export { useVoice, wireVoiceToBus, loadPersistedVoiceMode } from './hooks/useVoice';
 export { MicButton } from './components/MicButton';
+export { AuroraVoiceOrb, getAuroraVoicePresentation } from './components/AuroraVoiceOrb';
 export { VoiceWaveform } from './components/VoiceWaveform';
 export { CabinModeModal } from './components/CabinModeModal';
 export { VoiceStateIndicator } from './components/VoiceStateIndicator';

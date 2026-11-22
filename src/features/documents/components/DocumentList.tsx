@@ -13,10 +13,13 @@ export function DocumentList({ onOpen }: { onOpen: (d: TripDocument) => void }) 
     <View className="gap-3">
       {documents.map((d) => {
         const isNfe = d.kind === 'NF-e';
-        const accentColor = isNfe ? '#099DFD' : '#17B26A';
+        const isRealFile = Boolean(d.realFile && d.fileUrl);
+        const accentColor = isNfe ? '#099DFD' : isRealFile ? '#F5A524' : '#17B26A';
         const iconBg = isNfe
           ? 'bg-brand-500/15 border-brand-500/40'
-          : 'bg-ok-500/15 border-ok-500/40';
+          : isRealFile
+            ? 'bg-wait-500/15 border-wait-500/40'
+            : 'bg-ok-500/15 border-ok-500/40';
         const previewEntries = Object.entries(d.fields).slice(0, 3);
 
         return (
@@ -50,10 +53,12 @@ export function DocumentList({ onOpen }: { onOpen: (d: TripDocument) => void }) 
                 <View className="flex-1">
                   <View className="flex-row items-center gap-2">
                     <Text className="text-ink-50 text-base font-bold">{d.title}</Text>
-                    <Badge tone={isNfe ? 'brand' : 'ok'} label={d.kind} />
+                    <Badge tone={isNfe ? 'brand' : isRealFile ? 'wait' : 'ok'} label={d.kind} />
                   </View>
                   <Text className="text-ink-300 text-xs mt-0.5">
-                    {t('documents.extractedFields', { count: Object.keys(d.fields).length })}
+                    {isRealFile
+                      ? t('documents.realFileReady')
+                      : t('documents.extractedFields', { count: Object.keys(d.fields).length })}
                   </Text>
                 </View>
               </View>

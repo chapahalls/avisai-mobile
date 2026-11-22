@@ -34,6 +34,11 @@ import type {
 const SPEED_KMH = 80;
 const BASE_SIM_HOUR = 14;
 let centralClearTimer: ReturnType<typeof setTimeout> | null = null;
+let lastRouteSyncRequest = 0;
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
 
 function formatTimelineTime(simMinutes: number, timestampIso?: string): string {
   if (timestampIso) {
@@ -361,6 +366,10 @@ export const useTrip = create<TripState>((set, get) => ({
   },
 
   tick: (dtRealMs) => {
+    // Em modo conectado, posição, ETA e fase são a fonte de verdade do GPS/API.
+    // O simulador local não pode sobrescrever atualizações que chegam do WebSocket.
+    if (useApiConfig.getState().mode === 'http') return;
+
     const s = get();
     if (s.phase === 'idle' || s.phase === 'unloaded') return;
 
@@ -645,6 +654,8 @@ export const useTrip = create<TripState>((set, get) => ({
   syncRouteFromBackend: async (rotaId?: number) => {
     try {
       const apiCfg = useApiConfig.getState();
+      const requestId = ++lastRouteSyncRequest;
+      const requestedDriverId = apiCfg.driverId;
       const apiRoute = await getApiClient().getAssignedRoute(
         rotaId !== undefined
           ? { tripId: String(rotaId) }
@@ -652,14 +663,25 @@ export const useTrip = create<TripState>((set, get) => ({
       );
       if (!apiRoute) return;
 
+      // Não permita que uma resposta antiga (boot, troca de perfil ou rota
+      // recém-atribuída) volte a pintar uma rota que já não é a ativa.
+      const currentApiCfg = useApiConfig.getState();
+      if (
+        requestId !== lastRouteSyncRequest ||
+        (rotaId !== undefined && currentApiCfg.rotaId !== rotaId) ||
+        (rotaId === undefined && currentApiCfg.driverId !== requestedDriverId)
+      ) {
+        return;
+      }
+
       const s = get();
       const parsedRotaId =
         Number(String(apiRoute.tripId).replace(/^rota-|^trip-/, '')) ||
         rotaId ||
-        apiCfg.rotaId;
+        currentApiCfg.rotaId;
 
-      if (parsedRotaId !== apiCfg.rotaId) {
-        apiCfg.setRotaId(parsedRotaId);
+      if (parsedRotaId !== currentApiCfg.rotaId) {
+        currentApiCfg.setRotaId(parsedRotaId);
       }
 
       const originPos: LatLng =
@@ -709,9 +731,16 @@ export const useTrip = create<TripState>((set, get) => ({
         path,
       };
 
+      const apiPosition = apiRoute.position;
+      // O /api/route pode ainda não ter GPS, enquanto o snapshot do WebSocket
+      // já trouxe ultima_lat/ultima_lng. Preserve essa posição mais nova.
       const position: LatLng =
-        typeof apiRoute.position?.lat === 'number' && typeof apiRoute.position?.lng === 'number'
-          ? { lat: apiRoute.position.lat, lng: apiRoute.position.lng }
+        apiPosition &&
+        isFiniteNumber(apiPosition.lat) &&
+        isFiniteNumber(apiPosition.lng)
+        ? { lat: apiPosition.lat, lng: apiPosition.lng }
+        : s.activeRoute.rotaId === parsedRotaId
+          ? s.position
           : originPos;
       const progress = computeProgressFromPosition(position, nextRoute);
       const phase = statusRotaToPhase(apiRoute.status, s.phase);
@@ -735,11 +764,22 @@ export const useTrip = create<TripState>((set, get) => ({
 
   applyBackendSnapshot: (snap) => {
     const s = get();
-    const rotaId = useApiConfig.getState().rotaId;
-    const rota = snap.rotas.find((r) => r.id === rotaId) ?? snap.rotas[0] ?? null;
-    const estadia = snap.estadias.find((e) => !e.encerrada) ?? snap.estadias[0] ?? null;
-    const task = snap.tasks[0] ?? null;
-    const ligacao = snap.ligacoes[0] ?? null;
+    const apiConfig = useApiConfig.getState();
+    const configuredRotaId = apiConfig.rotaId;
+    const configuredRoute = snap.rotas.find((r) => r.id === configuredRotaId);
+    // O stream do motorista contém somente a rota atual. Quando uma nova rota
+    // chega antes do evento de atribuição, adotamos apenas esse snapshot único;
+    // nunca a primeira rota de uma lista ampla do CCO.
+    const rota =
+      configuredRoute ??
+      (snap.rotas.length === 1 ? snap.rotas[0] : null);
+    const routeId = rota?.id ?? configuredRotaId;
+    const estadiasDaRota = snap.estadias.filter((e) => e.rota_id === routeId);
+    const tasksDaRota = snap.tasks.filter((t) => t.rota_id === routeId);
+    const ligacoesDaRota = snap.ligacoes.filter((l) => l.rota_id === routeId);
+    const estadia = estadiasDaRota.find((e) => !e.encerrada) ?? estadiasDaRota[0] ?? null;
+    const task = tasksDaRota[0] ?? null;
+    const ligacao = ligacoesDaRota[0] ?? null;
 
     let position = s.position;
     let progress = s.progress;
@@ -747,9 +787,12 @@ export const useTrip = create<TripState>((set, get) => ({
     let activeRoute = s.activeRoute;
 
     if (rota) {
+      if (rota.id !== configuredRotaId) {
+        apiConfig.setRotaId(rota.id);
+      }
       const destPos: LatLng = {
-        lat: typeof rota.destino_lat === 'number' ? rota.destino_lat : s.activeRoute.destination.position.lat,
-        lng: typeof rota.destino_lng === 'number' ? rota.destino_lng : s.activeRoute.destination.position.lng,
+        lat: Number.isFinite(rota.destino_lat) ? rota.destino_lat : s.activeRoute.destination.position.lat,
+        lng: Number.isFinite(rota.destino_lng) ? rota.destino_lng : s.activeRoute.destination.position.lng,
       };
       const receiverLabel =
         rota.recebedor_empresa && rota.recebedor_nome
@@ -782,7 +825,7 @@ export const useTrip = create<TripState>((set, get) => ({
         },
       };
 
-      if (typeof rota.ultima_lat === 'number' && typeof rota.ultima_lng === 'number') {
+      if (isFiniteNumber(rota.ultima_lat) && isFiniteNumber(rota.ultima_lng)) {
         position = { lat: rota.ultima_lat, lng: rota.ultima_lng };
         progress = computeProgressFromPosition(position, activeRoute);
       }
@@ -837,6 +880,13 @@ export const useTrip = create<TripState>((set, get) => ({
   },
 
   applyBackendPosicao: (pos) => {
+    if (
+      pos.rota_id !== useApiConfig.getState().rotaId ||
+      !isFiniteNumber(pos.lat) ||
+      !isFiniteNumber(pos.lng)
+    ) {
+      return;
+    }
     const s = get();
     const position = { lat: pos.lat, lng: pos.lng };
     const progress = computeProgressFromPosition(position, s.activeRoute);
@@ -857,7 +907,8 @@ export const useTrip = create<TripState>((set, get) => ({
 
   applyBackendContador: (estadias) => {
     const s = get();
-    const estadia = estadias.find((e) => !e.encerrada) ?? estadias[0] ?? null;
+    const estadiasDaRota = estadias.filter((e) => e.rota_id === useApiConfig.getState().rotaId);
+    const estadia = estadiasDaRota.find((e) => !e.encerrada) ?? estadiasDaRota[0] ?? null;
     if (!estadia) return;
     const nextPhase = estadia.encerrada
       ? 'unloaded'
@@ -872,6 +923,7 @@ export const useTrip = create<TripState>((set, get) => ({
   },
 
   applyBackendTask: (task) => {
+    if (task.rota_id !== useApiConfig.getState().rotaId) return;
     const s = get();
     const mappedReceiver = ligacaoToReceiverStatus(s.backendLigacao, task);
     set({
@@ -904,6 +956,10 @@ export const useTrip = create<TripState>((set, get) => ({
         tone: 'brand',
       });
       void get().syncRouteFromBackend(nextRotaId);
+      return;
+    }
+
+    if (evento.rota_id !== null && evento.rota_id !== useApiConfig.getState().rotaId) {
       return;
     }
 
@@ -1178,7 +1234,14 @@ export const useTrip = create<TripState>((set, get) => ({
       return;
     }
 
-    if (evento.tipo === 'notificacao_cco' || evento.tipo === 'escalada_recebedor') {
+    if (
+      evento.tipo === 'notificacao_cco'
+      || evento.tipo === 'escalada_recebedor'
+      || evento.tipo === 'chamado_cco_aberto'
+      || evento.tipo === 'chamado_cco_lembrete'
+      || evento.tipo === 'chamado_cco_respondido'
+      || evento.tipo === 'chamado_cco_timeout'
+    ) {
       set((curr) => ({
         timeline: appendTimeline(
           curr.timeline,
@@ -1348,12 +1411,12 @@ export function wireTripToVoice() {
     enqueue(tripId, 'ReportFieldMissing', { context, missing, collected, utterance }, 'agent');
   });
 
-  const offOcc = agentBus.on('voice:occurrence', ({ text }) => {
+  const offOcc = agentBus.on('voice:occurrence', ({ text, descricao, km, rodovia }) => {
     const s = useTrip.getState();
     enqueue(
       s.activeRoute.tripId,
       'OccurrenceCreated',
-      { text, descricao: text, position: s.position },
+      { text, descricao, km, rodovia, position: s.position },
       'driver',
     );
     useTrip.getState().addTimelineEntry(

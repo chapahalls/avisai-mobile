@@ -6,6 +6,7 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { useSession } from '../features/auth';
@@ -123,6 +124,8 @@ function OutboxTabIcon({ color, focused }: { color: string; focused: boolean }) 
 function MainTabs() {
   const { t } = useTranslation();
   const pending = useOutboxStore((s) => s.pending);
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 10);
 
   return (
     <Tabs.Navigator
@@ -131,9 +134,11 @@ function MainTabs() {
         tabBarActiveTintColor: '#099DFD',
         tabBarInactiveTintColor: '#A7B1C6',
         tabBarStyle: {
-          height: 68,
-          paddingTop: 8,
-          paddingBottom: 10,
+          // A altura precisa incluir a barra de navegação do Android. Sem isso,
+          // os atalhos e os botões da tela ficam escondidos atrás dela.
+          height: 60 + bottomInset,
+          paddingTop: 7,
+          paddingBottom: bottomInset,
           backgroundColor: '#0E1626',
           borderTopColor: '#1E293B',
           borderTopWidth: 1,

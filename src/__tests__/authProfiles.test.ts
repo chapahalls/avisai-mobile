@@ -1,6 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('react-native', () => ({}));
+vi.mock('react-native-reanimated', () => ({
+  default: { View: () => null },
+  cancelAnimation: vi.fn(),
+  Easing: {
+    inOut: (value: unknown) => value,
+    linear: 'linear',
+    sin: 'sin',
+  },
+  useAnimatedStyle: () => ({}),
+  useSharedValue: (value: number) => ({ value }),
+  withRepeat: (animation: unknown) => animation,
+  withSequence: (...animations: unknown[]) => animations[0],
+  withSpring: (value: number) => value,
+  withTiming: (value: number) => value,
+}));
 vi.mock('react-native-svg', () => ({
   default: () => null,
   Path: () => null,

@@ -70,6 +70,18 @@ export function answerDocumentQuestionWithMeta(
 
   const currentDocs = useDocuments.getState().documents;
   const sourceDocs = currentDocs.length > 0 ? currentDocs : DOCUMENTS;
+  if (
+    /(quais|lista|nome|names|which|list).*(document|nota|nf|ct-?e|arquivo|file)/
+      .test(q)
+    || /(document|arquivo|file).*(disponive|tem|available)/
+      .test(q)
+  ) {
+    const titles = sourceDocs.map((doc) => doc.title).join(', ');
+    return {
+      answer: i18n.t('documents.listAnswer', { documents: titles }),
+      found: sourceDocs.length > 0,
+    };
+  }
   const wantsCte = /ct-?e/.test(q);
   const docs = wantsCte ? sourceDocs.filter((d) => d.kind === 'CT-e') : sourceDocs;
 

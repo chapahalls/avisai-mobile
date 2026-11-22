@@ -1,6 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('react-native', () => ({}));
+vi.mock('react-native-reanimated', () => ({
+  default: { View: () => null },
+  cancelAnimation: vi.fn(),
+  Easing: {
+    inOut: (value: unknown) => value,
+    linear: 'linear',
+    sin: 'sin',
+  },
+  useAnimatedStyle: () => ({}),
+  useSharedValue: (value: number) => ({ value }),
+  withRepeat: (animation: unknown) => animation,
+  withSequence: (...animations: unknown[]) => animations[0],
+  withSpring: (value: number) => value,
+  withTiming: (value: number) => value,
+}));
 vi.mock('react-native-svg', () => ({
   default: () => null,
   Path: () => null,
@@ -141,7 +156,7 @@ describe('Agora Conversational AI real-time streaming & backend sync (v1.0-entre
     });
   });
 
-  it('canal "fala" no WebSocket registra fala do AGENTE (papel=motorista) sem disparar comando de voz do motorista', () => {
+  it('canal "fala" no WebSocket não cria transcrição nem dispara comando do motorista', () => {
     handleStreamMessage(
       JSON.stringify({
         canal: 'fala',
@@ -154,16 +169,12 @@ describe('Agora Conversational AI real-time streaming & backend sync (v1.0-entre
     );
 
     const { transcript } = useVoice.getState();
-    expect(transcript).toHaveLength(1);
-    expect(transcript[0]?.who).toBe('agent');
-    expect(transcript[0]?.text).toBe(
-      'Iniciei a viagem e avisei o recebedor que você está a caminho.',
-    );
+    expect(transcript).toHaveLength(0);
     // Não deve ter disparado o comando "Iniciar viagem" do motorista
     expect(useTrip.getState().phase).toBe('idle');
   });
 
-  it('não vaza TTS local (expo-speech) em modo Agora, deduplica WS + datastream e auto-habilita HTTP no listen()', async () => {
+  it('não vaza TTS local nem legendas em modo Agora e auto-habilita HTTP no listen()', async () => {
     const mockSaySpy = vi.spyOn(MockVoiceSession.prototype, 'say');
     const unsub = wireVoiceToBus();
 
@@ -172,14 +183,14 @@ describe('Agora Conversational AI real-time streaming & backend sync (v1.0-entre
       expect(useVoice.getState().preferredMode).toBe('agora');
 
       // Emitir agent:say em modo Agora desconectado NÃO pode chamar MockVoiceSession.say
+      // nem gravar legenda no cliente.
       agentBus.emit('agent:say', { text: 'Fala do agente durante modo Agora' });
       expect(mockSaySpy).not.toHaveBeenCalled();
-      expect(useVoice.getState().transcript).toHaveLength(1);
-      expect(useVoice.getState().transcript[0]?.who).toBe('agent');
+      expect(useVoice.getState().transcript).toHaveLength(0);
 
-      // Deduplicação entre datastream e WebSocket dentro da janela de 4s
+      // Datastream e WebSocket também não podem alimentar o histórico de legendas.
       useVoice.getState().pushTranscript('agent', 'Fala do agente durante modo Agora');
-      expect(useVoice.getState().transcript).toHaveLength(1);
+      expect(useVoice.getState().transcript).toHaveLength(0);
 
       // listen() com preferredMode === 'agora' e baseUrl configurada deve alternar useApiConfig.mode para 'http'
       expect(useApiConfig.getState().mode).toBe('mock');

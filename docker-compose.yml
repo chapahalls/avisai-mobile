@@ -20,7 +20,9 @@ services:
       - "8081:8081"
     stdin_open: true
     tty: true
-    command: ["npx", "expo", "start", "--dev-client", "--port", "8081"]
+    # O Dev Client baixa o bundle JavaScript do Metro. Limpar o cache ao subir
+    # impede que um bundle antigo continue sendo servido ao aparelho.
+    command: ["npx", "expo", "start", "--dev-client", "--clear", "--port", "8081"]
 
   android-build:
     build:

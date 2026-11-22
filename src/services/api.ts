@@ -5,7 +5,9 @@ import type { ApiClient } from './apiClient';
 import { httpApiClient } from './httpApi';
 import { mockApiClient } from './mockApi';
 
-const DEFAULT_PRESET_URL = 'http://localhost:8000';
+const DEFAULT_PRESET_URL = (
+  process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || 'http://localhost:8000'
+).replace(/\/+$/, '');
 const MAX_RECENT_URLS = 3;
 
 export interface ApiConfigState {
@@ -83,8 +85,18 @@ export function loadPersistedApiConfig(): void {
   }
 
   useApiConfig.setState((s) => ({
-    baseUrl: savedUrl?.trim() ? savedUrl.trim().replace(/\/+$/, '') : s.baseUrl,
-    mode: savedMode === 'http' || savedMode === 'mock' ? savedMode : s.mode,
+    // O build configurado para produção não pode ser desviado silenciosamente por um banco
+    // SQLite antigo que ainda aponta para mock ou para outro computador.
+    baseUrl: ENV.apiBaseUrlConfigured
+      ? ENV.apiBaseUrl
+      : savedUrl?.trim()
+        ? savedUrl.trim().replace(/\/+$/, '')
+        : s.baseUrl,
+    mode: ENV.apiModeConfigured
+      ? ENV.apiMode
+      : savedMode === 'http' || savedMode === 'mock'
+        ? savedMode
+        : s.mode,
     recentUrls,
   }));
 }

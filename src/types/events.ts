@@ -13,7 +13,22 @@ export type EventType =
   | 'TaskEscalated'
   | 'TaskAcknowledged'
   | 'UnloadConfirmed'
-  | 'DocumentQuestionAnswered';
+  | 'DocumentQuestionAnswered'
+  | 'DriverRequestOpened'
+  | 'DriverRequestReminder'
+  | 'DriverRequestAnswered'
+  | 'DriverRequestTimeout'
+  | 'DriverAlert'
+  | 'AgentDecision'
+  | 'DriverMessageSent'
+  | 'DriverMessageSpoken'
+  | 'DriverMessageAnswered'
+  | 'DriverOffline'
+  | 'TwilioCallFailed'
+  | 'AgoraFallbackStarted'
+  | 'AgoraFallbackAnswered'
+  | 'AgentCallNoAnswer'
+  | 'SupervisorEscalated';
 
 export interface DomainEvent<T = Record<string, unknown>> {
   id: string;
@@ -30,6 +45,9 @@ export interface DomainEvent<T = Record<string, unknown>> {
 export const CRITICAL_EVENTS: EventType[] = [
   'ArrivalRegistered',
   'OccurrenceCreated',
+  'DriverRequestOpened',
   'UnloadConfirmed',
   'ReceiverCallResult',
+  'DriverAlert',
+  'SupervisorEscalated',
 ];

@@ -9,6 +9,7 @@ export const REQUIRED_FIELDS: Record<ReportContext, FieldKey[]> = {
   pickup: ['carga', 'caminhao'],
   checkin: ['status_carga', 'avarias', 'ocorrencias'],
   unload: ['descarga'],
+  occurrence: ['problema', 'km', 'br'],
   free: [],
 };
 
@@ -67,6 +68,9 @@ const PATTERNS: Record<FieldKey, RegExp[]> = {
     /unload(ing)? (is )?(done|completed|finished)/,
     /finished unloading/,
   ],
+  problema: [],
+  km: [],
+  br: [],
 };
 
 export function extractFields(context: ReportContext, utterance: string): Partial<Record<FieldKey, string>> {

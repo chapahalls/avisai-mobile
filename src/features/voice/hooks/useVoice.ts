@@ -101,6 +101,11 @@ let activeSession: VoiceSession = initialMockSession;
 let startingAgora = false;
 
 export const useVoice = create<VoiceStore>((set, get) => {
+  const usesDirectVoice = () => {
+    const { activeMode, preferredMode } = get();
+    return activeMode === 'agora' || preferredMode === 'agora';
+  };
+
   const triggerBargeInFeedback = () => {
     clearBargeInTimer();
     hapticBargeIn();
@@ -116,7 +121,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
       set((s) => ({
         state,
         liveTranscript:
-          state === 'interrupted' && s.liveTranscript?.who === 'agent'
+          usesDirectVoice() || (state === 'interrupted' && s.liveTranscript?.who === 'agent')
             ? null
             : s.liveTranscript,
       }));
@@ -125,6 +130,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
       }
     },
     onTranscript: (who, text) => {
+      if (usesDirectVoice()) return;
       set((s) => ({
         transcript: push(s.transcript, who, text),
         liveTranscript: s.liveTranscript?.who === who ? null : s.liveTranscript,
@@ -134,6 +140,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
       }
     },
     onPartialTranscript: (who, text) => {
+      if (usesDirectVoice()) return;
       const clean = text.trim();
       if (!clean) return;
       set({ liveTranscript: { who, text: clean } });
@@ -162,6 +169,16 @@ export const useVoice = create<VoiceStore>((set, get) => {
               : s.agoraChannel,
         ...(stage === 'error' && detail ? { lastError: detail } : {}),
         ...(stage === 'live' || stage === 'waiting_agent' ? { lastError: null } : {}),
+        ...(stage === 'disconnected'
+          ? {
+              sessionConnected: false,
+              muted: false,
+              audioLevel: 0,
+              audioSpeaker: 'none' as AudioSpeaker,
+              liveTranscript: null,
+              state: 'idle' as VoiceState,
+            }
+          : {}),
       }));
     },
     onModeFallback: (reason) =>
@@ -196,6 +213,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
     clearError: () => set({ lastError: null }),
 
     pushTranscript: (who, text) => {
+      if (usesDirectVoice()) return;
       set((s) => ({
         transcript: push(s.transcript, who, text),
         liveTranscript: s.liveTranscript?.who === who ? null : s.liveTranscript,
@@ -339,8 +357,13 @@ export const useVoice = create<VoiceStore>((set, get) => {
         const latency = Date.now() - started;
         set({ collected: turn.collected, lastLatencyMs: latency });
 
+        if (turn.startOccurrence) {
+          set({ context: 'occurrence', collected: {} });
+        }
+
         if (turn.occurrence) {
-          agentBus.emit('voice:occurrence', { text: turn.occurrence });
+          agentBus.emit('voice:occurrence', turn.occurrence);
+          set({ context: 'free', collected: {} });
         }
 
         if (turn.documentAnswer) {
@@ -516,12 +539,8 @@ export function wireVoiceToBus() {
   const offSay = agentBus.on('agent:say', ({ text }) => {
     const v = useVoice.getState();
     // Em modo Agora (tempo real), nunca reproduz TTS local (expo-speech).
-    // Se a sessão estiver conectada, o áudio e a transcrição vêm do agente na Agora;
-    // se desconectada, apenas registra no histórico visual sem disparar TTS sintético.
+    // O áudio vem exclusivamente do agente no RTC; o app não armazena legendas.
     if (v.preferredMode === 'agora' || v.activeMode === 'agora') {
-      if (!v.sessionConnected && text) {
-        v.pushTranscript('agent', text);
-      }
       return;
     }
     v.say(text);

@@ -68,7 +68,8 @@
       "openDocuments": "Comando de voz: Abrindo Documentos",
       "openOutbox": "Comando de voz: Abrindo Fila",
       "backToTrip": "Comando de voz: Voltando para Viagem",
-      "startTrip": "Comando de voz: Viagem iniciada"
+      "startTrip": "Comando de voz: Viagem iniciada",
+      "startGps": "Comando de voz: GPS ativado"
     }
   },
   "trip": {
@@ -192,9 +193,11 @@
     "talk": "Falar",
     "listening": "Ouvindo",
     "interrupt": "Interromper",
-    "privacyBadge": "Somente transcrição · sem gravação de áudio",
+    "privacyBadge": "Voz direta · sem gravação de áudio",
     "emptyTitle": "Copiloto de voz pronto",
     "emptyHint": "Toque no microfone abaixo para falar com o AvisAI ou relatar ocorrências.",
+    "directVoiceTitle": "Voz direta ativa",
+    "directVoiceHint": "Diga “AvisAI” antes do comando. Para sair: “AvisAI, encerrar sessão”.",
     "agentTag": "AvisAI",
     "driverTag": "Você",
     "liveStreamingTag": "ao vivo",
@@ -202,7 +205,7 @@
     "bargeInBanner": "⚡ Interrompido · ouvindo você",
     "tapToSpeakHint": "Toque para falar com o agente",
     "selectQuickHint": "Escolha uma fala simulada abaixo ou toque para cancelar",
-    "agoraLiveHint": "Sessão Agora ativa · fale livremente ou toque para mudo",
+    "agoraLiveHint": "Sessão GPT-Live ativa · fale livremente ou toque para mudo",
     "unmuteHint": "Microfone em mudo · toque para ativar",
     "muted": "Mudo",
     "muteButton": "Mudo",
@@ -216,7 +219,8 @@
     "cabinMode": {
       "openButton": "Modo Cabine",
       "exitButton": "Sair do Modo Cabine",
-      "lastAgentSpeech": "AvisAI · Última fala"
+      "lastAgentSpeech": "AvisAI · Última fala",
+      "directVoice": "AvisAI · Voz direta"
     },
     "activeBar": {
       "agentSpeaking": "AvisAI falando",
@@ -234,7 +238,7 @@
     "agoraWaitingAgent": "Aguardando agente…",
     "agoraWaitingAgentHint": "Canal conectado · aguardando agente (9001)…",
     "modePill": {
-      "agoraLive": "Agora Live",
+      "agoraLive": "GPT-Live",
       "agoraWaitingAgent": "Aguardando agente (9001)…",
       "agoraDisconnected": "Agora · Desconectado",
       "mock": "Voz Simulada"
@@ -262,7 +266,13 @@
         "unload": "Descarga registrada. Estadia encerrada e enviada ao CCO.",
         "free": ""
       },
-      "occurrenceRecorded": "Entendi, registrei a ocorrência e avisei o CCO.",
+    "occurrenceRecorded": "Entendi, registrei a ocorrência e avisei o CCO.",
+    "occurrenceStart": "Claro. Qual é o problema? Depois me diga o km e em qual BR você está.",
+    "occurrenceAsk": {
+      "problema": "Qual é o problema?",
+      "km": "Em qual km aconteceu?",
+      "br": "Em qual BR você está?"
+    },
       "returningToTopic": " Voltando: {{question}}",
       "freePrompt": "Estou aqui. Pode falar de uma ocorrência ou perguntar sobre a nota.",
       "gotItPrefix": "Anotado. ",
@@ -274,6 +284,11 @@
     "hint": "Pergunte por voz: “qual o peso da nota?”",
     "viewer": "Documento",
     "mockNotice": "Visualizador simulado (PDF fictício).",
+    "realFileReady": "Anexo real da rota pronto para abrir",
+    "realFileNotice": "Este é um anexo real vinculado à rota. Abra-o no visualizador do dispositivo.",
+    "openRealFileButton": "Abrir arquivo",
+    "openFileErrorTitle": "Não foi possível abrir o arquivo",
+    "openFileError": "Verifique sua conexão e se há um aplicativo compatível instalado.",
     "page": "Página {{n}} de {{total}}",
     "extractedFields": "{{count}} campos extraídos",
     "countBadge": "{{count}} docs",
@@ -285,6 +300,7 @@
     "answerByField": "Pela {{title}}: {{field}} {{value}}.",
     "answerByChunk": "Achei na {{title}}: {{excerpt}}",
     "notFound": "Não encontrei isso nos documentos da viagem.",
+    "listAnswer": "Os documentos disponíveis são: {{documents}}.",
     "fieldLabels": {
       "peso": "peso",
       "peso_kg": "peso",
@@ -301,7 +317,10 @@
       "origem": "origem",
       "destino": "destino",
       "placa": "placa",
-      "janela": "janela"
+      "janela": "janela",
+      "arquivo": "arquivo",
+      "tipo": "tipo",
+      "descricao": "descrição"
     }
   },
   "outbox": {

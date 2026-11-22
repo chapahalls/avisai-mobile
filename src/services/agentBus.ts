@@ -20,7 +20,12 @@ type Events = {
     collected: Partial<Record<FieldKey, string>>;
     utterance: string;
   };
-  'voice:occurrence': { text: string };
+  'voice:occurrence': {
+    text: string;
+    descricao: string;
+    km: number | null;
+    rodovia: string | null;
+  };
   'voice:document_answered': {
     question: string;
     answer: string;

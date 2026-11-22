@@ -13,6 +13,7 @@ export type StatusRota =
   | 'no_destino'
   | 'descarregada';
 export type StatusLigacao = 'chamando' | 'em_andamento' | 'respondida' | 'nao_atendida' | 'falhou';
+export type StatusChamadoCCO = 'coletando' | 'aguardando_cco' | 'respondido' | 'timeout';
 
 export type TipoEvento =
   | 'sessao_iniciada'
@@ -44,7 +45,22 @@ export type TipoEvento =
   | 'divergencia_gps'
   | 'rota_publicada'
   | 'rota_atribuida'
-  | 'pergunta_documento';
+  | 'pergunta_documento'
+  | 'chamado_cco_aberto'
+  | 'chamado_cco_lembrete'
+  | 'chamado_cco_respondido'
+  | 'chamado_cco_timeout'
+  | 'alerta_motorista'
+  | 'decisao_agente'
+  | 'mensagem_motorista_enviada'
+  | 'mensagem_motorista_falada'
+  | 'mensagem_motorista_respondida'
+  | 'motorista_offline'
+  | 'chamada_twilio_falhou'
+  | 'chamada_agora_iniciada'
+  | 'chamada_agora_atendida'
+  | 'chamada_sem_resposta'
+  | 'escalada_supervisor';
 
 export interface Sessao {
   id: number;
@@ -154,6 +170,28 @@ export interface Snapshot {
   ligacoes: Ligacao[];
   ocorrencias: { id: number; rota_id: number; tipo: string; descricao: string; timestamp: string }[];
   eventos: EventoStream[];
+  chamados?: ChamadoCCO[];
+}
+
+export interface ChamadoCCO {
+  id: number;
+  rota_id: number;
+  tipo: string;
+  assunto: string;
+  descricao: string;
+  km: number | null;
+  rodovia: string | null;
+  ocorrencia_id: number | null;
+  status: StatusChamadoCCO;
+  tentativas: number;
+  max_tentativas: number;
+  intervalo_s: number;
+  criada_em: string;
+  ultima_notificacao: string | null;
+  respondida_em: string | null;
+  resposta: string | null;
+  respondido_por: string | null;
+  transcricao: string | null;
 }
 
 export interface PosicaoOut {
@@ -209,6 +247,20 @@ export interface ApiDocumentResponse {
   mock: boolean;
 }
 
+/** Anexo real vinculado à rota, retornado por GET /rotas/{rota_id}/arquivos. */
+export interface ApiRouteFile {
+  id: number;
+  rota_id: number;
+  nome_original: string;
+  tipo_mime: string;
+  tamanho_bytes: number;
+  categoria: 'documento' | 'nota_fiscal' | 'comprovante' | 'imagem' | 'outro';
+  descricao: string | null;
+  criado_em: string;
+  /** Caminho relativo (ou URL absoluta) para baixar/abrir o anexo. */
+  url_download: string;
+}
+
 export interface SolicitacaoCentral {
   id: number;
   rota_id: number;
@@ -253,9 +305,18 @@ export interface MensagensStream {
     eta_min: number;
     status: StatusRota;
   };
-  fala: { rota_id: number; papel: 'motorista' | 'recebedor'; texto: string };
+  fala: { rota_id: number; papel: 'motorista' | 'recebedor' | 'operador'; texto: string };
+  /**
+   * Ação explicitamente autorizada pelo backend para o dispositivo.
+   * Não carrega nem depende da transcrição de voz no cliente.
+   */
+  acao_cliente: {
+    rota_id: number;
+    acao: 'open_documents' | 'open_map' | 'start_gps' | 'start_trip';
+  };
   contador: { estadias: Estadia[] };
   reset: { rota_id: number };
+  chamado: { chamado: ChamadoCCO };
 }
 
 export type CanalStream = keyof MensagensStream;
@@ -265,8 +326,10 @@ export const CANAIS: CanalStream[] = [
   'task',
   'posicao',
   'fala',
+  'acao_cliente',
   'contador',
   'reset',
+  'chamado',
 ];
 
 /** UIDs fixos (README > Canais e UIDs). */

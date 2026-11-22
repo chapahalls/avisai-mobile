@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getApiClient, useApiConfig } from '../../../services/api';
-import type { ApiDocumentResponse } from '../../../types/backend';
+import type { ApiDocumentResponse, ApiRouteFile } from '../../../types/backend';
 import { brl } from '../../../utils/format';
 import { DOCUMENTS } from '../api/documents.mock';
 import type { TripDocument } from '../types';
@@ -63,6 +63,26 @@ export function apiDocumentToTripDocument(apiDoc: ApiDocumentResponse): TripDocu
   };
 }
 
+export function apiRouteFileToTripDocument(file: ApiRouteFile): TripDocument {
+  const fields: Record<string, string> = {
+    arquivo: file.nome_original,
+    tipo: file.tipo_mime,
+  };
+  if (file.descricao?.trim()) fields.descricao = file.descricao.trim();
+
+  return {
+    id: `arquivo-${file.id}`,
+    kind: 'Arquivo',
+    title: file.nome_original,
+    fields,
+    pages: [],
+    fileUrl: file.url_download,
+    mimeType: file.tipo_mime,
+    description: file.descricao,
+    realFile: true,
+  };
+}
+
 interface DocumentsState {
   documents: TripDocument[];
   loading: boolean;
@@ -77,12 +97,22 @@ export const useDocuments = create<DocumentsState>((set) => ({
   lastSyncedAt: null,
   syncFromBackend: async (tripId?: string) => {
     const { rotaId } = useApiConfig.getState();
+    const targetRotaId = Number(String(tripId ?? rotaId).replace(/^rota-|^trip-/, '')) || rotaId;
     set({ loading: true });
     try {
-      const apiDocs = await getApiClient().getDocuments(tripId ?? String(rotaId));
-      if (Array.isArray(apiDocs) && apiDocs.length > 0) {
+      const [apiDocsResult, routeFilesResult] = await Promise.allSettled([
+        getApiClient().getDocuments(tripId ?? String(rotaId)),
+        getApiClient().getRouteFiles(targetRotaId),
+      ]);
+      const apiDocs = apiDocsResult.status === 'fulfilled' ? apiDocsResult.value : [];
+      const routeFiles = routeFilesResult.status === 'fulfilled' ? routeFilesResult.value : [];
+      const nextDocuments = [
+        ...(Array.isArray(routeFiles) ? routeFiles.map(apiRouteFileToTripDocument) : []),
+        ...(Array.isArray(apiDocs) ? apiDocs.map(apiDocumentToTripDocument) : []),
+      ];
+      if (nextDocuments.length > 0) {
         set({
-          documents: apiDocs.map(apiDocumentToTripDocument),
+          documents: nextDocuments,
           lastSyncedAt: new Date().toISOString(),
           loading: false,
         });

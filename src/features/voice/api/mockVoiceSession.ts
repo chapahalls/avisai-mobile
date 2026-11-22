@@ -25,7 +25,7 @@ const noopCallbacks: VoiceSessionCallbacks = {
  * - Usa `expo-speech` para síntese de voz (TTS) em `pt-BR` ou `en-US`.
  * - Cancela todos os timers em `interrupt()` e `stop()` para evitar race conditions.
  * - Aguarda `await Speech.stop()` antes de `Speech.speak()` e trata `onError` para nunca travar em `speaking`.
- * - Somente transcrição (`VOICE_PRIVACY.transcriptionOnly === true`, `recordAudio === false`).
+ * - Não grava áudio bruto.
  */
 export class MockVoiceSession implements VoiceSession {
   readonly mode = 'mock' as const;

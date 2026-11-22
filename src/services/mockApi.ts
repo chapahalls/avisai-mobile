@@ -3,6 +3,7 @@ import { ROUTE } from '../features/trip/api/route.mock';
 import {
   UID,
   type ApiDocumentResponse,
+  type ApiRouteFile,
   type ApiRouteResponse,
   type DemoProfile,
   type PosicaoOut,
@@ -444,6 +445,11 @@ export async function getDocuments(tripId?: string): Promise<ApiDocumentResponse
   ];
 }
 
+export async function getRouteFiles(_rotaId = 1): Promise<ApiRouteFile[]> {
+  await sleep(60);
+  return [];
+}
+
 export async function getCentralRequests(_rotaId = 1): Promise<SolicitacaoCentral[]> {
   await sleep(60);
   return [];
@@ -570,6 +576,7 @@ export const mockApiClient: ApiClient = {
   getRoute,
   getAssignedRoute,
   getDocuments,
+  getRouteFiles,
   getCentralRequests,
   sendPosition,
   registerArrival,
