@@ -1,14 +1,34 @@
+import type { FieldKey, ReportContext } from '../features/report';
+
 /**
  * Barramento simples entre features (evita import circular trip ↔ voice).
- * - 'agent:say'      → o agente fala algo por iniciativa própria (aviso só de ida).
- * - 'agent:context'  → muda o que o agente espera ouvir (retirada, check-in, descarga).
- * - 'voice:completed'→ o agente terminou de coletar os campos de um contexto.
+ * - 'agent:say'              → o agente fala algo por iniciativa própria (aviso só de ida).
+ * - 'agent:context'          → muda o que o agente espera ouvir (retirada, check-in, descarga).
+ * - 'voice:completed'        → o agente terminou de coletar os campos de um contexto.
+ * - 'voice:field_missing'    → o motorista falou mas faltou campo obrigatório no contexto atual.
+ * - 'voice:occurrence'       → o motorista relatou uma ocorrência em rota.
+ * - 'voice:document_answered'→ o agente respondeu uma dúvida sobre documentos da viagem.
+ * - 'voice:reset'            → reinicia o estado de voz ao resetar a viagem.
  */
 type Events = {
   'agent:say': { text: string };
-  'agent:context': { context: import('../features/report/types').ReportContext };
-  'voice:completed': { context: import('../features/report/types').ReportContext; fields: Record<string, string> };
+  'agent:context': { context: ReportContext };
+  'voice:completed': { context: ReportContext; fields: Record<string, string> };
+  'voice:field_missing': {
+    context: ReportContext;
+    missing: FieldKey[];
+    collected: Partial<Record<FieldKey, string>>;
+    utterance: string;
+  };
   'voice:occurrence': { text: string };
+  'voice:document_answered': {
+    question: string;
+    answer: string;
+    documentId?: string;
+    field?: string;
+    found: boolean;
+  };
+  'voice:reset': Record<string, never>;
 };
 
 type Handler<T> = (p: T) => void;

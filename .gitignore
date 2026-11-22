@@ -2,7 +2,13 @@ node_modules/
 .expo/
 dist/
 web-build/
+build/
 *.log
+*.apk
+*.aab
+*.keystore
+*.jks
+google-services.json
 .env
 .env.*
 !.env.example

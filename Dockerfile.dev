@@ -1,0 +1,17 @@
+FROM node:20-bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    ca-certificates \
+    curl \
+    git \
+    procps \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+EXPOSE 8081
+
+CMD ["npx", "expo", "start", "--dev-client", "--port", "8081"]

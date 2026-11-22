@@ -1,23 +1,151 @@
 {
+  "brand": {
+    "name": "AvisAI",
+    "poweredBy": "Voice AI · Powered by Agora"
+  },
+  "lang": {
+    "label": "Idioma",
+    "ptBR": "PT-BR",
+    "en": "EN",
+    "ptShort": "PT",
+    "enShort": "EN"
+  },
   "auth": {
     "title": "Entre para ver sua rota",
     "subtitle": "O agente avisa o recebedor, conta a espera e prova cada hora parada.",
     "sso": "Entrar com SSO",
+    "ssoAs": "Entrar como {{name}}",
     "loading": "Entrando…",
     "mockNotice": "SSO simulado para a demo.",
-    "logout": "Sair"
+    "logout": "Sair",
+    "profileSwitcher": {
+      "title": "Escolha o perfil de motorista (3 opções)",
+      "selectedBadge": "Selecionado",
+      "tripTag": "Rota #{{id}}",
+      "noTrip": "Sem rota ativa"
+    },
+    "confirmLogout": {
+      "title": "Sair da conta?",
+      "message": "Você voltará para a tela de login SSO.",
+      "cancel": "Cancelar",
+      "confirm": "Sair"
+    },
+    "demoDriverName": "Carlos Andrade",
+    "demoCompanyName": "Transportadora Rota Sul",
+    "pillars": {
+      "voiceTitle": "Voz em tempo real",
+      "voiceDesc": "Check-in e ocorrências sem tirar a mão do volante",
+      "receiverTitle": "Aviso prévio ao recebedor",
+      "receiverDesc": "Ligação automática aos 8 km para confirmar doca e horário",
+      "stayTitle": "Prova de estadia",
+      "stayDesc": "Cronômetro legal, escalonamento ao CCO e cálculo em R$"
+    }
   },
   "tabs": {
     "trip": "Viagem",
+    "map": "Mapa",
     "documents": "Documentos",
     "outbox": "Fila"
+  },
+  "map": {
+    "title": "Mapa da Rota",
+    "geofenceBadge": "Geocerca {{meters}} m · Aviso {{km}} km",
+    "talkToAvisai": "Falar com AvisAI",
+    "etaShort": "ETA ~{{min}} min",
+    "speedLabel": "{{kmh}} km/h",
+    "focusTruck": "Caminhão",
+    "fitRoute": "Rota"
+  },
+  "headsUp": {
+    "receiverConfirmedTitle": "Recebedor confirmou doca!",
+    "receiverAlertTitle": "Alerta do Recebimento"
+  },
+  "voiceCommands": {
+    "toast": {
+      "openMap": "Comando de voz: Abrindo Mapa",
+      "openNfe": "Comando de voz: Abrindo NF-e",
+      "openCte": "Comando de voz: Abrindo CT-e",
+      "openDocuments": "Comando de voz: Abrindo Documentos",
+      "openOutbox": "Comando de voz: Abrindo Fila",
+      "backToTrip": "Comando de voz: Voltando para Viagem",
+      "startTrip": "Comando de voz: Viagem iniciada"
+    }
   },
   "trip": {
     "start": "Iniciar viagem",
     "restart": "Nova viagem",
-    "mapMock": "mapa simulado",
+    "viewMapShortcut": "Ver mapa →",
+    "mapMock": "Mapa simulado (SVG)",
+    "mapGoogle": "Google Maps",
     "left": "Faltam {{km}} km",
     "receiver": "Recebedor:",
+    "ccoOperatorMock": "Operador CCO (mock)",
+    "receiverEscalationEta": "em 40 minutos",
+    "demoButton": "Demo",
+    "originLabel": "Origem",
+    "destinationLabel": "Destino",
+    "totalDistanceLabel": "Distância total",
+    "totalDistanceValue": "{{km}} km",
+    "plateLabel": "Veículo",
+    "routeSummaryTitle": "Resumo da rota do dia",
+    "routeSummarySubtitle": "Inicie a viagem para ativar o copiloto de voz e o monitoramento de geocerca.",
+    "routeAssignedBanner": {
+      "title": "Nova rota atribuída pela transportadora",
+      "defaultMessage": "Sua rota atual foi atualizada pelo CCO.",
+      "dismiss": "OK"
+    },
+    "centralRequest": {
+      "title": "Pergunta da Central (CCO)",
+      "answeredTitle": "Resposta enviada à Central",
+      "voiceHint": "Responda por voz ao AvisAI",
+      "dismiss": "Fechar"
+    },
+    "gpsDivergence": {
+      "title": "Divergência de GPS detectada (R6)",
+      "dismiss": "Dispensar"
+    },
+    "confirmReset": {
+      "title": "Iniciar nova viagem?",
+      "message": "Isso limpará a linha do tempo e o cronômetro da viagem atual.",
+      "cancel": "Cancelar",
+      "confirm": "Reiniciar"
+    },
+    "quickActions": {
+      "label": "Ações rápidas na cabine (1 toque):",
+      "arrived": "Cheguei",
+      "reportQueue": "Reportar fila / doca",
+      "unloaded": "Descarreguei",
+      "queueReportText": "Fila na portaria / aguardando liberação de doca"
+    },
+    "timeline": {
+      "title": "Prova da Espera ({{count}} eventos)",
+      "routeAssigned": "Rota atribuída: {{origin}} → {{destination}}",
+      "pickupDetected": "Entrada na geocerca de origem",
+      "pickupConfirmed": "Retirada confirmada pelo motorista",
+      "approachDetected": "Aproximação detectada ({{km}} km)",
+      "receiverCalling": "Ligação automática ao recebedor iniciada",
+      "receiverConfirmed": "Recebedor confirmou: doca {{dock}}, {{time}}",
+      "receiverNotToday": "Recebedor informou que não recebe hoje",
+      "receiverNoAnswer": "Recebedor não atendeu (registrado como prova)",
+      "geofenceEntered": "Entrada na geocerca do destino (300 m)",
+      "arrivalConfirmed": "Chegada confirmada (GPS + Voz) · estadia iniciada",
+      "ccoTaskCreated": "Task aberta no painel do CCO",
+      "ccoEscalated": "Escalonamento CCO {{n}}/{{max}} ({{channel}})",
+      "ccoAcknowledged": "CCO assumiu o atendimento",
+      "escalationCallingReceiver": "3/3 sem resposta do CCO · ligando ao recebedor",
+      "centralQuestion": "Pergunta do CCO: “{{question}}”",
+      "centralAnswered": "Resposta enviada ao CCO: “{{answer}}”",
+      "documentQueried": "Consulta por voz ao documento ({{doc}})",
+      "occurrenceReported": "Ocorrência registrada: {{text}}",
+      "unloadCompleted": "Descarga concluída · estadia encerrada"
+    },
+    "steps": {
+      "pickup": "Retirada",
+      "driving": "Rota",
+      "approaching": "8 km",
+      "arrived": "Chegada",
+      "unloaded": "Descarga"
+    },
     "phase": {
       "idle": "Pronto para sair",
       "pickup": "Na origem",
@@ -33,6 +161,15 @@
       "confirmed": "doca {{dock}}, {{time}}",
       "not_today": "não recebe hoje",
       "no_answer": "não atendeu"
+    },
+    "voice": {
+      "originPrompt": "Você está no CD de origem. Confirma a retirada e me diz como está o caminhão?",
+      "arrivedPrompt": "Chegou no destino. Me conta: como está a carga, teve avaria ou ocorrência?",
+      "receiverConfirmed": "O recebimento confirmou: doca {{dock}}, {{time}}.",
+      "receiverNotToday": "O recebimento disse que não recebe hoje. Avisei o CCO; siga a orientação da transportadora.",
+      "receiverNoAnswer": "O recebimento não atendeu. Registrei a tentativa como prova e avisei o CCO.",
+      "ccoAcknowledged": "O CCO assumiu o seu caso e está falando com o recebimento.",
+      "ccoNoResponseCallingReceiver": "O CCO não respondeu em {{max}} tentativas. Estou ligando para o recebimento."
     }
   },
   "stay": {
@@ -40,19 +177,96 @@
     "value": "Estadia acumulada: {{value}}",
     "franchiseLeft": "Franquia restante: {{left}}",
     "ccoAck": "CCO assumiu o caso",
-    "ccoAttempts": "Avisos ao CCO: {{n}}/{{max}}"
+    "ccoAttempts": "Avisos ao CCO: {{n}}/{{max}}",
+    "unloadedBadge": "Descarga concluída · estadia encerrada",
+    "franchiseBarLabel": "Franquia legal ({{hours}}h)",
+    "franchiseExceeded": "Franquia excedida",
+    "channels": {
+      "push": "1 Push",
+      "painel": "2 Painel",
+      "ligacao": "3 Ligação"
+    }
   },
   "voice": {
     "title": "Agente",
     "talk": "Falar",
     "listening": "Ouvindo",
     "interrupt": "Interromper",
+    "privacyBadge": "Somente transcrição · sem gravação de áudio",
+    "emptyTitle": "Copiloto de voz pronto",
+    "emptyHint": "Toque no microfone abaixo para falar com o AvisAI ou relatar ocorrências.",
+    "agentTag": "AvisAI",
+    "driverTag": "Você",
+    "liveStreamingTag": "ao vivo",
+    "bargeInHint": "Toque para interromper o agente (barge-in)",
+    "bargeInBanner": "⚡ Interrompido · ouvindo você",
+    "tapToSpeakHint": "Toque para falar com o agente",
+    "selectQuickHint": "Escolha uma fala simulada abaixo ou toque para cancelar",
+    "agoraLiveHint": "Sessão Agora ativa · fale livremente ou toque para mudo",
+    "unmuteHint": "Microfone em mudo · toque para ativar",
+    "muted": "Mudo",
+    "muteButton": "Mudo",
+    "unmuteButton": "Ativar microfone",
+    "endSessionButton": "Encerrar sessão",
+    "audioRoute": {
+      "speaker": "Viva-voz",
+      "bluetooth": "Bluetooth",
+      "headset": "Fone"
+    },
+    "cabinMode": {
+      "openButton": "Modo Cabine",
+      "exitButton": "Sair do Modo Cabine",
+      "lastAgentSpeech": "AvisAI · Última fala"
+    },
+    "activeBar": {
+      "agentSpeaking": "AvisAI falando",
+      "agoraMuted": "Agora · Mudo",
+      "listening": "Ouvindo você",
+      "goToVoice": "Ir p/ Voz",
+      "endShort": "Encerrar"
+    },
+    "useAgoraButton": "Usar Agora",
+    "configureBackendButton": "Configurar Backend",
+    "connectAgora": "Conectar Agora",
+    "connectAgoraHint": "Toque para entrar no canal de voz",
+    "agoraConnecting": "Conectando…",
+    "agoraConnectingHint": "Criando sessão de voz no backend…",
+    "agoraWaitingAgent": "Aguardando agente…",
+    "agoraWaitingAgentHint": "Canal conectado · aguardando agente (9001)…",
+    "modePill": {
+      "agoraLive": "Agora Live",
+      "agoraWaitingAgent": "Aguardando agente (9001)…",
+      "agoraDisconnected": "Agora · Desconectado",
+      "mock": "Voz Simulada"
+    },
+    "quickPromptsLabel": "Falas rápidas (simulação):",
     "state": {
       "idle": "pronto",
       "listening": "ouvindo",
       "thinking": "pensando",
       "speaking": "falando",
       "interrupted": "interrompido"
+    },
+    "agent": {
+      "ask": {
+        "carga": "Você já pegou a carga?",
+        "caminhao": "E o caminhão, tudo certo?",
+        "status_carga": "Como está a carga?",
+        "avarias": "Teve alguma avaria?",
+        "ocorrencias": "E na viagem, alguma ocorrência?",
+        "descarga": "A descarga terminou?"
+      },
+      "done": {
+        "pickup": "Retirada confirmada e relatório enviado ao CCO. Boa viagem.",
+        "checkin": "Check-in feito. Avisei o CCO e o contador de espera começou.",
+        "unload": "Descarga registrada. Estadia encerrada e enviada ao CCO.",
+        "free": ""
+      },
+      "occurrenceRecorded": "Entendi, registrei a ocorrência e avisei o CCO.",
+      "returningToTopic": " Voltando: {{question}}",
+      "freePrompt": "Estou aqui. Pode falar de uma ocorrência ou perguntar sobre a nota.",
+      "gotItPrefix": "Anotado. ",
+      "didNotCatchPrefix": "Não peguei essa. "
     }
   },
   "documents": {
@@ -60,14 +274,49 @@
     "hint": "Pergunte por voz: “qual o peso da nota?”",
     "viewer": "Documento",
     "mockNotice": "Visualizador simulado (PDF fictício).",
-    "page": "Página {{n}} de {{total}}"
+    "page": "Página {{n}} de {{total}}",
+    "extractedFields": "{{count}} campos extraídos",
+    "countBadge": "{{count}} docs",
+    "verifiedTitle": "Campos verificados (anti-alucinação)",
+    "verifiedSubtitle": "O agente de voz responde exclusivamente com base nestes dados extraídos.",
+    "openDoc": "Abrir",
+    "askAboutDocumentButton": "Perguntar ao AvisAI sobre este documento",
+    "askPromptForDoc": "Estou com a {{title}} aberta. O que você quer saber sobre este documento?",
+    "answerByField": "Pela {{title}}: {{field}} {{value}}.",
+    "answerByChunk": "Achei na {{title}}: {{excerpt}}",
+    "notFound": "Não encontrei isso nos documentos da viagem.",
+    "fieldLabels": {
+      "peso": "peso",
+      "peso_kg": "peso",
+      "valor": "valor",
+      "numero": "número",
+      "emitente": "emitente",
+      "destinatario": "destinatário",
+      "produto": "produto",
+      "itens": "itens",
+      "chave": "chave",
+      "frete": "frete",
+      "nfe_referenciada": "NF-e ref.",
+      "transportadora": "transportadora",
+      "origem": "origem",
+      "destino": "destino",
+      "placa": "placa",
+      "janela": "janela"
+    }
   },
   "outbox": {
     "title": "Fila de envio",
     "hint": "Tudo o que o app manda passa por aqui. Sem rede, espera e reenvia sem duplicar.",
     "empty": "Nada na fila.",
+    "emptyHint": "Os eventos da viagem aparecerão aqui com garantia de entrega offline-first.",
     "attempts": "{{n}} tentativas",
     "retry": "Tentar de novo os que falharam",
+    "idempotencyPrefix": "ID",
+    "metrics": {
+      "sent": "Enviados",
+      "pending": "Na fila",
+      "failed": "Falhas"
+    },
     "status": {
       "pending": "na fila",
       "sending": "enviando",
@@ -83,13 +332,61 @@
   },
   "demo": {
     "title": "Controles da demo (simulação)",
+    "close": "Fechar",
+    "simBadge": "SIMULAÇÃO E8",
+    "networkSection": "Condição de rede",
+    "timeAndRouteSection": "Avanço rápido de rota e estadia",
+    "adaptersSection": "Adaptadores de execução",
     "net": {
       "real": "Rede real",
       "weak": "Rede fraca",
       "offline": "Sem rede"
     },
     "ccoResponds": "CCO responde na 2ª tentativa",
-    "skipHour": "+1 h no relógio"
+    "skipHour": "+1 h",
+    "jumpApproach": "Ir p/ Aproximação (8 km)",
+    "jumpArrival": "Ir p/ Chegada",
+    "voiceModeLabel": "Voz:",
+    "voiceMock": "Mock",
+    "voiceAgora": "Agora",
+    "mapModeLabel": "Mapa:",
+    "mapAuto": "Auto",
+    "mapSvg": "SVG",
+    "apiModeLabel": "API:",
+    "apiMock": "Mock",
+    "apiHttp": "Backend",
+    "backendAndAgoraSection": "Conexão Backend & Voz Agora",
+    "backendUrlLabel": "URL do Backend (Lucas)",
+    "backendUrlPlaceholder": "https://xxxx.trycloudflare.com ou http://localhost:8000",
+    "urlPresetsLabel": "Presets:",
+    "deviceGpsToggle": "GPS Real do Celular",
+    "deviceGpsHint": "Envia localização real (fonte: celular) para POST /rotas/{id}/posicao",
+    "connectBackendAndAgora": "Conectar Backend + Voz Agora",
+    "connectingBackendAndAgora": "Conectando Backend + Agora…",
+    "comboReadyStatus": "Online · WS conectado · Agora pronto!",
+    "backendPipelineStatus": "LLM: {{mode}} · {{upstream}}",
+    "llmUpstreamOk": "Upstream OK",
+    "llmContingency": "Contingência",
+    "agoraNotConfiguredWarning": "Aviso: backend sem credenciais da Agora (AGORA_APP_ID / AGORA_APP_CERTIFICATE).",
+    "testHealthButton": "Testar",
+    "testingHealth": "Testando…",
+    "healthOnline": "Online",
+    "healthError": "Offline ({{error}})",
+    "wsStatus": {
+      "connected": "WS conectado",
+      "connecting": "WS conectando…",
+      "disconnected": "WS desconectado"
+    },
+    "resetBackendRoute": "Resetar rota no backend",
+    "resettingBackendRoute": "Resetando…",
+    "fallback": {
+      "agora_native_unavailable": "Fallback Mock: módulo nativo Agora indisponível neste build",
+      "agora_requires_http_api": "Fallback Mock: Agora requer API HTTP (agent-server)",
+      "agora_backend_unreachable": "Fallback Mock: agent-server indisponível para iniciar sessão Agora",
+      "agora_permission_denied": "Fallback Mock: permissão de microfone negada",
+      "maps_no_key": "Fallback SVG: GOOGLE_MAPS_API_KEY_ANDROID não configurada",
+      "maps_native_unavailable": "Fallback SVG: módulo nativo Google Maps indisponível"
+    }
   },
   "events": {
     "RouteAssigned": "Rota recebida",

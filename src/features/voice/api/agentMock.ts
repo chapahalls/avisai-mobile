@@ -1,32 +1,45 @@
+import i18n, { getCurrentLanguage, type AppLanguage } from '../../../lib/i18n';
 import { normalize } from '../../../utils/text';
 import { extractFields, missingFields, type FieldKey, type ReportContext } from '../../report';
-import { answerDocumentQuestion } from '../../documents';
+import { answerDocumentQuestionWithMeta } from '../../documents';
 
 /**
- * Agente mock: decide a resposta a partir do contexto e do que já foi coletado.
+ * Agente mock bilíngue (pt-BR e en): decide a resposta a partir do contexto e do que já foi coletado.
  * Na versão real, este papel é do LLM no Conversational AI Engine da Agora, com o mesmo prompt.
  */
-const ASK: Record<FieldKey, string> = {
-  carga: 'Você já pegou a carga?',
-  caminhao: 'E o caminhão, tudo certo?',
-  status_carga: 'Como está a carga?',
-  avarias: 'Teve alguma avaria?',
-  ocorrencias: 'E na viagem, alguma ocorrência?',
-  descarga: 'A descarga terminou?',
-};
-
-const DONE: Record<ReportContext, string> = {
-  pickup: 'Retirada confirmada e relatório enviado ao CCO. Boa viagem.',
-  checkin: 'Check-in feito. Avisei o CCO e o contador de espera começou.',
-  unload: 'Descarga registrada. Estadia encerrada e enviada ao CCO.',
-  free: '',
-};
 
 export interface AgentTurn {
   reply: string;
   collected: Partial<Record<FieldKey, string>>;
   completed: boolean;
+  missingFields?: FieldKey[];
   occurrence?: string;
+  documentAnswer?: {
+    question: string;
+    answer: string;
+    documentId?: string;
+    field?: string;
+    found: boolean;
+  };
+}
+
+const OCCURRENCE_RE =
+  /(acidente|bloqueio|pneu|fiscalizacao|roubo|interdicao|accident|roadblock|flat tire|inspection|theft|crash|hazard)/;
+
+const DOCUMENT_RE =
+  /(nota|nf|nfe|nf-e|ct-?e|peso|valor|destinatario|documento|invoice|weight|value|amount|recipient|document)/;
+
+function askQuestion(field: FieldKey): string {
+  return i18n.t(`voice.agent.ask.${field}`);
+}
+
+function doneMessage(context: ReportContext): string {
+  return i18n.t(`voice.agent.done.${context}`);
+}
+
+function nextQuestion(context: ReportContext, collected: Partial<Record<FieldKey, string>>): string | undefined {
+  const m = missingFields(context, collected);
+  return m.length ? askQuestion(m[0]) : undefined;
 }
 
 export function agentRespond(
@@ -37,42 +50,104 @@ export function agentRespond(
   const text = normalize(utterance);
 
   // Ocorrência a qualquer momento: registra e volta ao assunto.
-  if (/(acidente|bloqueio|pneu|fiscalizacao|roubo)/.test(text)) {
+  if (OCCURRENCE_RE.test(text)) {
+    const nextQ = context !== 'free' ? nextQuestion(context, collected) : undefined;
+    const suffix = nextQ ? i18n.t('voice.agent.returningToTopic', { question: nextQ }) : '';
     return {
-      reply: 'Entendi, registrei a ocorrência e avisei o CCO.' + (context !== 'free' ? ' Voltando: ' + (nextQuestion(context, collected) ?? '') : ''),
+      reply: i18n.t('voice.agent.occurrenceRecorded') + suffix,
       collected,
       completed: false,
       occurrence: utterance,
     };
   }
 
-  // Pergunta sobre documento: responde só com o que está no documento.
-  if (/(nota|nf|ct-?e|peso|valor|destinatario|documento)/.test(text)) {
-    return { reply: answerDocumentQuestion(utterance), collected, completed: false };
+  // Pergunta sobre documento: responde só com o que está no documento (R7).
+  if (DOCUMENT_RE.test(text)) {
+    const docRes = answerDocumentQuestionWithMeta(utterance);
+    return {
+      reply: docRes.answer,
+      collected,
+      completed: false,
+      documentAnswer: {
+        question: utterance,
+        answer: docRes.answer,
+        documentId: docRes.documentId,
+        field: docRes.field,
+        found: docRes.found,
+      },
+    };
   }
 
   if (context === 'free') {
-    return { reply: 'Estou aqui. Pode falar de uma ocorrência ou perguntar sobre a nota.', collected, completed: false };
+    return {
+      reply: i18n.t('voice.agent.freePrompt'),
+      collected,
+      completed: false,
+    };
   }
 
   const merged = { ...collected, ...extractFields(context, utterance) };
   const missing = missingFields(context, merged);
-  if (missing.length === 0) return { reply: DONE[context], collected: merged, completed: true };
+  if (missing.length === 0) {
+    return {
+      reply: doneMessage(context),
+      collected: merged,
+      completed: true,
+      missingFields: [],
+    };
+  }
 
   const gotSomething = Object.keys(merged).length > Object.keys(collected).length;
-  const prefix = gotSomething ? 'Anotado. ' : 'Não peguei essa. ';
-  return { reply: prefix + ASK[missing[0]], collected: merged, completed: false };
+  const prefix = gotSomething
+    ? i18n.t('voice.agent.gotItPrefix')
+    : i18n.t('voice.agent.didNotCatchPrefix');
+
+  return {
+    reply: prefix + askQuestion(missing[0]),
+    collected: merged,
+    completed: false,
+    missingFields: missing,
+  };
 }
 
-function nextQuestion(context: ReportContext, collected: Partial<Record<FieldKey, string>>) {
-  const m = missingFields(context, collected);
-  return m.length ? ASK[m[0]] : undefined;
-}
-
-/** Falas prontas para a demo (substituem o reconhecimento de voz no Expo Go). */
-export const QUICK_UTTERANCES: Record<ReportContext, string[]> = {
-  pickup: ['Peguei a carga, caminhão ok', 'Peguei a carga', 'Tudo certo'],
-  checkin: ['Cheguei, carga ok', 'Sem avaria, viagem tranquila', 'Carga inteira, sem avaria, sem ocorrência'],
-  unload: ['Descarreguei', 'Terminou a descarga'],
-  free: ['Tem um acidente no km 230', 'Qual o peso da nota?', 'Qual o número do CT-e?'],
+export const QUICK_UTTERANCES_BY_LANG: Record<AppLanguage, Record<ReportContext, string[]>> = {
+  'pt-BR': {
+    pickup: ['Peguei a carga, caminhão ok', 'Peguei a carga', 'Tudo certo'],
+    checkin: ['Cheguei, carga ok', 'Sem avaria, viagem tranquila', 'Carga inteira, sem avaria, sem ocorrência'],
+    unload: ['Descarreguei', 'Terminou a descarga'],
+    free: [
+      'Abrir mapa',
+      'Abrir nota fiscal',
+      'Tem um acidente no km 230',
+      'Qual o peso da nota?',
+      'Qual o número do CT-e?',
+    ],
+  },
+  en: {
+    pickup: ['Picked up the cargo, truck ok', 'Picked up the cargo', 'All good'],
+    checkin: ['Arrived, cargo ok', 'No damage, smooth trip', 'Cargo intact, no damage, no incident'],
+    unload: ['Unloaded', 'Finished unloading'],
+    free: [
+      'Open map',
+      'Open invoice',
+      'There is an accident at km 230',
+      'What is the invoice weight?',
+      'What is the CT-e number?',
+    ],
+  },
 };
+
+export function getQuickUtterances(context: ReportContext, lang: AppLanguage = getCurrentLanguage()): string[] {
+  return QUICK_UTTERANCES_BY_LANG[lang][context];
+}
+
+/** Falas prontas dinâmicas conforme o idioma atual (mantém compatibilidade com import `QUICK_UTTERANCES`). */
+export const QUICK_UTTERANCES: Record<ReportContext, string[]> = new Proxy(
+  QUICK_UTTERANCES_BY_LANG['pt-BR'],
+  {
+    get(_target, prop: string) {
+      const lang = getCurrentLanguage();
+      return QUICK_UTTERANCES_BY_LANG[lang][prop as ReportContext] ?? [];
+    },
+  },
+);

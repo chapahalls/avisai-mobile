@@ -1,10 +1,22 @@
 import { create } from 'zustand';
-import * as Speech from 'expo-speech';
-import i18n from '../../../lib/i18n';
+import { ENV, type VoiceMode } from '../../../lib/config';
+import { getSetting, setSetting } from '../../../lib/db';
 import { newId } from '../../../lib/id';
 import { agentBus } from '../../../services/agentBus';
+import { useApiConfig } from '../../../services/api';
+import { tryExecuteVoiceCommand } from '../../../services/voiceCommands';
+import { hapticBargeIn } from '../../../utils/haptics';
 import type { FieldKey, ReportContext } from '../../report';
 import { agentRespond } from '../api/agentMock';
+import { MockVoiceSession } from '../api/mockVoiceSession';
+import { createAndStartVoiceSession, getAgoraFallbackReason } from '../api/voiceFactory';
+import type {
+  AgoraStage,
+  AudioRouteType,
+  AudioSpeaker,
+  VoiceSession,
+  VoiceSessionCallbacks,
+} from '../api/voiceSession';
 import type { TranscriptLine, VoiceState } from '../types';
 
 interface VoiceStore {
@@ -14,70 +26,512 @@ interface VoiceStore {
   transcript: TranscriptLine[];
   /** Latência medida (ms) do fim da fala até o início da resposta. */
   lastLatencyMs: number | null;
+  preferredMode: VoiceMode;
+  activeMode: VoiceMode;
+  fallbackReason: string | null;
+  agoraStage: AgoraStage;
+  agoraChannel: string | null;
+  lastError: string | null;
+  /** Em modo `agora`, indica se a sessão RTC (/sessions) está conectada. */
+  sessionConnected: boolean;
+  /** Em modo `agora`, indica se o microfone local está em mudo. */
+  muted: boolean;
+  /** Nível de volume normalizado (0..1) do microfone ou agente. */
+  audioLevel: number;
+  /** Quem está emitindo áudio no momento (motorista, agente ou silêncio). */
+  audioSpeaker: AudioSpeaker;
+  /** Rota de áudio ativa reportada pela Agora (viva-voz, bluetooth ou fone). */
+  audioRoute: AudioRouteType;
+  /** Banner visual temporário (1800 ms) indicando barge-in acionado. */
+  bargeInBanner: boolean;
+  /** Legenda parcial em tempo real (stream de chunks Agora ConvoAI) antes da frase finalizar. */
+  liveTranscript: { who: 'driver' | 'agent'; text: string } | null;
+  /** Modo LLM reportado pela sessão ativa no backend (`custom`, `realtime`, `mllm`, etc.). */
+  backendLlmMode: string | null;
+  clearError: () => void;
+  connectAgoraNow: () => Promise<void>;
   listen: () => void;
   utter: (text: string) => void;
   say: (text: string) => void;
   interrupt: () => void;
+  toggleMute: () => void;
+  stop: () => void;
+  reset: () => void;
   setContext: (c: ReportContext) => void;
+  setVoiceMode: (mode: VoiceMode) => Promise<void>;
+  pushTranscript: (who: 'driver' | 'agent', text: string) => void;
 }
 
-const push = (t: TranscriptLine[], who: TranscriptLine['who'], text: string) =>
-  [...t, { id: newId(), who, text }].slice(-30);
+let lastPushedText = '';
+let lastPushedWho: 'driver' | 'agent' | null = null;
+let lastPushedAt = 0;
 
-export const useVoice = create<VoiceStore>((set, get) => ({
-  state: 'idle',
-  context: 'free',
-  collected: {},
-  transcript: [],
-  lastLatencyMs: null,
+const push = (t: TranscriptLine[], who: TranscriptLine['who'], text: string): TranscriptLine[] => {
+  const clean = text.trim();
+  if (!clean) return t;
+  const now = Date.now();
+  if (clean === lastPushedText && who === lastPushedWho && now - lastPushedAt < 4000) {
+    return t;
+  }
+  lastPushedText = clean;
+  lastPushedWho = who;
+  lastPushedAt = now;
+  return [...t, { id: newId(), who, text: clean }].slice(-30);
+};
 
-  listen: () => {
-    if (get().state === 'speaking') return get().interrupt();
-    set({ state: 'listening' });
-  },
+let thinkTimer: ReturnType<typeof setTimeout> | null = null;
+let bargeInTimer: ReturnType<typeof setTimeout> | null = null;
 
-  utter: (text) => {
-    const started = Date.now();
-    set((s) => ({ state: 'thinking', transcript: push(s.transcript, 'driver', text) }));
-    setTimeout(() => {
-      const { context, collected } = get();
-      const turn = agentRespond(context, text, collected);
-      set({ collected: turn.collected, lastLatencyMs: Date.now() - started });
-      if (turn.occurrence) agentBus.emit('voice:occurrence', { text: turn.occurrence });
-      get().say(turn.reply);
-      if (turn.completed) {
-        agentBus.emit('voice:completed', { context, fields: turn.collected as Record<string, string> });
-        set({ collected: {}, context: 'free' });
+function clearThinkTimer() {
+  if (thinkTimer) {
+    clearTimeout(thinkTimer);
+    thinkTimer = null;
+  }
+}
+
+function clearBargeInTimer() {
+  if (bargeInTimer) {
+    clearTimeout(bargeInTimer);
+    bargeInTimer = null;
+  }
+}
+
+const initialMockSession = new MockVoiceSession();
+let activeSession: VoiceSession = initialMockSession;
+let startingAgora = false;
+
+export const useVoice = create<VoiceStore>((set, get) => {
+  const triggerBargeInFeedback = () => {
+    clearBargeInTimer();
+    hapticBargeIn();
+    set({ bargeInBanner: true });
+    bargeInTimer = setTimeout(() => {
+      bargeInTimer = null;
+      set({ bargeInBanner: false });
+    }, 1800);
+  };
+
+  const callbacks: VoiceSessionCallbacks = {
+    onStateChange: (state) => {
+      set((s) => ({
+        state,
+        liveTranscript:
+          state === 'interrupted' && s.liveTranscript?.who === 'agent'
+            ? null
+            : s.liveTranscript,
+      }));
+      if (state === 'interrupted') {
+        triggerBargeInFeedback();
       }
-    }, 700);
-  },
+    },
+    onTranscript: (who, text) => {
+      set((s) => ({
+        transcript: push(s.transcript, who, text),
+        liveTranscript: s.liveTranscript?.who === who ? null : s.liveTranscript,
+      }));
+      if (who === 'driver') {
+        tryExecuteVoiceCommand(text);
+      }
+    },
+    onPartialTranscript: (who, text) => {
+      const clean = text.trim();
+      if (!clean) return;
+      set({ liveTranscript: { who, text: clean } });
+    },
+    onSessionMeta: (meta) => {
+      set({ backendLlmMode: meta.llmMode ?? null });
+    },
+    onLatency: (ms) => set({ lastLatencyMs: ms }),
+    onError: (msg) => {
+      set((s) => ({
+        lastError: msg,
+        agoraStage: 'error',
+        audioLevel: 0,
+        audioSpeaker: 'none',
+        state: s.state === 'speaking' || s.state === 'thinking' ? 'idle' : s.state,
+      }));
+    },
+    onAgoraStage: (stage, detail) => {
+      set((s) => ({
+        agoraStage: stage,
+        agoraChannel:
+          stage === 'disconnected'
+            ? null
+            : detail && stage !== 'error'
+              ? detail
+              : s.agoraChannel,
+        ...(stage === 'error' && detail ? { lastError: detail } : {}),
+        ...(stage === 'live' || stage === 'waiting_agent' ? { lastError: null } : {}),
+      }));
+    },
+    onModeFallback: (reason) =>
+      set({ fallbackReason: reason, sessionConnected: false, muted: false }),
+    onVolume: (level, speaker) => set({ audioLevel: level, audioSpeaker: speaker }),
+    onAudioRouteChange: (route) => set({ audioRoute: route }),
+  };
 
-  say: (text) => {
-    if (!text) return set({ state: 'idle' });
-    set((s) => ({ state: 'speaking', transcript: push(s.transcript, 'agent', text) }));
-    Speech.stop();
-    Speech.speak(text, {
-      language: i18n.language === 'en' ? 'en-US' : 'pt-BR',
-      onDone: () => get().state === 'speaking' && set({ state: 'idle' }),
-      onStopped: () => undefined,
-    });
-  },
+  initialMockSession.setCallbacks(callbacks);
 
-  interrupt: () => {
-    Speech.stop();
-    set({ state: 'interrupted' });
-    setTimeout(() => set({ state: 'listening' }), 400);
-  },
+  return {
+    state: 'idle',
+    context: 'free',
+    collected: {},
+    transcript: [],
+    lastLatencyMs: null,
+    preferredMode: ENV.voiceMode,
+    activeMode: ENV.voiceMode === 'agora' ? 'agora' : 'mock',
+    fallbackReason: ENV.voiceMode === 'agora' ? getAgoraFallbackReason() : null,
+    agoraStage: 'disconnected',
+    agoraChannel: null,
+    lastError: null,
+    sessionConnected: false,
+    muted: false,
+    audioLevel: 0,
+    audioSpeaker: 'none',
+    audioRoute: 'speaker',
+    bargeInBanner: false,
+    liveTranscript: null,
+    backendLlmMode: null,
 
-  setContext: (context) => set({ context, collected: {} }),
-}));
+    clearError: () => set({ lastError: null }),
+
+    pushTranscript: (who, text) => {
+      set((s) => ({
+        transcript: push(s.transcript, who, text),
+        liveTranscript: s.liveTranscript?.who === who ? null : s.liveTranscript,
+      }));
+    },
+
+    connectAgoraNow: async () => {
+      if (startingAgora) return;
+      setSetting('voice_mode', 'agora');
+      const apiState = useApiConfig.getState();
+      if (apiState.mode !== 'http' && Boolean(apiState.baseUrl?.trim())) {
+        apiState.setMode('http');
+      }
+
+      const precheck = getAgoraFallbackReason();
+      if (precheck) {
+        const errMsg =
+          precheck === 'agora_requires_http_api'
+            ? 'Agora requer API em modo Backend (HTTP). Ative o Backend no painel Demo.'
+            : 'SDK nativo react-native-agora indisponível neste build.';
+        set({
+          preferredMode: 'agora',
+          activeMode: 'agora',
+          fallbackReason: precheck,
+          agoraStage: 'error',
+          lastError: errMsg,
+          sessionConnected: false,
+          muted: false,
+          state: 'idle',
+        });
+        return;
+      }
+
+      startingAgora = true;
+      clearThinkTimer();
+      const prevSession = activeSession;
+      if (prevSession !== initialMockSession) {
+        await prevSession.stop().catch(() => undefined);
+      }
+
+      set({
+        preferredMode: 'agora',
+        activeMode: 'agora',
+        state: 'thinking',
+        fallbackReason: null,
+        lastError: null,
+        agoraStage: 'connecting',
+      });
+
+      try {
+        const res = await createAndStartVoiceSession(
+          'agora',
+          `avisai-rota-${useApiConfig.getState().rotaId}`,
+          callbacks,
+        );
+        if (res.errorMessage) {
+          set({
+            activeMode: 'agora',
+            fallbackReason: res.fallbackReason,
+            sessionConnected: false,
+            muted: false,
+            agoraStage: 'error',
+            lastError: res.errorMessage,
+            state: 'idle',
+          });
+        } else {
+          activeSession = res.session;
+          set({
+            activeMode: 'agora',
+            fallbackReason: null,
+            sessionConnected: true,
+            muted: false,
+            lastError: null,
+          });
+        }
+      } finally {
+        startingAgora = false;
+      }
+    },
+
+    listen: () => {
+      const { state: current, preferredMode, sessionConnected, activeMode } = get();
+
+      // Modo Agora: primeiro toque no MicButton inicia a sessão real (POST /sessions + joinChannel)
+      if (preferredMode === 'agora' && !sessionConnected) {
+        void get().connectAgoraNow();
+        return;
+      }
+
+      // Sessão Agora já conectada: toque durante fala do agente = barge-in; caso contrário alterna mudo
+      if (activeMode === 'agora' && sessionConnected) {
+        if (current === 'speaking') {
+          if (get().muted) {
+            activeSession.setMuted?.(false);
+            set({ muted: false });
+          }
+          get().interrupt();
+          return;
+        }
+        get().toggleMute();
+        return;
+      }
+
+      // Modo Mock padrão
+      if (current === 'speaking') {
+        get().interrupt();
+        return;
+      }
+      if (current === 'listening') {
+        clearThinkTimer();
+        void activeSession.stopListening();
+        return;
+      }
+      clearThinkTimer();
+      void activeSession.listen();
+    },
+
+    toggleMute: () => {
+      const nextMuted = !get().muted;
+      activeSession.setMuted?.(nextMuted);
+      set({
+        muted: nextMuted,
+        state: nextMuted ? 'idle' : 'listening',
+      });
+    },
+
+    utter: (text) => {
+      clearThinkTimer();
+      const started = Date.now();
+      set((s) => ({
+        state: 'thinking',
+        transcript: push(s.transcript, 'driver', text),
+        liveTranscript: s.liveTranscript?.who === 'driver' ? null : s.liveTranscript,
+      }));
+      tryExecuteVoiceCommand(text);
+
+      thinkTimer = setTimeout(() => {
+        thinkTimer = null;
+        const { context, collected } = get();
+        const turn = agentRespond(context, text, collected);
+        const latency = Date.now() - started;
+        set({ collected: turn.collected, lastLatencyMs: latency });
+
+        if (turn.occurrence) {
+          agentBus.emit('voice:occurrence', { text: turn.occurrence });
+        }
+
+        if (turn.documentAnswer) {
+          agentBus.emit('voice:document_answered', turn.documentAnswer);
+        }
+
+        if (turn.missingFields && turn.missingFields.length > 0) {
+          agentBus.emit('voice:field_missing', {
+            context,
+            missing: turn.missingFields,
+            collected: turn.collected,
+            utterance: text,
+          });
+        }
+
+        if (turn.completed) {
+          const completedContext = context;
+          const completedFields = turn.collected as Record<string, string>;
+          // Limpa ANTES de emitir `voice:completed`, permitindo que `wireTripToVoice` defina o próximo contexto (ex.: `checkin` -> `unload`) sem ser sobrescrito!
+          set({ collected: {}, context: 'free' });
+          agentBus.emit('voice:completed', { context: completedContext, fields: completedFields });
+        }
+
+        get().say(turn.reply);
+      }, 700);
+    },
+
+    say: (text) => {
+      if (!text) {
+        set({ state: 'idle' });
+        return;
+      }
+      if (get().preferredMode === 'agora' && activeSession === initialMockSession) {
+        get().pushTranscript('agent', text);
+        return;
+      }
+      void activeSession.say(text);
+    },
+
+    interrupt: () => {
+      clearThinkTimer();
+      triggerBargeInFeedback();
+      void activeSession.interrupt();
+    },
+
+    stop: () => {
+      clearThinkTimer();
+      clearBargeInTimer();
+      const currentSession = activeSession;
+      activeSession = initialMockSession;
+      initialMockSession.setCallbacks(callbacks);
+      set({
+        sessionConnected: false,
+        muted: false,
+        state: 'idle',
+        agoraStage: 'disconnected',
+        agoraChannel: null,
+        audioLevel: 0,
+        audioSpeaker: 'none',
+        bargeInBanner: false,
+        liveTranscript: null,
+        backendLlmMode: null,
+      });
+      void currentSession.stop();
+    },
+
+    reset: () => {
+      clearThinkTimer();
+      clearBargeInTimer();
+      const currentSession = activeSession;
+      activeSession = initialMockSession;
+      initialMockSession.setCallbacks(callbacks);
+      lastPushedText = '';
+      lastPushedWho = null;
+      lastPushedAt = 0;
+      set({
+        state: 'idle',
+        context: 'free',
+        collected: {},
+        transcript: [],
+        lastLatencyMs: null,
+        sessionConnected: false,
+        muted: false,
+        agoraStage: 'disconnected',
+        agoraChannel: null,
+        lastError: null,
+        audioLevel: 0,
+        audioSpeaker: 'none',
+        bargeInBanner: false,
+        liveTranscript: null,
+        backendLlmMode: null,
+      });
+      void currentSession.stop();
+    },
+
+    setContext: (context) => set({ context, collected: {} }),
+
+    setVoiceMode: async (mode: VoiceMode) => {
+      setSetting('voice_mode', mode);
+      clearThinkTimer();
+      clearBargeInTimer();
+      const prevSession = activeSession;
+      activeSession = initialMockSession;
+      initialMockSession.setCallbacks(callbacks);
+      await prevSession.stop();
+
+      if (mode === 'agora') {
+        const reason = getAgoraFallbackReason();
+        set({
+          preferredMode: 'agora',
+          activeMode: 'agora',
+          fallbackReason: reason,
+          agoraStage: 'disconnected',
+          agoraChannel: null,
+          lastError: null,
+          sessionConnected: false,
+          muted: false,
+          audioLevel: 0,
+          audioSpeaker: 'none',
+          bargeInBanner: false,
+          liveTranscript: null,
+          backendLlmMode: null,
+          state: 'idle',
+        });
+        return;
+      }
+
+      await initialMockSession.start('rota-1', callbacks);
+      set({
+        preferredMode: 'mock',
+        activeMode: 'mock',
+        fallbackReason: null,
+        agoraStage: 'disconnected',
+        agoraChannel: null,
+        lastError: null,
+        sessionConnected: false,
+        muted: false,
+        audioLevel: 0,
+        audioSpeaker: 'none',
+        bargeInBanner: false,
+        liveTranscript: null,
+        backendLlmMode: null,
+        state: 'idle',
+      });
+    },
+  };
+});
+
+export function loadPersistedVoiceMode(): void {
+  const saved = getSetting('voice_mode');
+  if (saved === 'agora' || saved === 'mock') {
+    void useVoice.getState().setVoiceMode(saved);
+  }
+}
 
 /** Liga o agente aos eventos da viagem. Chamar uma vez no bootstrap. */
 export function wireVoiceToBus() {
-  const offSay = agentBus.on('agent:say', ({ text }) => useVoice.getState().say(text));
+  if (ENV.voiceMode === 'agora') {
+    void useVoice.getState().setVoiceMode('agora');
+  }
+  const unsubApi = useApiConfig.subscribe((apiState, prevApiState) => {
+    if (apiState.mode !== prevApiState.mode) {
+      const voice = useVoice.getState();
+      if (voice.preferredMode === 'agora' && !voice.sessionConnected) {
+        const reason = getAgoraFallbackReason();
+        useVoice.setState({
+          activeMode: 'agora',
+          fallbackReason: reason,
+        });
+      }
+    }
+  });
+  const offSay = agentBus.on('agent:say', ({ text }) => {
+    const v = useVoice.getState();
+    // Em modo Agora (tempo real), nunca reproduz TTS local (expo-speech).
+    // Se a sessão estiver conectada, o áudio e a transcrição vêm do agente na Agora;
+    // se desconectada, apenas registra no histórico visual sem disparar TTS sintético.
+    if (v.preferredMode === 'agora' || v.activeMode === 'agora') {
+      if (!v.sessionConnected && text) {
+        v.pushTranscript('agent', text);
+      }
+      return;
+    }
+    v.say(text);
+  });
   const offCtx = agentBus.on('agent:context', ({ context }) => useVoice.getState().setContext(context));
+  const offReset = agentBus.on('voice:reset', () => useVoice.getState().reset());
   return () => {
+    unsubApi();
     offSay();
     offCtx();
+    offReset();
   };
 }

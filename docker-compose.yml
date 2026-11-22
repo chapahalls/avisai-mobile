@@ -1,0 +1,79 @@
+services:
+  metro:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /app
+    volumes:
+      - .:/app
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${REACT_NATIVE_PACKAGER_HOSTNAME:-localhost}
+      EXPO_PUBLIC_API_MODE: ${EXPO_PUBLIC_API_MODE:-mock}
+      EXPO_PUBLIC_API_BASE_URL: ${EXPO_PUBLIC_API_BASE_URL:-http://localhost:8787}
+      EXPO_PUBLIC_VOICE_MODE: ${EXPO_PUBLIC_VOICE_MODE:-mock}
+      GOOGLE_MAPS_API_KEY_ANDROID: ${GOOGLE_MAPS_API_KEY_ANDROID:-}
+    ports:
+      - "8081:8081"
+    stdin_open: true
+    tty: true
+    command: ["npx", "expo", "start", "--dev-client", "--port", "8081"]
+
+  android-build:
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+    working_dir: /app
+    volumes:
+      - .:/app
+      - gradle_cache:/root/.gradle
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      ANDROID_HOME: /opt/android-sdk
+      ANDROID_SDK_ROOT: /opt/android-sdk
+      GOOGLE_MAPS_API_KEY_ANDROID: ${GOOGLE_MAPS_API_KEY_ANDROID:-}
+      EXPO_PUBLIC_API_MODE: ${EXPO_PUBLIC_API_MODE:-mock}
+      EXPO_PUBLIC_API_BASE_URL: ${EXPO_PUBLIC_API_BASE_URL:-http://localhost:8787}
+      EXPO_PUBLIC_VOICE_MODE: ${EXPO_PUBLIC_VOICE_MODE:-mock}
+      EXPO_PREBUILD_CLEAN: ${EXPO_PREBUILD_CLEAN:-0}
+    command:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+        if [ ! -d node_modules ]; then
+          echo "[android-build] node_modules ausente; executando npm install..."
+          npm install
+        fi
+        if [ "$${EXPO_PREBUILD_CLEAN:-0}" = "1" ]; then
+          CI=1 npx expo prebuild --platform android --no-install --clean
+        else
+          CI=1 npx expo prebuild --platform android --no-install
+        fi
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug --no-daemon
+        mkdir -p /app/build
+        cp app/build/outputs/apk/debug/app-debug.apk /app/build/avisai-dev-debug.apk
+        echo "[android-build] APK gerado com sucesso em build/avisai-dev-debug.apk"
+
+  adb:
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+    working_dir: /app
+    privileged: true
+    network_mode: host
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+      - .:/app
+    entrypoint: ["adb"]
+
+volumes:
+  gradle_cache:
+  node_modules_cache:

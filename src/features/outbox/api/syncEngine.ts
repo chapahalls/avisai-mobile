@@ -1,42 +1,55 @@
-import { CRITICAL_EVENTS, type DomainEvent } from '../../../types/events';
-import { postEvent } from '../../../services/mockApi';
+import type { DomainEvent } from '../../../types/events';
+import { getApiClient } from '../../../services/api';
 import { useNetwork } from '../../../services/network';
-import { duePending, markRetry, markSent } from './outboxRepo';
-import { useOutboxStore } from '../hooks/useOutbox';
+import { markRetry, markSending, markSent, oldestPending } from './outboxRepo';
 
 const MAX_ATTEMPTS = 8;
 let running = false;
 
 /**
- * Envia a fila em ordem, um por vez.
- * - Sem rede: não tenta.
+ * Envia a fila estritamente em ordem FIFO, um por vez.
+ * - Sem rede: retorna cedo sem tocar no SQLite.
  * - Rede fraca: só eventos críticos (chegada, ocorrência, descarga, resultado da ligação).
+ * - Se a cabeça da fila ainda estiver aguardando backoff (`next_try_at > now`), para o ciclo e não pula para o item 2.
  * - 409 = servidor já tinha o evento (idempotência) → conta como enviado.
  */
-async function flush() {
+export async function flushOutbox() {
   if (running) return;
+  const quality = useNetwork.getState().quality();
+  if (quality === 'offline') return;
+
   running = true;
   try {
-    const quality = useNetwork.getState().quality();
-    if (quality === 'offline') return;
-    for (const row of duePending(Date.now())) {
-      const event = JSON.parse(row.payload) as DomainEvent;
-      if (quality === 'weak' && !CRITICAL_EVENTS.includes(event.type)) continue;
+    while (true) {
+      const currentQuality = useNetwork.getState().quality();
+      if (currentQuality === 'offline') break;
+
+      const head = oldestPending(currentQuality === 'weak');
+      if (!head) break;
+
+      if (head.next_try_at > Date.now()) {
+        // Preserva estritamente a ordem FIFO: não envia o item 2 enquanto o item 1 aguarda retry
+        break;
+      }
+
+      markSending(head.id);
+      const event = JSON.parse(head.payload) as DomainEvent;
       try {
-        await postEvent(event);
-        markSent(row.id);
+        const res = await getApiClient().postEvent(event);
+        markSent(head.id, res.receivedAt);
       } catch {
-        markRetry(row, MAX_ATTEMPTS);
-        break; // mantém a ordem: não pula para o próximo
+        markRetry(head, MAX_ATTEMPTS);
+        break;
       }
     }
   } finally {
     running = false;
-    useOutboxStore.getState().refresh();
   }
 }
 
 export function startSyncEngine() {
-  const timer = setInterval(flush, 2000);
+  const timer = setInterval(() => {
+    void flushOutbox();
+  }, 2000);
   return () => clearInterval(timer);
 }

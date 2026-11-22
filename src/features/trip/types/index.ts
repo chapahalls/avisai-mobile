@@ -20,8 +20,35 @@ export interface Stop {
 
 export interface RouteMock {
   tripId: string;
+  rotaId: number;
   plate: string;
+  invoice?: string;
+  cargo?: string;
+  weightT?: number;
+  unloadWindow?: string | null;
+  company?: string;
+  driverName?: string | null;
   origin: Stop;
   destination: Stop;
+  receiver: {
+    name: string;
+    phone: string;
+    company?: string;
+  };
   path: LatLng[];
+}
+
+export interface CentralRequestState {
+  pergunta: string;
+  resposta?: string;
+  status: 'pendente' | 'respondida';
+}
+
+export type TimelineTone = 'brand' | 'ok' | 'wait' | 'alert';
+
+export interface TimelineEntry {
+  id: string;
+  time: string;
+  label: string;
+  tone: TimelineTone;
 }

@@ -1,49 +1,86 @@
-import { View, Text } from 'react-native';
-import Svg, { Circle, Polyline, Rect } from 'react-native-svg';
+import { Component, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ROUTE } from '../api/route.mock';
-import { useTrip } from '../hooks/useTrip';
-import type { LatLng } from '../../../types/geo';
+import { create } from 'zustand';
+import { ENV } from '../../../lib/config';
+import { RouteMapGoogle, isGoogleMapsNativeAvailable } from './RouteMapGoogle';
+import { RouteMapSvg } from './RouteMapSvg';
 
-const W = 340;
-const H = 220;
-const PAD = 24;
+export type MapMode = 'auto' | 'svg';
+
+interface MapModeState {
+  mapMode: MapMode;
+  runtimeError: boolean;
+  setMapMode: (mode: MapMode) => void;
+  setRuntimeError: (hasError: boolean) => void;
+  fallbackReason: () => 'maps_no_key' | 'maps_native_unavailable' | null;
+}
+
+export const useMapMode = create<MapModeState>((set, get) => ({
+  mapMode: 'auto',
+  runtimeError: false,
+  setMapMode: (mapMode) => set({ mapMode, runtimeError: false }),
+  setRuntimeError: (runtimeError) => set({ runtimeError }),
+  fallbackReason: () => {
+    const { mapMode, runtimeError } = get();
+    if (mapMode === 'svg') return null;
+    if (!ENV.hasGoogleMapsKey) return 'maps_no_key';
+    if (runtimeError || !isGoogleMapsNativeAvailable()) return 'maps_native_unavailable';
+    return null;
+  },
+}));
+
+interface BoundaryProps {
+  fallback: ReactNode;
+  onError: () => void;
+  children: ReactNode;
+}
+
+interface BoundaryState {
+  hasError: boolean;
+}
+
+class MapErrorBoundary extends Component<BoundaryProps, BoundaryState> {
+  state: BoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): BoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch() {
+    this.props.onError();
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 /**
- * Mapa MOCK desenhado em SVG (react-native-maps com Google não roda no Expo Go).
- * Dev build: trocar por <MapView provider={PROVIDER_GOOGLE}> com <Polyline>, <Marker> e <Circle> nas mesmas coordenadas.
+ * Wrapper com ErrorBoundary que seleciona `RouteMapGoogle` quando `ENV.hasGoogleMapsKey === true`,
+ * módulo nativo disponível e `mapMode !== 'svg'`, fazendo fallback automático para `RouteMapSvg`.
  */
-export function RouteMap() {
+export function RouteMap({ fullScreen = false }: { fullScreen?: boolean }) {
   const { t } = useTranslation();
-  const position = useTrip((s) => s.position);
-  const lats = ROUTE.path.map((p) => p.lat);
-  const lngs = ROUTE.path.map((p) => p.lng);
-  const [minLat, maxLat, minLng, maxLng] = [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)];
-  const project = (p: LatLng) => ({
-    x: PAD + ((p.lng - minLng) / (maxLng - minLng)) * (W - 2 * PAD),
-    y: PAD + ((maxLat - p.lat) / (maxLat - minLat)) * (H - 2 * PAD),
-  });
-  const pts = ROUTE.path.map(project).map((p) => `${p.x},${p.y}`).join(' ');
-  const o = project(ROUTE.origin.position);
-  const d = project(ROUTE.destination.position);
-  const truck = project(position);
+  const { mapMode, runtimeError, setRuntimeError } = useMapMode();
+
+  const canUseGoogle =
+    mapMode !== 'svg' &&
+    ENV.hasGoogleMapsKey &&
+    !runtimeError &&
+    isGoogleMapsNativeAvailable();
+
+  const svgFallback = <RouteMapSvg badgeLabel={t('trip.mapMock')} fullScreen={fullScreen} />;
+
+  if (!canUseGoogle) {
+    return svgFallback;
+  }
+
   return (
-    <View className="bg-ink-900 border border-ink-700 rounded-card overflow-hidden">
-      <Svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
-        <Rect x={0} y={0} width={W} height={H} fill="#121A2B" />
-        <Polyline points={pts} fill="none" stroke="#2A3550" strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" />
-        <Polyline points={pts} fill="none" stroke="#099DFD" strokeWidth={2} strokeDasharray="6 6" />
-        <Circle cx={o.x} cy={o.y} r={14} fill="#099DFD" opacity={0.15} />
-        <Circle cx={d.x} cy={d.y} r={18} fill="#F5A524" opacity={0.18} />
-        <Circle cx={o.x} cy={o.y} r={5} fill="#099DFD" />
-        <Circle cx={d.x} cy={d.y} r={6} fill="#F5A524" />
-        <Circle cx={truck.x} cy={truck.y} r={8} fill="#F4F6FA" stroke="#099DFD" strokeWidth={3} />
-      </Svg>
-      <View className="flex-row justify-between px-3 py-2 border-t border-ink-700">
-        <Text className="text-ink-300 text-xs">{ROUTE.origin.name}</Text>
-        <Text className="text-ink-300 text-xs">{t('trip.mapMock')}</Text>
-        <Text className="text-ink-300 text-xs">{ROUTE.destination.name}</Text>
-      </View>
-    </View>
+    <MapErrorBoundary fallback={svgFallback} onError={() => setRuntimeError(true)}>
+      <RouteMapGoogle onFallback={() => setRuntimeError(true)} fullScreen={fullScreen} />
+    </MapErrorBoundary>
   );
 }

@@ -8,7 +8,7 @@ import { normalize } from '../../../utils/text';
 const DIM = 64;
 
 export function embed(text: string): number[] {
-  const v = new Array(DIM).fill(0);
+  const v = new Array<number>(DIM).fill(0);
   for (const word of normalize(text).split(/[^a-z0-9]+/).filter((w) => w.length > 2)) {
     let h = 0;
     for (let i = 0; i < word.length; i++) h = (h * 31 + word.charCodeAt(i)) >>> 0;
@@ -18,4 +18,5 @@ export function embed(text: string): number[] {
   return v.map((x) => x / norm);
 }
 
-export const cosine = (a: number[], b: number[]) => a.reduce((s, x, i) => s + x * b[i], 0);
+export const cosine = (a: number[], b: number[]) =>
+  a.reduce((s, x, i) => s + x * (b[i] ?? 0), 0);

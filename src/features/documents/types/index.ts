@@ -1,4 +1,4 @@
-export interface MockDocument {
+export interface TripDocument {
   id: string;
   kind: 'NF-e' | 'CT-e' | 'MDF-e';
   title: string;
@@ -7,3 +7,5 @@ export interface MockDocument {
   /** Texto das "páginas" do PDF mock. */
   pages: string[];
 }
+
+export type MockDocument = TripDocument;

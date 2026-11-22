@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { countPending, listOutbox } from '../api/outboxRepo';
+import { countPending, listOutbox, onOutboxChange } from '../api/outboxRepo';
 import type { OutboxRow } from '../types';
 
 interface OutboxState {
@@ -13,3 +13,7 @@ export const useOutboxStore = create<OutboxState>((set) => ({
   pending: 0,
   refresh: () => set({ rows: listOutbox(), pending: countPending() }),
 }));
+
+onOutboxChange(() => {
+  useOutboxStore.getState().refresh();
+});

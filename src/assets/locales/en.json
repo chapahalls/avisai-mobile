@@ -1,23 +1,151 @@
 {
+  "brand": {
+    "name": "AvisAI",
+    "poweredBy": "Voice AI · Powered by Agora"
+  },
+  "lang": {
+    "label": "Language",
+    "ptBR": "PT-BR",
+    "en": "EN",
+    "ptShort": "PT",
+    "enShort": "EN"
+  },
   "auth": {
     "title": "Sign in to see your route",
     "subtitle": "The agent warns the receiver, counts the wait and proves every stopped hour.",
     "sso": "Sign in with SSO",
+    "ssoAs": "Sign in as {{name}}",
     "loading": "Signing in…",
     "mockNotice": "Simulated SSO for the demo.",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "profileSwitcher": {
+      "title": "Choose driver profile (3 options)",
+      "selectedBadge": "Selected",
+      "tripTag": "Route #{{id}}",
+      "noTrip": "No active route"
+    },
+    "confirmLogout": {
+      "title": "Sign out?",
+      "message": "You will return to the SSO login screen.",
+      "cancel": "Cancel",
+      "confirm": "Sign out"
+    },
+    "demoDriverName": "Carlos Andrade",
+    "demoCompanyName": "Transportadora Rota Sul",
+    "pillars": {
+      "voiceTitle": "Real-time voice",
+      "voiceDesc": "Hands-free check-in and incident reporting on the road",
+      "receiverTitle": "Advance receiver alert",
+      "receiverDesc": "Automatic call at 8 km to confirm dock and schedule",
+      "stayTitle": "Detention proof",
+      "stayDesc": "Legal wait timer, control center escalation and BRL billing"
+    }
   },
   "tabs": {
     "trip": "Trip",
+    "map": "Map",
     "documents": "Documents",
     "outbox": "Queue"
+  },
+  "map": {
+    "title": "Route Map",
+    "geofenceBadge": "Geofence {{meters}} m · Alert {{km}} km",
+    "talkToAvisai": "Talk to AvisAI",
+    "etaShort": "ETA ~{{min}} min",
+    "speedLabel": "{{kmh}} km/h",
+    "focusTruck": "Truck",
+    "fitRoute": "Route"
+  },
+  "headsUp": {
+    "receiverConfirmedTitle": "Receiver confirmed dock!",
+    "receiverAlertTitle": "Receiving Alert"
+  },
+  "voiceCommands": {
+    "toast": {
+      "openMap": "Voice command: Opening Map",
+      "openNfe": "Voice command: Opening NF-e",
+      "openCte": "Voice command: Opening CT-e",
+      "openDocuments": "Voice command: Opening Documents",
+      "openOutbox": "Voice command: Opening Queue",
+      "backToTrip": "Voice command: Returning to Trip",
+      "startTrip": "Voice command: Trip started"
+    }
   },
   "trip": {
     "start": "Start trip",
     "restart": "New trip",
-    "mapMock": "simulated map",
+    "viewMapShortcut": "View map →",
+    "mapMock": "Simulated map (SVG)",
+    "mapGoogle": "Google Maps",
     "left": "{{km}} km to go",
     "receiver": "Receiver:",
+    "ccoOperatorMock": "Control Center Operator (mock)",
+    "receiverEscalationEta": "in 40 minutes",
+    "demoButton": "Demo",
+    "originLabel": "Origin",
+    "destinationLabel": "Destination",
+    "totalDistanceLabel": "Total distance",
+    "totalDistanceValue": "{{km}} km",
+    "plateLabel": "Vehicle",
+    "routeSummaryTitle": "Today's route summary",
+    "routeSummarySubtitle": "Start the trip to activate the voice copilot and geofence monitoring.",
+    "routeAssignedBanner": {
+      "title": "New route assigned by carrier",
+      "defaultMessage": "Your active route was updated by the Control Center.",
+      "dismiss": "OK"
+    },
+    "centralRequest": {
+      "title": "Control Center Question (CCO)",
+      "answeredTitle": "Reply sent to Control Center",
+      "voiceHint": "Answer by voice to AvisAI",
+      "dismiss": "Close"
+    },
+    "gpsDivergence": {
+      "title": "GPS divergence detected (R6)",
+      "dismiss": "Dismiss"
+    },
+    "confirmReset": {
+      "title": "Start new trip?",
+      "message": "This will clear the timeline and wait timer for the current trip.",
+      "cancel": "Cancel",
+      "confirm": "Restart"
+    },
+    "quickActions": {
+      "label": "Cabin quick actions (1 tap):",
+      "arrived": "I arrived",
+      "reportQueue": "Report queue / dock",
+      "unloaded": "Unloaded",
+      "queueReportText": "Queue at gate / waiting for dock release"
+    },
+    "timeline": {
+      "title": "Detention Proof ({{count}} events)",
+      "routeAssigned": "Route assigned: {{origin}} → {{destination}}",
+      "pickupDetected": "Entered origin geofence",
+      "pickupConfirmed": "Pickup confirmed by driver",
+      "approachDetected": "Approach detected ({{km}} km)",
+      "receiverCalling": "Automated call to receiver started",
+      "receiverConfirmed": "Receiver confirmed: dock {{dock}}, {{time}}",
+      "receiverNotToday": "Receiver reported no unloading today",
+      "receiverNoAnswer": "Receiver did not answer (logged as proof)",
+      "geofenceEntered": "Entered destination geofence (300 m)",
+      "arrivalConfirmed": "Arrival confirmed (GPS + Voice) · detention started",
+      "ccoTaskCreated": "Task created on Control Center panel",
+      "ccoEscalated": "Control Center escalation {{n}}/{{max}} ({{channel}})",
+      "ccoAcknowledged": "Control Center acknowledged task",
+      "escalationCallingReceiver": "3/3 no CCO response · calling receiver",
+      "centralQuestion": "CCO question: “{{question}}”",
+      "centralAnswered": "Reply sent to CCO: “{{answer}}”",
+      "documentQueried": "Voice query on document ({{doc}})",
+      "occurrenceReported": "Incident logged: {{text}}",
+      "unloadCompleted": "Unloading completed · detention closed"
+    },
+    "steps": {
+      "pickup": "Pickup",
+      "driving": "Route",
+      "approaching": "8 km",
+      "arrived": "Arrival",
+      "unloaded": "Unload"
+    },
     "phase": {
       "idle": "Ready to leave",
       "pickup": "At origin",
@@ -33,6 +161,15 @@
       "confirmed": "dock {{dock}}, {{time}}",
       "not_today": "not receiving today",
       "no_answer": "no answer"
+    },
+    "voice": {
+      "originPrompt": "You are at the origin DC. Can you confirm pickup and tell me how the truck is?",
+      "arrivedPrompt": "You arrived at the destination. Tell me: how is the cargo, any damage or incidents?",
+      "receiverConfirmed": "Receiving confirmed: dock {{dock}}, {{time}}.",
+      "receiverNotToday": "Receiving said they won't unload today. I notified the control center; follow carrier instructions.",
+      "receiverNoAnswer": "Receiving did not answer. I logged the attempt as proof and notified the control center.",
+      "ccoAcknowledged": "The control center took your case and is speaking with receiving.",
+      "ccoNoResponseCallingReceiver": "Control center did not respond after {{max}} alerts. I am calling receiving now."
     }
   },
   "stay": {
@@ -40,19 +177,96 @@
     "value": "Detention so far: {{value}}",
     "franchiseLeft": "Free time left: {{left}}",
     "ccoAck": "Control center took the case",
-    "ccoAttempts": "Control center alerts: {{n}}/{{max}}"
+    "ccoAttempts": "Control center alerts: {{n}}/{{max}}",
+    "unloadedBadge": "Unloaded · detention closed",
+    "franchiseBarLabel": "Free time allowance ({{hours}}h)",
+    "franchiseExceeded": "Allowance exceeded",
+    "channels": {
+      "push": "1 Push",
+      "painel": "2 Panel",
+      "ligacao": "3 Call"
+    }
   },
   "voice": {
     "title": "Agent",
     "talk": "Talk",
     "listening": "Listening",
     "interrupt": "Interrupt",
+    "privacyBadge": "Transcription only · no audio recorded",
+    "emptyTitle": "Voice copilot ready",
+    "emptyHint": "Tap the microphone below to talk to AvisAI or report an incident.",
+    "agentTag": "AvisAI",
+    "driverTag": "You",
+    "liveStreamingTag": "live",
+    "bargeInHint": "Tap to interrupt the agent (barge-in)",
+    "bargeInBanner": "⚡ Interrupted · listening to you",
+    "tapToSpeakHint": "Tap to talk to the agent",
+    "selectQuickHint": "Pick a simulated utterance below or tap mic to cancel",
+    "agoraLiveHint": "Agora session live · speak freely or tap to mute",
+    "unmuteHint": "Microphone muted · tap to unmute",
+    "muted": "Muted",
+    "muteButton": "Mute",
+    "unmuteButton": "Unmute",
+    "endSessionButton": "End session",
+    "audioRoute": {
+      "speaker": "Speaker",
+      "bluetooth": "Bluetooth",
+      "headset": "Headset"
+    },
+    "cabinMode": {
+      "openButton": "Cabin Mode",
+      "exitButton": "Exit Cabin Mode",
+      "lastAgentSpeech": "AvisAI · Last speech"
+    },
+    "activeBar": {
+      "agentSpeaking": "AvisAI speaking",
+      "agoraMuted": "Agora · Muted",
+      "listening": "Listening to you",
+      "goToVoice": "Go to Voice",
+      "endShort": "End"
+    },
+    "useAgoraButton": "Use Agora",
+    "configureBackendButton": "Configure Backend",
+    "connectAgora": "Connect Agora",
+    "connectAgoraHint": "Tap to join the voice channel",
+    "agoraConnecting": "Connecting…",
+    "agoraConnectingHint": "Creating voice session on backend…",
+    "agoraWaitingAgent": "Waiting for agent…",
+    "agoraWaitingAgentHint": "Channel connected · waiting for agent (9001)…",
+    "modePill": {
+      "agoraLive": "Agora Live",
+      "agoraWaitingAgent": "Waiting for agent (9001)…",
+      "agoraDisconnected": "Agora · Disconnected",
+      "mock": "Simulated Voice"
+    },
+    "quickPromptsLabel": "Quick phrases (simulation):",
     "state": {
       "idle": "ready",
       "listening": "listening",
       "thinking": "thinking",
       "speaking": "speaking",
       "interrupted": "interrupted"
+    },
+    "agent": {
+      "ask": {
+        "carga": "Did you pick up the cargo?",
+        "caminhao": "And how is the truck?",
+        "status_carga": "How is the cargo?",
+        "avarias": "Was there any damage?",
+        "ocorrencias": "And on the trip, any incidents?",
+        "descarga": "Is unloading finished?"
+      },
+      "done": {
+        "pickup": "Pickup confirmed and report sent to control center. Have a safe trip.",
+        "checkin": "Check-in complete. I notified the control center and the wait timer started.",
+        "unload": "Unloading recorded. Detention closed and sent to control center.",
+        "free": ""
+      },
+      "occurrenceRecorded": "Understood, I logged the incident and notified the control center.",
+      "returningToTopic": " Back to check-in: {{question}}",
+      "freePrompt": "I'm here. You can report an incident or ask about the invoice.",
+      "gotItPrefix": "Got it. ",
+      "didNotCatchPrefix": "Didn't catch that. "
     }
   },
   "documents": {
@@ -60,14 +274,49 @@
     "hint": "Ask by voice: “what is the invoice weight?”",
     "viewer": "Document",
     "mockNotice": "Simulated viewer (fictitious PDF).",
-    "page": "Page {{n}} of {{total}}"
+    "page": "Page {{n}} of {{total}}",
+    "extractedFields": "{{count}} extracted fields",
+    "countBadge": "{{count}} docs",
+    "verifiedTitle": "Verified fields (anti-hallucination)",
+    "verifiedSubtitle": "The voice agent answers strictly from these extracted data points.",
+    "openDoc": "Open",
+    "askAboutDocumentButton": "Ask AvisAI about this document",
+    "askPromptForDoc": "I have {{title}} open. What would you like to know about this document?",
+    "answerByField": "According to {{title}}: {{field}} {{value}}.",
+    "answerByChunk": "Found in {{title}}: {{excerpt}}",
+    "notFound": "I couldn't find that in the trip documents.",
+    "fieldLabels": {
+      "peso": "weight",
+      "peso_kg": "weight",
+      "valor": "value",
+      "numero": "number",
+      "emitente": "issuer",
+      "destinatario": "recipient",
+      "produto": "product",
+      "itens": "items",
+      "chave": "access key",
+      "frete": "freight",
+      "nfe_referenciada": "ref. NF-e",
+      "transportadora": "carrier",
+      "origem": "origin",
+      "destino": "destination",
+      "placa": "plate",
+      "janela": "window"
+    }
   },
   "outbox": {
     "title": "Send queue",
     "hint": "Everything the app sends goes through here. Offline, it waits and resends without duplicates.",
     "empty": "Queue is empty.",
+    "emptyHint": "Trip events will appear here with offline-first delivery guarantee.",
     "attempts": "{{n}} attempts",
     "retry": "Retry failed items",
+    "idempotencyPrefix": "ID",
+    "metrics": {
+      "sent": "Sent",
+      "pending": "Queued",
+      "failed": "Failed"
+    },
     "status": {
       "pending": "queued",
       "sending": "sending",
@@ -83,13 +332,61 @@
   },
   "demo": {
     "title": "Demo controls (simulation)",
+    "close": "Close",
+    "simBadge": "E8 SIMULATION",
+    "networkSection": "Network condition",
+    "timeAndRouteSection": "Route & detention fast-forward",
+    "adaptersSection": "Runtime adapters",
     "net": {
       "real": "Real network",
       "weak": "Weak signal",
       "offline": "Offline"
     },
     "ccoResponds": "Control center answers on 2nd alert",
-    "skipHour": "+1 h on the clock"
+    "skipHour": "+1 h",
+    "jumpApproach": "Jump to Approach (8 km)",
+    "jumpArrival": "Jump to Arrival",
+    "voiceModeLabel": "Voice:",
+    "voiceMock": "Mock",
+    "voiceAgora": "Agora",
+    "mapModeLabel": "Map:",
+    "mapAuto": "Auto",
+    "mapSvg": "SVG",
+    "apiModeLabel": "API:",
+    "apiMock": "Mock",
+    "apiHttp": "Backend",
+    "backendAndAgoraSection": "Backend Connection & Agora Voice",
+    "backendUrlLabel": "Backend URL (Lucas)",
+    "backendUrlPlaceholder": "https://xxxx.trycloudflare.com or http://localhost:8000",
+    "urlPresetsLabel": "Presets:",
+    "deviceGpsToggle": "Real Device GPS",
+    "deviceGpsHint": "Sends real device location (fonte: celular) to POST /rotas/{id}/posicao",
+    "connectBackendAndAgora": "Connect Backend + Agora Voice",
+    "connectingBackendAndAgora": "Connecting Backend + Agora…",
+    "comboReadyStatus": "Online · WS connected · Agora ready!",
+    "backendPipelineStatus": "LLM: {{mode}} · {{upstream}}",
+    "llmUpstreamOk": "Upstream OK",
+    "llmContingency": "Contingency",
+    "agoraNotConfiguredWarning": "Warning: backend is missing Agora credentials (AGORA_APP_ID / AGORA_APP_CERTIFICATE).",
+    "testHealthButton": "Test",
+    "testingHealth": "Testing…",
+    "healthOnline": "Online",
+    "healthError": "Offline ({{error}})",
+    "wsStatus": {
+      "connected": "WS connected",
+      "connecting": "WS connecting…",
+      "disconnected": "WS disconnected"
+    },
+    "resetBackendRoute": "Reset route on backend",
+    "resettingBackendRoute": "Resetting…",
+    "fallback": {
+      "agora_native_unavailable": "Mock fallback: Agora native module unavailable in this build",
+      "agora_requires_http_api": "Mock fallback: Agora requires HTTP API (agent-server)",
+      "agora_backend_unreachable": "Mock fallback: agent-server unreachable to start Agora session",
+      "agora_permission_denied": "Mock fallback: microphone permission denied",
+      "maps_no_key": "SVG fallback: GOOGLE_MAPS_API_KEY_ANDROID not configured",
+      "maps_native_unavailable": "SVG fallback: Google Maps native module unavailable"
+    }
   },
   "events": {
     "RouteAssigned": "Route received",

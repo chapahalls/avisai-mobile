@@ -4,8 +4,12 @@ import { BUSINESS } from '../../../lib/config';
 export const CCO_CHANNELS = ['push', 'painel', 'ligação'] as const;
 
 export function channelFor(attempt: number) {
-  return CCO_CHANNELS[Math.min(attempt, CCO_CHANNELS.length) - 1];
+  const index = Math.max(1, Math.min(attempt, CCO_CHANNELS.length)) - 1;
+  return CCO_CHANNELS[index];
 }
 
-export const shouldCallReceiver = (attempts: number, ccoAcknowledged: boolean) =>
-  !ccoAcknowledged && attempts >= BUSINESS.maxCcoAttempts;
+export const shouldCallReceiver = (
+  attempts: number,
+  ccoAcknowledged: boolean,
+  maxAttempts: number = BUSINESS.maxCcoAttempts,
+) => !ccoAcknowledged && attempts >= maxAttempts;
