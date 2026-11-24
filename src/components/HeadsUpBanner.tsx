@@ -3,6 +3,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { create } from 'zustand';
 import { newId } from '../lib/id';
 import { hapticAlert } from '../utils/haptics';
+import { colors } from '../lib/theme';
 
 export type HeadsUpTone = 'brand' | 'ok' | 'wait' | 'alert';
 
@@ -56,17 +57,17 @@ const containerStyles: Record<HeadsUpTone, string> = {
 };
 
 const titleStyles: Record<HeadsUpTone, string> = {
-  brand: 'text-brand-500',
+  brand: 'text-brand-300',
   ok: 'text-ok-500',
   wait: 'text-wait-500',
   alert: 'text-alert-500',
 };
 
 const iconColors: Record<HeadsUpTone, string> = {
-  brand: '#099DFD',
-  ok: '#17B26A',
-  wait: '#F5A524',
-  alert: '#F04438',
+  brand: colors.brand[300],
+  ok: colors.ok[500],
+  wait: colors.wait[500],
+  alert: colors.alert[500],
 };
 
 function navigateToTrip(): void {

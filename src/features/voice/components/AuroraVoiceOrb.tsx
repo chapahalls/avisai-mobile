@@ -4,6 +4,7 @@ import Animated, {
   cancelAnimation,
   Easing,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -13,6 +14,7 @@ import Animated, {
 import Svg, { Circle, Defs, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg';
 import type { AudioSpeaker } from '../api/voiceSession';
 import type { VoiceState } from '../types';
+import { colors, voiceOrb, withAlpha } from '../../../lib/theme';
 
 interface AuroraVoiceOrbProps {
   state: VoiceState;
@@ -20,6 +22,7 @@ interface AuroraVoiceOrbProps {
   audioLevel: number;
   audioSpeaker: AudioSpeaker;
   size?: number;
+  showGlyph?: boolean;
 }
 
 export interface AuroraVoicePresentation {
@@ -53,7 +56,7 @@ export function getAuroraVoicePresentation(
       listening,
       speaking,
       pausedGlyph: state === 'speaking',
-      hue: { rim: '#5EEAD4', core: '#075E63', glow: '#2DD4BF' },
+      hue: { rim: voiceOrb.mint, core: voiceOrb.forest, glow: colors.brand[400] },
     };
   }
   if (muted) {
@@ -63,7 +66,7 @@ export function getAuroraVoicePresentation(
       listening: false,
       speaking: false,
       pausedGlyph: false,
-      hue: { rim: '#667085', core: '#18243A', glow: '#344054' },
+      hue: { rim: colors.ink[300], core: colors.ink[800], glow: colors.ink[700] },
     };
   }
   if (connecting) {
@@ -73,7 +76,7 @@ export function getAuroraVoicePresentation(
       listening,
       speaking,
       pausedGlyph: false,
-      hue: { rim: '#A78BFA', core: '#302566', glow: '#8B5CF6' },
+      hue: { rim: voiceOrb.lime, core: voiceOrb.deep, glow: colors.rodar[400] },
     };
   }
   if (listening) {
@@ -83,7 +86,7 @@ export function getAuroraVoicePresentation(
       listening,
       speaking,
       pausedGlyph: false,
-      hue: { rim: '#38BDF8', core: '#075985', glow: '#22D3EE' },
+      hue: { rim: colors.brand[300], core: voiceOrb.deep, glow: voiceOrb.mint },
     };
   }
   return {
@@ -92,15 +95,15 @@ export function getAuroraVoicePresentation(
     listening,
     speaking,
     pausedGlyph: false,
-    hue: { rim: '#0EA5E9', core: '#13233D', glow: '#1D4ED8' },
+    hue: { rim: voiceOrb.leaf, core: voiceOrb.deep, glow: colors.brand[600] },
   };
 }
 
-function MicrophoneGlyph({ paused }: { paused: boolean }) {
+function MicrophoneGlyph({ paused, color }: { paused: boolean; color: string }) {
   if (paused) {
     return (
       <Svg width={30} height={30} viewBox="0 0 24 24" fill="none">
-        <Path d="M7.5 6.5v11M16.5 6.5v11" stroke="#F4F6FA" strokeWidth={2.8} strokeLinecap="round" />
+        <Path d="M7.5 6.5v11M16.5 6.5v11" stroke={color} strokeWidth={2.8} strokeLinecap="round" />
       </Svg>
     );
   }
@@ -109,12 +112,12 @@ function MicrophoneGlyph({ paused }: { paused: boolean }) {
     <Svg width={30} height={30} viewBox="0 0 24 24" fill="none">
       <Path
         d="M12 3.25a3.5 3.5 0 0 0-3.5 3.5v5.5a3.5 3.5 0 1 0 7 0v-5.5a3.5 3.5 0 0 0-3.5-3.5Z"
-        stroke="#F4F6FA"
+        stroke={color}
         strokeWidth={1.9}
       />
       <Path
         d="M18.5 11.5v.85a6.5 6.5 0 0 1-13 0v-.85M12 18.85v2.1M8.75 21h6.5"
-        stroke="#F4F6FA"
+        stroke={color}
         strokeWidth={1.9}
         strokeLinecap="round"
       />
@@ -123,9 +126,10 @@ function MicrophoneGlyph({ paused }: { paused: boolean }) {
 }
 
 /**
- * Superfície de voz sem bitmap: camadas translúcidas e animação lenta formam
- * uma aurora que responde ao volume de áudio. O botão pai mantém a semântica
- * de toque e acessibilidade; este componente é exclusivamente visual.
+ * Esfera do AvisAI (mockups `05-modo-viagem`, `06-chat-ao-vivo` e `13-componente-avisai`):
+ * degradê verde com uma faixa clara que gira devagar e pulsa com o volume do áudio.
+ * Sem bitmap. O botão pai cuida do toque e da acessibilidade; este componente só desenha.
+ * `showGlyph` mostra o microfone (ou a pausa, quando tocar interrompe o agente).
  */
 export function AuroraVoiceOrb({
   state,
@@ -133,10 +137,13 @@ export function AuroraVoiceOrb({
   audioLevel,
   audioSpeaker,
   size = 124,
+  showGlyph = true,
 }: AuroraVoiceOrbProps) {
   const breath = useSharedValue(0);
   const drift = useSharedValue(0);
   const energy = useSharedValue(0);
+  // Com "reduzir movimento" a esfera não gira nem respira; só o volume a faz pulsar.
+  const reduceMotion = useReducedMotion();
 
   const presentation = getAuroraVoicePresentation(state, muted, audioSpeaker);
   const { active: isActive, speaking: isSpeaking, hue } = presentation;
@@ -146,7 +153,7 @@ export function AuroraVoiceOrb({
     cancelAnimation(breath);
     cancelAnimation(drift);
 
-    if (!isActive) {
+    if (!isActive || reduceMotion) {
       breath.value = 0;
       drift.value = 0;
       return;
@@ -154,23 +161,14 @@ export function AuroraVoiceOrb({
 
     breath.value = withRepeat(
       withSequence(
-        withTiming(1, {
-          duration: isSpeaking ? 1900 : 2400,
-          easing: Easing.inOut(Easing.sin),
-        }),
-        withTiming(0, {
-          duration: isSpeaking ? 1900 : 2400,
-          easing: Easing.inOut(Easing.sin),
-        }),
+        withTiming(1, { duration: isSpeaking ? 1900 : 2400, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: isSpeaking ? 1900 : 2400, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
       false,
     );
     drift.value = withRepeat(
-      withTiming(1, {
-        duration: isSpeaking ? 7800 : 11200,
-        easing: Easing.linear,
-      }),
+      withTiming(1, { duration: isSpeaking ? 9000 : 14000, easing: Easing.linear }),
       -1,
       false,
     );
@@ -179,33 +177,31 @@ export function AuroraVoiceOrb({
       cancelAnimation(breath);
       cancelAnimation(drift);
     };
-  }, [breath, drift, isActive, isSpeaking]);
+  }, [breath, drift, isActive, isSpeaking, reduceMotion]);
 
   useEffect(() => {
     const target = isActive ? Math.max(0.18, level) : 0;
-    energy.value = withSpring(target, {
-      stiffness: 180,
-      damping: 18,
-      mass: 0.55,
-    });
+    energy.value = withSpring(target, { stiffness: 180, damping: 18, mass: 0.55 });
   }, [energy, isActive, level]);
 
   const haloStyle = useAnimatedStyle(() => ({
-    opacity: (isActive ? 0.24 : 0.34) + breath.value * 0.1 + energy.value * 0.18,
-    transform: [{ scale: 1.02 + breath.value * 0.085 + energy.value * 0.16 }],
+    opacity: (isActive ? 0.22 : 0.14) + breath.value * 0.1 + energy.value * 0.2,
+    transform: [{ scale: 1 + breath.value * 0.06 + energy.value * 0.14 }],
   }));
-  const surfaceStyle = useAnimatedStyle(() => ({
+  // A esfera inteira gira: a faixa clara "passeia" como no mockup.
+  const sphereStyle = useAnimatedStyle(() => ({
     transform: [
-      { scale: 1 + breath.value * 0.045 + energy.value * 0.11 },
-      { rotate: `${drift.value * 360}deg` },
+      { scale: 1 + breath.value * 0.03 + energy.value * 0.08 },
+      { rotate: `${-14 + drift.value * 360}deg` },
     ],
   }));
-  // O núcleo só escala: o ícone fica sempre vertical e não recebe contra-rotação.
-  const coreStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 + breath.value * 0.045 + energy.value * 0.11 }],
+  // O ícone só escala; nunca gira.
+  const glyphStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + energy.value * 0.08 }],
   }));
-  const rimSize = Math.round(size * 0.78);
-  const coreSize = Math.round(size * 0.56);
+
+  const sphereSize = Math.round(size * 0.86);
+  const glyphColor = withAlpha(colors.ink[950], 0.85);
 
   return (
     <View
@@ -229,72 +225,45 @@ export function AuroraVoiceOrb({
         style={[
           {
             position: 'absolute',
-            width: rimSize,
-            height: rimSize,
-            borderRadius: rimSize / 2,
+            width: sphereSize,
+            height: sphereSize,
+            borderRadius: sphereSize / 2,
             overflow: 'hidden',
             borderWidth: 2,
-            borderColor: isActive ? `${hue.rim}BB` : '#0EA5E9B3',
-            backgroundColor: isActive ? '#0A1324' : '#0B2A49',
+            borderColor: withAlpha(hue.rim, isActive ? 0.55 : 0.3),
+            shadowColor: hue.glow,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: isActive ? 0.7 : 0.35,
+            shadowRadius: 16,
+            elevation: 8,
           },
-          surfaceStyle,
+          sphereStyle,
         ]}
       >
         <Svg width="100%" height="100%" viewBox="0 0 100 100">
           <Defs>
-            <RadialGradient id="aurora-core" cx="50%" cy="48%" rx="54%" ry="54%">
-              <Stop offset="0%" stopColor="#E0F2FE" stopOpacity={isActive ? 0.82 : 0.38} />
-              <Stop offset="32%" stopColor="#38BDF8" stopOpacity={isActive ? 0.65 : 0.28} />
-              <Stop offset="72%" stopColor={hue.core} stopOpacity="0.4" />
-              <Stop offset="100%" stopColor="#081323" stopOpacity="0" />
+            <LinearGradient id="orb-band" x1="0%" y1="0%" x2="0%" y2="100%">
+              <Stop offset="0%" stopColor={hue.core} />
+              <Stop offset="28%" stopColor={hue.glow} />
+              <Stop offset="50%" stopColor={voiceOrb.highlight} stopOpacity={isActive ? 1 : 0.75} />
+              <Stop offset="68%" stopColor={hue.rim} />
+              <Stop offset="100%" stopColor={hue.core} />
+            </LinearGradient>
+            <RadialGradient id="orb-shade" cx="50%" cy="50%" rx="50%" ry="50%">
+              <Stop offset="70%" stopColor={colors.ink[950]} stopOpacity="0" />
+              <Stop offset="100%" stopColor={colors.ink[950]} stopOpacity="0.35" />
             </RadialGradient>
-            <LinearGradient id="aurora-ribbon-a" x1="5%" y1="14%" x2="96%" y2="84%">
-              <Stop offset="0%" stopColor="#38BDF8" stopOpacity="0.08" />
-              <Stop offset="45%" stopColor="#2DD4BF" stopOpacity={isActive ? 0.68 : 0.26} />
-              <Stop offset="100%" stopColor="#A78BFA" stopOpacity="0.16" />
-            </LinearGradient>
-            <LinearGradient id="aurora-ribbon-b" x1="10%" y1="80%" x2="92%" y2="18%">
-              <Stop offset="0%" stopColor="#818CF8" stopOpacity="0.12" />
-              <Stop offset="54%" stopColor="#22D3EE" stopOpacity={isActive ? 0.66 : 0.22} />
-              <Stop offset="100%" stopColor="#67E8F9" stopOpacity="0.06" />
-            </LinearGradient>
           </Defs>
-          <Circle cx="50" cy="50" r="50" fill="url(#aurora-core)" />
-          <Path
-            d="M-10 54C8 25 22 31 38 46c17 16 28 8 39-8 13-19 24-17 35 3v36H-10V54Z"
-            fill="url(#aurora-ribbon-a)"
-          />
-          <Path
-            d="M-5 33C13 51 25 67 41 65c16-2 23-25 43-28 15-2 22 5 27 13v28H-5V33Z"
-            fill="url(#aurora-ribbon-b)"
-          />
-          <Circle cx="50" cy="50" r="43" fill="none" stroke="#E0F2FE" strokeOpacity="0.18" />
+          <Circle cx="50" cy="50" r="50" fill="url(#orb-band)" />
+          <Circle cx="50" cy="50" r="50" fill="url(#orb-shade)" />
         </Svg>
       </Animated.View>
 
-      <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            width: coreSize,
-            height: coreSize,
-            borderRadius: coreSize / 2,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1,
-            borderColor: isActive ? '#E0F2FE99' : '#7DD3FCB3',
-            backgroundColor: isActive ? '#0B172A99' : '#0C4A6E',
-            shadowColor: hue.glow,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: isActive ? 0.75 : 0.5,
-            shadowRadius: 14,
-            elevation: 7,
-          },
-          coreStyle,
-        ]}
-      >
-        <MicrophoneGlyph paused={presentation.pausedGlyph} />
-      </Animated.View>
+      {showGlyph ? (
+        <Animated.View style={glyphStyle}>
+          <MicrophoneGlyph paused={presentation.pausedGlyph} color={glyphColor} />
+        </Animated.View>
+      ) : null}
     </View>
   );
 }

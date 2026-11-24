@@ -1,8 +1,7 @@
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import Svg, { Circle, Path } from 'react-native-svg';
-import { BrandLogo } from '../components/BrandLogo';
+import { RodarLogo } from '../components/RodarLogo';
 import { LanguageSwitch } from '../components/LanguageSwitch';
 import { ProfileSwitcher, SsoButton } from '../features/auth';
 
@@ -16,51 +15,19 @@ export function LoginPage() {
         showsVerticalScrollIndicator={false}
       >
         {/* Top bar */}
-        <View className="flex-row items-center justify-between">
-          <BrandLogo size="md" />
+        <View className="flex-row items-start justify-between gap-3">
+          <RodarLogo size={44} tagline={t('brand.tagline')} />
           <LanguageSwitch />
         </View>
 
-        {/* Center Hero */}
-        <View className="flex-1 justify-center my-4">
-          <View className="items-center mb-4">
-            <Svg width={104} height={104} viewBox="0 0 120 120" fill="none">
-              <Circle cx={60} cy={60} r={54} stroke="#099DFD" strokeOpacity={0.14} strokeWidth={1.5} />
-              <Circle
-                cx={60}
-                cy={60}
-                r={42}
-                stroke="#099DFD"
-                strokeOpacity={0.28}
-                strokeWidth={1.5}
-                strokeDasharray="4 4"
-              />
-              <Circle cx={60} cy={60} r={29} fill="#099DFD" fillOpacity={0.16} stroke="#099DFD" strokeWidth={2} />
-              {/* Ondas de voz + rota central */}
-              <Path
-                d="M60 46c-5 0-9 4-9 9 0 6.5 9 16 9 16s9-9.5 9-16c0-5-4-9-9-9Z"
-                stroke="#F4F6FA"
-                strokeWidth={2.2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <Circle cx={60} cy={55} r={3} fill="#099DFD" />
-              <Path
-                d="M44 50a14 14 0 0 0 0 12M76 50a14 14 0 0 1 0 12"
-                stroke="#38BDF8"
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-            </Svg>
-          </View>
-
-          <Text className="text-ink-50 text-3xl font-bold tracking-tight text-center">
+        {/* Título logo abaixo da assinatura, como no mockup 02-login */}
+        <View className="flex-1 mt-8 mb-4">
+          <Text className="text-ink-50 text-3xl font-bold tracking-tight">
             {t('auth.title')}
           </Text>
-          <Text className="text-ink-300 text-base text-center mt-1.5 leading-6 px-2">
+          <Text className="text-ink-300 text-base mt-1.5 leading-6">
             {t('auth.subtitle')}
           </Text>
-
         </View>
 
         {/* Anchored Footer CTA */}

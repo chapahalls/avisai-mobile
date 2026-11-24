@@ -1,6 +1,6 @@
-# AvisAI Mobile
+# RODAR Mobile
 
-App do motorista do **AvisAI**: o agente de voz que avisa o recebedor, conta a espera e prova cada hora parada. Hackathon UNMUTE by Agora (22/11/2026).
+App do motorista do **RODAR**, com o **AvisAI**: o agente de voz que avisa o recebedor, conta a espera e prova cada hora parada. Hackathon UNMUTE by Agora (22/11/2026).
 
 O foco é a operação na cabine: o motorista consulta a viagem atribuída, acompanha a rota, fala com o agente, registra ocorrências e acessa documentos. O app mantém uma fila local para funcionar sem rede, mas **não** transforma o login MOCK, o GPS simulado, os documentos fiscais MOCK ou a voz de demonstração em recursos de produção.
 
@@ -15,11 +15,11 @@ O foco é a operação na cabine: o motorista consulta a viagem atribuída, acom
 ```text
 src/
 ├── app/                 bootstrap, providers e navegação
-├── pages/               Login, Viagem, Mapa, Documentos, Visualizador e Fila
+├── pages/               Login, Início, Mapa, Documentos, Visualizador, Mensagens, Fila no recebedor e Ajustes
 ├── features/
 │   ├── auth/            seleção de perfil e SSO MOCK
 │   ├── trip/            rota, geocerca, estadia, escalonamento e mapa
-│   ├── voice/           sessões Mock/Agora, transcrição e microfone
+│   ├── voice/           sessões Mock/Agora, esfera flutuante do AvisAI e conversa em tela cheia
 │   ├── documents/       documentos, busca local e respostas por campo
 │   ├── report/          campos obrigatórios do reporte por voz
 │   └── outbox/          fila offline FIFO e sincronização
@@ -35,17 +35,21 @@ src/
 
 ## Telas do aplicativo
 
-Capturas do Android fornecidas para a documentação. Elas mostram a navegação do motorista, mapa, documentos, fila offline e modo de cabine; nomes de rota, documentos e estados operacionais pertencem à demonstração e não comprovam conexão Agora, GPS ou documentos reais.
+O visual segue os mockups do repositório web (`rodar-web/docs/RODAR-telas/aplicativo/`) e a paleta RODAR descrita em [docs/DESIGN.md](docs/DESIGN.md).
 
-<p align="center">
-  <img src="docs/assets/trip-agent.jpg" alt="Tela de viagem com status da rota e agente de voz" width="180" />
-  <img src="docs/assets/route-map.jpg" alt="Tela de mapa da rota entre Jundiaí e Campinas" width="180" />
-  <img src="docs/assets/documents.jpg" alt="Tela de documentos da viagem e anexos" width="180" />
-</p>
-<p align="center">
-  <img src="docs/assets/outbox.jpg" alt="Tela da fila offline com eventos enviados" width="180" />
-  <img src="docs/assets/voice-cabin.jpg" alt="Modo de cabine com controles de voz e prova de estadia" width="180" />
-</p>
+| Tela | Mockup | O que mostra |
+|---|---|---|
+| Abertura | `01-abertura` | símbolo RODAR, assinatura e barra de carregamento enquanto o app inicia |
+| Login | `02-login` | assinatura RODAR, escolha do perfil cadastrado e SSO MOCK |
+| Início | `03-home` | saudação, viagem (próxima ou em andamento, com etapas), atalhos, recado do CCO, espera e jornada |
+| Mapa | `08-mapa` | destino, mapa da rota, horário de chegada, botão Navegar e paradas |
+| Documentos | `09-documentos` | pedir ao AvisAI e lista agrupada (Carga, Transporte, Anexos) |
+| Documento | `10-documento-guiado` | trilha, folha clara com os campos verificados e páginas do PDF MOCK |
+| Mensagens | `11-mensagens-cco` | o que foi enviado ao CCO e em que trecho do envio está (outbox) |
+| Fila no recebedor | `12-fila-recebedor` | doca prevista, estado do aviso ao recebedor e tempo parado |
+| AvisAI | `13-componente-avisai`, `06-chat-ao-vivo` | esfera flutuante, painel de comandos e conversa em tela cheia |
+
+Ainda sem tela no app, porque dependem de funções que não existem: login por SMS (`02-login/codigo-sms`), checklist de saída em 5 passos (`04`), modo viagem curva a curva (`05`) e chamada de voz com o CCO (`07`). As capturas em `docs/assets/` são da versão anterior (AvisAI, azul).
 
 ---
 
@@ -130,7 +134,7 @@ GOOGLE_MAPS_API_KEY_ANDROID=sua_chave_aqui
 2. No app mobile, toque no botão **Demo** (canto superior direito):
    - Alterne **API: Backend** e **Voz: Agora**.
    - Cole a URL pública do túnel (`https://xxxx.trycloudflare.com`) no campo **URL do Backend** e toque em **Testar** (`GET /health` → badge verde `Online` e `WS conectado`).
-3. Toque no botão do microfone (`MicButton`) para iniciar a sessão real (`POST /sessions`) e conversar ao vivo com o agente no canal RTC (`uid 1001` motorista ↔ `uid 9001` agente).
+3. Toque na esfera do AvisAI (canto inferior direito) e no microfone do painel para iniciar a sessão real (`POST /sessions`) e conversar ao vivo com o agente no canal RTC (`uid 1001` motorista ↔ `uid 9001` agente).
 
 ### Contratos e Endpoints Oficiais Integrados
 
@@ -166,7 +170,7 @@ Nenhum código proprietário anterior ao hackathon foi utilizado. Apenas pacotes
 
 ## O que é simulado vs. Real / Plugável (E8)
 
-Todos os controles de simulação ficam isolados no componente `DemoControls` (identificado com **borda tracejada** na interface):
+Todos os controles de simulação ficam isolados no componente `DemoControls` (identificado com **borda tracejada** na interface), aberto em **Ajustes** (Início) e no botão **Demo** do Mapa:
 
 - **Mapa:** `RouteMap` suporta `RouteMapGoogle` (`react-native-maps` com `PROVIDER_GOOGLE` e estilo escuro) quando `GOOGLE_MAPS_API_KEY_ANDROID` está configurada no Dev Build, e faz fallback automático para `RouteMapSvg` (mapa simulado em SVG) quando sem chave ou em modo SVG.
 - **GPS e relógio:** simulador percorre a polilinha da rota em tempo acelerado (`1 s real = 1 min simulado`), com botões de atalho na demo (`+1 h`, `Ir p/ Aproximação (8 km)`, `Ir p/ Chegada`).
@@ -176,6 +180,8 @@ Todos os controles de simulação ficam isolados no componente `DemoControls` (i
 - **Recebedor:** em modo `mock`, respostas simuladas (confirma doca/horário, não recebe hoje, não atende); em modo `http`, delega para `POST /rotas/{id}/ligar-recebedor` e recebe a confirmação em tempo real via WebSocket (`resposta_recebedor`).
 - **Documentos:** NF-e e CT-e sincronizados da rota, mais anexos reais baixados pelo CCO; visualizador local/nativo, indexação vetorial local em SQLite (embedding determinístico de 64 dimensões + similaridade cosseno) e resposta estrita por campos extraídos (**R7**). O agente também informa os nomes dos documentos disponíveis. A voz real usa Agora RTC com o agente GPT-Live configurado no backend.
 - **Servidor e SSO:** fila offline-first real em SQLite (`outbox` + `events` + `settings`) com `idempotencyKey` e ordem estrita FIFO; transporte plugável entre `mockApi.ts` e `httpApi.ts` + stream tempo real `backendStream.ts` (`/ws`).
+- **Fila no recebedor:** a posição na fila e os outros caminhões do mockup não aparecem; o recebedor ainda não informa a fila. A tela mostra só a doca confirmada e o tempo parado.
+- **Navegar:** abre o app de mapas do aparelho com o destino da rota (não é simulado).
 - **Rota, placa, empresas e telefones:** 100% fictícios (`Carlos Andrade`, `Transportadora Rota Sul`, `RST-4B21`, `CD Jundiaí` → `Mercadão Campinas, CD Norte`).
 
 ---

@@ -1,54 +1,70 @@
 import { useState } from 'react';
-import { Alert, Modal, Pressable, Text, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { Alert, Pressable, Text, View } from 'react-native';
+import { useNavigation, type CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import Svg, { Circle, Path } from 'react-native-svg';
-import type { MainTabParams } from '../app/navigation';
-import { Screen } from '../components/Screen';
+import type { MainTabParams, RootStackParams } from '../app/navigation';
+import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { Icon, type IconName } from '../components/Icon';
+import { RodarMark } from '../components/RodarLogo';
+import { Screen } from '../components/Screen';
+import { SectionLabel } from '../components/ScreenTitle';
 import { useSession } from '../features/auth';
-import {
-  DemoControls,
-  JourneyTimeline,
-  StayCounter,
-  TripStatusCard,
-  computeStay,
-  useTrip,
-} from '../features/trip';
-import {
-  CabinModeModal,
-  MicButton,
-  QuickUtterances,
-  Transcript,
-  VoiceStateIndicator,
-  useVoice,
-} from '../features/voice';
-import { useApiConfig } from '../services/api';
-import { brl, hhmm } from '../utils/format';
+import { JourneyTimeline, StayCounter, useTrip, type TripPhase } from '../features/trip';
+import { useAvisaiDock, useVoice } from '../features/voice';
+import { colors } from '../lib/theme';
 import { distanceKm } from '../utils/geo';
 import { hapticTap } from '../utils/haptics';
+import { SettingsSheet } from './SettingsSheet';
+import { receiverLabel, receiverTone } from './tripUi';
 
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0) return 'MD';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
+type HomeNav = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParams, 'Trip'>,
+  NativeStackNavigationProp<RootStackParams>
+>;
+
+const STEPS = ['pickup', 'driving', 'approaching', 'arrived', 'unloaded'] as const;
+
+function stepIndex(phase: TripPhase): number {
+  switch (phase) {
+    case 'idle':
+      return -1;
+    case 'pickup':
+      return 0;
+    case 'driving':
+      return 1;
+    case 'approaching':
+      return 2;
+    case 'arrived':
+    case 'waiting':
+      return 3;
+    case 'unloaded':
+      return 4;
+  }
 }
 
-/** Tela principal: mapa, status, contador de espera e a conversa com o agente. */
+function greetingKey(
+  date: Date,
+): 'home.greeting.morning' | 'home.greeting.afternoon' | 'home.greeting.evening' {
+  const h = date.getHours();
+  if (h < 12) return 'home.greeting.morning';
+  if (h < 18) return 'home.greeting.afternoon';
+  return 'home.greeting.evening';
+}
+
+/** Início (mockup `03-home`): saudação, viagem, atalhos, recado do CCO, espera e jornada. */
 export function TripPage() {
   const { t } = useTranslation();
-  const nav = useNavigation<BottomTabNavigationProp<MainTabParams>>();
+  const nav = useNavigation<HomeNav>();
   const {
     phase,
     position,
     activeRoute,
-    simMinutes,
-    arrivedAtMin,
-    unloadedAtMin,
-    backendStay,
+    receiver,
+    etaMin,
     centralRequest,
     gpsDivergence,
     routeAssignedBanner,
@@ -62,262 +78,228 @@ export function TripPage() {
     clearRouteAssignedBanner,
   } = useTrip();
   const voiceState = useVoice((s) => s.state);
-  const preferredMode = useVoice((s) => s.preferredMode);
-  const agoraStage = useVoice((s) => s.agoraStage);
-  const audioRoute = useVoice((s) => s.audioRoute);
-  const lastError = useVoice((s) => s.lastError);
-  const clearError = useVoice((s) => s.clearError);
-  const apiMode = useApiConfig((s) => s.mode);
   const session = useSession((s) => s.session);
-  const [demoOpen, setDemoOpen] = useState(false);
-  const [cabinModeOpen, setCabinModeOpen] = useState(false);
+  const openPanel = useAvisaiDock((s) => s.openPanel);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const driverName = session?.name || activeRoute.driverName || t('auth.demoDriverName');
-  const initials = getInitials(driverName);
-  const leftKm = distanceKm(position, activeRoute.destination.position).toFixed(1);
-  const isVoiceActive = voiceState === 'listening' || voiceState === 'speaking';
+  const firstName = driverName.trim().split(/\s+/)[0] || driverName;
+  const leftKm = distanceKm(position, activeRoute.destination.position);
+  const idle = phase === 'idle';
+  const currentStep = stepIndex(phase);
 
-  const useBackendStay = apiMode === 'http' && backendStay !== null;
-  const hasStay = useBackendStay || (arrivedAtMin !== null && (phase === 'waiting' || phase === 'unloaded'));
-  const endMin = phase === 'unloaded' ? (unloadedAtMin ?? simMinutes) : simMinutes;
-  const localStay = computeStay(Math.max(0, endMin - (arrivedAtMin ?? simMinutes)));
-  const stayTimer = hasStay
-    ? useBackendStay
-      ? backendStay.tempo_parado
-      : hhmm(localStay.waitedMinutes)
-    : null;
-  const stayOver = hasStay
-    ? useBackendStay
-      ? backendStay.horas_excedentes > 0 || backendStay.valor > 0
-      : localStay.excessHours > 0
-    : false;
-  const stayValue = stayOver
-    ? useBackendStay
-      ? backendStay.valor_fmt
-      : brl(localStay.value)
-    : null;
-
-  const canQuickArrive =
-    phase === 'driving' || phase === 'approaching' || phase === 'arrived';
+  const canQuickArrive = phase === 'driving' || phase === 'approaching' || phase === 'arrived';
   const canQuickReportQueue = phase !== 'idle' && phase !== 'unloaded';
   const canQuickUnload = phase === 'waiting';
 
   const handleConfirmReset = () => {
     hapticTap();
-    if (typeof Alert?.alert === 'function') {
-      Alert.alert(
-        t('trip.confirmReset.title'),
-        t('trip.confirmReset.message'),
-        [
-          { text: t('trip.confirmReset.cancel'), style: 'cancel' },
-          {
-            text: t('trip.confirmReset.confirm'),
-            style: 'destructive',
-            onPress: () => reset(),
-          },
-        ],
-      );
-    } else {
-      reset();
-    }
+    Alert.alert(t('trip.confirmReset.title'), t('trip.confirmReset.message'), [
+      { text: t('trip.confirmReset.cancel'), style: 'cancel' },
+      { text: t('trip.confirmReset.confirm'), style: 'destructive', onPress: () => reset() },
+    ]);
   };
 
-  const modePill =
-    preferredMode === 'agora'
-      ? agoraStage === 'live'
-        ? {
-            label: t('voice.modePill.agoraLive'),
-            containerClass: 'bg-ok-500/15 border-ok-500/60',
-            dotColor: '#17B26A',
-            textClass: 'text-ok-500',
-          }
-        : agoraStage === 'waiting_agent' || agoraStage === 'connecting'
-          ? {
-              label: t('voice.modePill.agoraWaitingAgent'),
-              containerClass: 'bg-wait-500/15 border-wait-500/60',
-              dotColor: '#F5A524',
-              textClass: 'text-wait-500',
-            }
-          : {
-              label: t('voice.modePill.agoraDisconnected'),
-              containerClass: 'bg-brand-500/15 border-brand-500/60',
-              dotColor: '#099DFD',
-              textClass: 'text-brand-500',
-            }
-      : {
-          label: t('voice.modePill.mock'),
-          containerClass: 'bg-ink-800 border-ink-700',
-          dotColor: '#98A2B3',
-          textClass: 'text-ink-300',
-        };
-
-  const showQuickConfigButton = preferredMode === 'mock' || apiMode !== 'http';
-  const quickConfigLabel =
-    preferredMode === 'mock' ? t('voice.useAgoraButton') : t('voice.configureBackendButton');
-
   return (
-    <Screen hideActiveVoiceBar>
-      {/* Header do Cockpit do Motorista */}
-      <View className="flex-row items-center justify-between mb-1">
-        <View className="flex-row items-center gap-2.5 bg-ink-900 border border-ink-700/80 rounded-full py-1.5 pl-1.5 pr-3.5">
-          <View className="w-7 h-7 rounded-full bg-brand-500/20 border border-brand-500/50 items-center justify-center">
-            <Text className="text-brand-500 text-xs font-bold">{initials}</Text>
-          </View>
-          <View className="flex-row items-center gap-2">
-            <Text numberOfLines={1} className="text-ink-50 text-xs font-semibold">
-              {driverName}
-            </Text>
-            <View className="w-1 h-1 rounded-full bg-ink-700" />
-            <Text className="text-ink-300 text-xs font-mono font-bold">{activeRoute.plate}</Text>
-          </View>
+    <Screen>
+      {/* Cabeçalho: símbolo, saudação e estado do AvisAI */}
+      <View className="flex-row items-center gap-3">
+        <RodarMark size={52} />
+        <View className="flex-1">
+          <Text className="text-ink-300 text-base">{t(greetingKey(new Date()))}</Text>
+          <Text numberOfLines={1} className="text-ink-50 text-3xl font-display">
+            {firstName}
+          </Text>
         </View>
-
         <Pressable
-          onPress={() => setDemoOpen(true)}
+          onPress={() => {
+            hapticTap();
+            openPanel();
+          }}
           accessibilityRole="button"
-          accessibilityLabel={t('trip.demoButton')}
-          className="flex-row items-center gap-1.5 bg-ink-900 border border-dashed border-ink-700 active:opacity-80 rounded-full px-3.5 py-2"
+          accessibilityHint={t('voice.dock.openHint')}
+          className="flex-row items-center gap-2 bg-ink-900 border border-ink-800 rounded-full px-3.5 py-2 active:opacity-80"
         >
-          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"
-              stroke="#F5A524"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </Svg>
-          <Text className="text-ink-50 text-xs font-semibold">{t('trip.demoButton')}</Text>
+          <View
+            className={`w-2.5 h-2.5 rounded-full ${voiceState === 'idle' ? 'bg-ink-300' : 'bg-ok-500'}`}
+          />
+          <Text className="text-ink-50 text-sm font-semibold">
+            {t('home.avisaiState', { state: t(`voice.state.${voiceState}`) })}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            hapticTap();
+            setSettingsOpen(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={t('settings.title')}
+          className="w-11 h-11 rounded-full bg-ink-900 border border-ink-800 items-center justify-center active:opacity-80"
+        >
+          <Icon name="sliders" size={20} color={colors.ink[300]} />
         </Pressable>
       </View>
 
-      {/* Banner de Nova Rota Atribuída (azul #099DFD, dispensável) */}
+      {/* Avisos que pedem atenção */}
       {routeAssignedBanner ? (
-        <View className="bg-brand-500/15 border border-brand-500/60 rounded-2xl p-3 flex-row items-center justify-between gap-2.5">
-          <View className="flex-row items-center gap-2.5 flex-1">
-            <View className="w-8 h-8 rounded-xl bg-brand-500/20 border border-brand-500/50 items-center justify-center">
-              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z"
-                  stroke="#099DFD"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <Circle cx={12} cy={9} r={2.5} fill="#099DFD" />
-              </Svg>
-            </View>
-            <View className="flex-1">
-              <Text className="text-brand-500 text-xs font-bold">
-                {t('trip.routeAssignedBanner.title')}
-              </Text>
-              <Text className="text-ink-50 text-xs mt-0.5">{routeAssignedBanner}</Text>
-            </View>
-          </View>
-          <Pressable
-            onPress={clearRouteAssignedBanner}
-            accessibilityRole="button"
-            className="bg-brand-500/20 border border-brand-500/50 rounded-xl px-2.5 py-1.5 active:opacity-80"
-          >
-            <Text className="text-ink-50 text-xs font-bold">
-              {t('trip.routeAssignedBanner.dismiss')}
-            </Text>
-          </Pressable>
-        </View>
+        <Notice
+          tone="brand"
+          title={t('trip.routeAssignedBanner.title')}
+          body={routeAssignedBanner}
+          action={t('trip.routeAssignedBanner.dismiss')}
+          onAction={clearRouteAssignedBanner}
+        />
       ) : null}
-
-      {/* Alerta discreto de Divergência de GPS (R6 - dupla prova) */}
       {gpsDivergence ? (
-        <View className="bg-alert-500/15 border border-alert-500/60 rounded-2xl p-3 flex-row items-center justify-between gap-2.5">
-          <View className="flex-row items-center gap-2.5 flex-1">
-            <View className="w-8 h-8 rounded-xl bg-alert-500/20 border border-alert-500/50 items-center justify-center">
-              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
-                  stroke="#F04438"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
-            </View>
-            <View className="flex-1">
-              <Text className="text-alert-500 text-xs font-bold">
-                {t('trip.gpsDivergence.title')}
-              </Text>
-              <Text className="text-ink-50 text-xs mt-0.5">{gpsDivergence}</Text>
-            </View>
-          </View>
-          <Pressable
-            onPress={() => setGpsDivergence(null)}
-            accessibilityRole="button"
-            className="bg-alert-500/20 border border-alert-500/50 rounded-xl px-2.5 py-1.5 active:opacity-80"
-          >
-            <Text className="text-ink-50 text-xs font-semibold">
-              {t('trip.gpsDivergence.dismiss')}
-            </Text>
-          </Pressable>
-        </View>
+        <Notice
+          tone="alert"
+          title={t('trip.gpsDivergence.title')}
+          body={gpsDivergence}
+          action={t('trip.gpsDivergence.dismiss')}
+          onAction={() => setGpsDivergence(null)}
+        />
       ) : null}
 
-      {/* Card de Pergunta da Central (CCO) */}
-      {centralRequest ? (
-        <View
-          className={`rounded-2xl p-3.5 border ${
-            centralRequest.status === 'respondida'
-              ? 'bg-ok-500/15 border-ok-500/60'
-              : 'bg-wait-500/15 border-wait-500/70'
-          }`}
-        >
-          <View className="flex-row items-start justify-between gap-2.5">
-            <View className="flex-row items-start gap-2.5 flex-1">
-              <View
-                className={`w-8 h-8 rounded-xl border items-center justify-center mt-0.5 ${
-                  centralRequest.status === 'respondida'
-                    ? 'bg-ok-500/20 border-ok-500/50'
-                    : 'bg-wait-500/20 border-wait-500/60'
-                }`}
-              >
-                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z"
-                    stroke={centralRequest.status === 'respondida' ? '#17B26A' : '#F5A524'}
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-              </View>
-              <View className="flex-1">
-                <Text
-                  className={`text-xs font-bold ${
-                    centralRequest.status === 'respondida' ? 'text-ok-500' : 'text-wait-500'
-                  }`}
-                >
-                  {centralRequest.status === 'respondida'
-                    ? t('trip.centralRequest.answeredTitle')
-                    : t('trip.centralRequest.title')}
-                </Text>
-                {centralRequest.pergunta ? (
-                  <Text className="text-ink-50 text-sm font-semibold mt-1">
-                    “{centralRequest.pergunta}”
-                  </Text>
-                ) : null}
-                {centralRequest.status === 'respondida' && centralRequest.resposta ? (
-                  <Text className="text-ink-300 text-xs mt-1">{centralRequest.resposta}</Text>
-                ) : (
-                  <Text className="text-wait-500 text-xs font-medium mt-1">
-                    {t('trip.centralRequest.voiceHint')}
-                  </Text>
-                )}
-              </View>
+      {/* Próxima viagem / viagem em andamento */}
+      <Card className="p-5">
+        <View className="flex-row items-center justify-between gap-2">
+          <Text
+            numberOfLines={1}
+            className="flex-1 text-info-300 text-sm font-bold uppercase tracking-widest"
+          >
+            {idle ? t('home.nextTrip') : t('home.currentTrip')} · {activeRoute.tripId}
+          </Text>
+          <Text className="text-brand-300 text-base font-mono font-bold">{activeRoute.plate}</Text>
+        </View>
+
+        <View className="mt-4">
+          <RouteStop
+            kind="origin"
+            caption={t('trip.originLabel')}
+            name={activeRoute.origin.name}
+            done={!idle}
+          />
+          <View className="w-0.5 h-5 bg-ink-700 ml-[9px]" />
+          <RouteStop
+            kind="destination"
+            caption={
+              activeRoute.unloadWindow
+                ? t('home.windowAndKm', { window: activeRoute.unloadWindow, km: leftKm.toFixed(0) })
+                : t('trip.left', { km: leftKm.toFixed(1) })
+            }
+            name={activeRoute.destination.name}
+            done={phase === 'unloaded'}
+          />
+        </View>
+
+        {idle ? (
+          <>
+            <Button
+              className="mt-5"
+              label={t('trip.start')}
+              onPress={start}
+              icon={<Icon name="play" size={22} />}
+            />
+            <Text className="text-ink-300 text-sm text-center mt-3">{t('home.startHint')}</Text>
+          </>
+        ) : (
+          <>
+            <View className="flex-row flex-wrap items-center gap-2 mt-4">
+              <Badge tone="brand" label={t(`trip.phase.${phase}`)} />
+              <Badge
+                tone={receiverTone(receiver)}
+                label={`${t('trip.receiver')} ${receiverLabel(receiver, t)}`}
+              />
+              {etaMin !== null && etaMin > 0 ? (
+                <Badge tone="neutral" label={t('map.etaShort', { min: etaMin })} />
+              ) : null}
             </View>
+            <View
+              className="flex-row gap-1.5 mt-4"
+              accessible
+              accessibilityLabel={t('home.stepProgress', {
+                step: currentStep + 1,
+                total: STEPS.length,
+                name: t(`trip.steps.${STEPS[Math.max(0, currentStep)]}`),
+              })}
+            >
+              {STEPS.map((key, i) => (
+                <View key={key} className="flex-1">
+                  <View
+                    className={`h-1.5 rounded-full ${
+                      i < currentStep ? 'bg-brand-400' : i === currentStep ? 'bg-wait-500' : 'bg-ink-700'
+                    }`}
+                  />
+                  <Text
+                    numberOfLines={1}
+                    className={`text-[11px] mt-1.5 text-center ${
+                      i === currentStep ? 'text-ink-50 font-bold' : 'text-ink-300'
+                    }`}
+                  >
+                    {t(`trip.steps.${key}`)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+      </Card>
+
+      {/* Atalhos */}
+      <View className="flex-row gap-3">
+        <Shortcut
+          icon="message"
+          tone="info"
+          title={t('home.shortcuts.cco.title')}
+          subtitle={t('home.shortcuts.cco.subtitle')}
+          onPress={() => nav.navigate('Messages')}
+        />
+        <Shortcut
+          icon="list"
+          tone="wait"
+          title={t('home.shortcuts.queue.title')}
+          subtitle={t('home.shortcuts.queue.subtitle')}
+          onPress={() => nav.navigate('Queue')}
+        />
+        <Shortcut
+          icon="map"
+          tone="neutral"
+          title={t('home.shortcuts.map.title')}
+          subtitle={t('home.shortcuts.map.subtitle')}
+          onPress={() => nav.navigate('Map')}
+        />
+      </View>
+
+      {/* Recado do CCO */}
+      {centralRequest ? (
+        <View className="bg-info-900 rounded-3xl p-4 flex-row gap-3">
+          <View className="w-12 h-12 rounded-full bg-info-300/20 items-center justify-center">
+            <Text className="text-ink-50 text-sm font-bold">CCO</Text>
+          </View>
+          <View className="flex-1">
+            <Text className="text-info-300 text-sm font-bold">
+              {centralRequest.status === 'respondida'
+                ? t('trip.centralRequest.answeredTitle')
+                : t('trip.centralRequest.title')}
+            </Text>
+            {centralRequest.pergunta ? (
+              <Text className="text-ink-50 text-lg mt-1 leading-6">“{centralRequest.pergunta}”</Text>
+            ) : null}
+            <Text
+              className={`text-sm mt-1.5 ${
+                centralRequest.status === 'respondida' ? 'text-ink-300' : 'text-wait-500 font-semibold'
+              }`}
+            >
+              {centralRequest.status === 'respondida' && centralRequest.resposta
+                ? centralRequest.resposta
+                : t('trip.centralRequest.voiceHint')}
+            </Text>
             <Pressable
               onPress={() => setCentralRequest(null)}
               accessibilityRole="button"
-              className="bg-ink-900/70 border border-ink-700 rounded-lg px-2 py-1 active:opacity-80"
+              className="self-start mt-2 py-1 active:opacity-70"
             >
-              <Text className="text-ink-300 text-[11px] font-semibold">
+              <Text className="text-info-300 text-sm font-semibold">
                 {t('trip.centralRequest.dismiss')}
               </Text>
             </Pressable>
@@ -325,277 +307,152 @@ export function TripPage() {
         </View>
       ) : null}
 
-      {/* Card compacto de resumo da rota + atalho p/ aba Mapa */}
-      <Card className="p-3.5">
-        <View className="flex-row items-center justify-between gap-2">
-          <View className="flex-1">
-            <View className="flex-row items-center gap-1.5">
-              <View className="w-2 h-2 rounded-full bg-brand-500" />
-              <Text numberOfLines={1} className="text-ink-300 text-xs font-medium">
-                {activeRoute.origin.name}
-              </Text>
-              <Text className="text-ink-700 text-xs">→</Text>
-              <View className="w-2 h-2 rounded-full bg-wait-500" />
-              <Text numberOfLines={1} className="flex-1 text-ink-50 text-xs font-bold">
-                {activeRoute.destination.name}
-              </Text>
-            </View>
-            <Text
-              style={{ fontVariant: ['tabular-nums'] }}
-              className="text-ink-300 text-xs mt-1"
-            >
-              {t('trip.left', { km: leftKm })} · {t('trip.receiver')}{' '}
-              {activeRoute.destination.receiverName ?? activeRoute.destination.name}
-            </Text>
-          </View>
+      <StayCounter />
 
-          <Pressable
-            onPress={() => nav.navigate('Map')}
-            accessibilityRole="button"
-            className="bg-brand-500/15 border border-brand-500/50 active:opacity-80 rounded-xl px-3 py-2"
-          >
-            <Text className="text-brand-500 text-xs font-bold">{t('trip.viewMapShortcut')}</Text>
-          </Pressable>
-        </View>
-
-        {phase === 'idle' ? (
-          <View className="mt-3 pt-2.5 border-t border-ink-700/70">
-            <Button
-              label={t('trip.start')}
-              onPress={start}
-              icon={
-                <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M5 3l14 9-14 9V3Z"
-                    fill="#F4F6FA"
-                    stroke="#F4F6FA"
-                    strokeWidth={1.8}
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-              }
-            />
-          </View>
-        ) : null}
-      </Card>
-
-      {phase !== 'idle' && (
-        <>
-          <TripStatusCard />
-          <StayCounter />
-        </>
-      )}
-
-      {/* Cockpit de Voz (sempre visível, inclusive em phase === 'idle') */}
-      <Card className={isVoiceActive ? 'border-brand-500/70' : ''}>
-        <View className="flex-row justify-between items-center mb-1.5">
-          <View className="flex-row items-center gap-2">
-            <View className="w-7 h-7 rounded-lg bg-brand-500/15 border border-brand-500/40 items-center justify-center">
-              <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"
-                  stroke="#099DFD"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-              </Svg>
-            </View>
-            <Text className="text-ink-50 text-base font-bold">{t('voice.title')}</Text>
-          </View>
-          <View className="flex-row items-center gap-1.5">
-            <Pressable
-              onPress={() => {
-                hapticTap();
-                setCabinModeOpen(true);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={t('voice.cabinMode.openButton')}
-              className="flex-row items-center gap-1 bg-ink-800 border border-brand-500/50 active:opacity-80 rounded-full px-2.5 py-1"
-            >
-              <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"
-                  stroke="#099DFD"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
-              <Text className="text-brand-500 text-[11px] font-bold">
-                {t('voice.cabinMode.openButton')}
-              </Text>
-            </Pressable>
-            <VoiceStateIndicator />
-          </View>
-        </View>
-
-        {/* Pílula clara de modo Agora / Simulada + rota de áudio + botão compacto p/ abrir Demo */}
-        <View className="flex-row flex-wrap items-center justify-between gap-2 mb-2">
-          <View className="flex-row items-center gap-1.5">
-            <View
-              className={`flex-row items-center gap-1.5 border rounded-full px-2.5 py-1 ${modePill.containerClass}`}
-            >
-              <View
-                style={{ backgroundColor: modePill.dotColor }}
-                className="w-2 h-2 rounded-full"
+      {/* Ações de um toque, só quando fazem sentido na fase */}
+      {canQuickArrive || canQuickReportQueue || canQuickUnload ? (
+        <View className="gap-2">
+          <SectionLabel>{t('trip.quickActions.label')}</SectionLabel>
+          <View className="flex-row flex-wrap gap-2">
+            {canQuickArrive ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                label={t('trip.quickActions.arrived')}
+                onPress={() => {
+                  hapticTap();
+                  quickArrive();
+                }}
               />
-              <Text className={`text-xs font-semibold ${modePill.textClass}`}>
-                {modePill.label}
-              </Text>
-            </View>
-
-            <View className="flex-row items-center gap-1 bg-ink-800 border border-ink-700 rounded-full px-2 py-1">
-              <Text className="text-ink-300 text-[10px] font-semibold">
-                {t(`voice.audioRoute.${audioRoute}`)}
-              </Text>
-            </View>
+            ) : null}
+            {canQuickReportQueue ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                label={t('trip.quickActions.reportQueue')}
+                onPress={() => {
+                  hapticTap();
+                  quickReportQueue();
+                }}
+              />
+            ) : null}
+            {canQuickUnload ? (
+              <Button
+                size="sm"
+                className="flex-1"
+                label={t('trip.quickActions.unloaded')}
+                onPress={() => {
+                  hapticTap();
+                  quickUnload();
+                }}
+              />
+            ) : null}
           </View>
-
-          {showQuickConfigButton && (
-            <Pressable
-              onPress={() => setDemoOpen(true)}
-              accessibilityRole="button"
-              className="bg-brand-500/15 border border-brand-500/60 active:opacity-80 rounded-full px-3 py-1"
-            >
-              <Text className="text-brand-50 text-xs font-semibold">
-                {quickConfigLabel}
-              </Text>
-            </Pressable>
-          )}
         </View>
+      ) : null}
 
-        {/* Caixa discreta vermelha em caso de erro real (lastError) */}
-        {lastError ? (
-          <View className="bg-alert-500/15 border border-alert-500/60 rounded-xl p-2.5 mb-2.5 flex-row items-center justify-between gap-2">
-            <Text className="text-alert-500 text-xs font-medium flex-1">
-              {lastError}
-            </Text>
-            <Pressable
-              onPress={clearError}
-              accessibilityRole="button"
-              className="bg-alert-500/20 border border-alert-500/50 rounded-lg px-2.5 py-1 active:opacity-80"
-            >
-              <Text className="text-ink-50 text-[11px] font-semibold">
-                {t('demo.close')}
-              </Text>
-            </Pressable>
-          </View>
-        ) : null}
-
-        {/* Selo discreto de privacidade com ícone de escudo */}
-        <View className="flex-row items-center gap-1.5 mb-2.5">
-          <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
-            <Path
-              d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"
-              stroke="#17B26A"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <Circle cx={12} cy={12} r={2} fill="#17B26A" />
-          </Svg>
-          <Text className="text-ink-300 text-xs">{t('voice.privacyBadge')}</Text>
-        </View>
-
-        <Transcript />
-
-        <View className="items-center mt-2">
-          <MicButton />
-        </View>
-
-        {/* Ações Rápidas de 1 Toque na Cabine (B2) */}
-        {(canQuickArrive || canQuickReportQueue || canQuickUnload) && (
-          <View className="mt-3 pt-2.5 border-t border-ink-700/70">
-            <Text className="text-ink-300 text-[11px] font-semibold mb-2">
-              {t('trip.quickActions.label')}
-            </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {canQuickArrive && (
-                <Pressable
-                  onPress={() => {
-                    hapticTap();
-                    quickArrive();
-                  }}
-                  accessibilityRole="button"
-                  className="flex-1 min-w-[96px] bg-brand-500/15 border border-brand-500/60 active:opacity-80 rounded-xl py-2.5 px-3 items-center justify-center"
-                >
-                  <Text className="text-brand-500 text-xs font-bold">
-                    {t('trip.quickActions.arrived')}
-                  </Text>
-                </Pressable>
-              )}
-
-              {canQuickReportQueue && (
-                <Pressable
-                  onPress={() => {
-                    hapticTap();
-                    quickReportQueue();
-                  }}
-                  accessibilityRole="button"
-                  className="flex-1 min-w-[116px] bg-wait-500/15 border border-wait-500/60 active:opacity-80 rounded-xl py-2.5 px-3 items-center justify-center"
-                >
-                  <Text className="text-wait-500 text-xs font-bold">
-                    {t('trip.quickActions.reportQueue')}
-                  </Text>
-                </Pressable>
-              )}
-
-              {canQuickUnload && (
-                <Pressable
-                  onPress={() => {
-                    hapticTap();
-                    quickUnload();
-                  }}
-                  accessibilityRole="button"
-                  className="flex-1 min-w-[96px] bg-ok-500/15 border border-ok-500/60 active:opacity-80 rounded-xl py-2.5 px-3 items-center justify-center"
-                >
-                  <Text className="text-ok-500 text-xs font-bold">
-                    {t('trip.quickActions.unloaded')}
-                  </Text>
-                </Pressable>
-              )}
-            </View>
-          </View>
-        )}
-
-        <QuickUtterances />
-      </Card>
-
-      {/* Timeline ao vivo da Jornada ("Prova da Espera" — A5) */}
       <JourneyTimeline />
 
-      {phase === 'unloaded' && (
-        <Button label={t('trip.restart')} variant="ghost" onPress={handleConfirmReset} />
-      )}
+      {phase === 'unloaded' ? (
+        <Button label={t('trip.restart')} variant="outline" onPress={handleConfirmReset} />
+      ) : null}
 
-      {/* Modal Full-Screen Modo Cabine / Mãos-Livres (B1) */}
-      <CabinModeModal
-        visible={cabinModeOpen}
-        onClose={() => setCabinModeOpen(false)}
-        stayTimer={stayTimer}
-        stayValue={stayValue}
-        stayOver={stayOver}
-      />
-
-      {/* Modal Bottom Sheet de Simulação (Regra E8) */}
-      <Modal
-        visible={demoOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setDemoOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-ink-950/75">
-          <Pressable
-            className="flex-1"
-            onPress={() => setDemoOpen(false)}
-            accessibilityLabel={t('demo.close')}
-          />
-          <View className="bg-ink-950 border-t border-ink-700 rounded-t-3xl px-4 pt-3 pb-8">
-            <View className="w-10 h-1 rounded-full bg-ink-700 self-center mb-3" />
-            <DemoControls onClose={() => setDemoOpen(false)} />
-          </View>
-        </View>
-      </Modal>
+      <SettingsSheet visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Screen>
+  );
+}
+
+function RouteStop({
+  kind,
+  caption,
+  name,
+  done,
+}: {
+  kind: 'origin' | 'destination';
+  caption: string;
+  name: string;
+  done: boolean;
+}) {
+  const marker =
+    kind === 'origin'
+      ? `border-2 border-brand-400 ${done ? 'bg-brand-400' : 'bg-transparent'}`
+      : `border-2 border-wait-500 ${done ? 'bg-wait-500' : 'bg-wait-500/60'}`;
+  return (
+    <View className="flex-row items-center gap-3">
+      <View className={`w-5 h-5 rounded-full ${marker}`} />
+      <View className="flex-1">
+        <Text className="text-ink-300 text-sm">{caption}</Text>
+        <Text numberOfLines={1} className="text-ink-50 text-xl font-bold">
+          {name}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+const shortcutTone = {
+  info: { box: 'bg-info-900', color: colors.info[300] },
+  wait: { box: 'bg-wait-500/20', color: colors.wait[500] },
+  neutral: { box: 'bg-ink-800', color: colors.ink[300] },
+} as const;
+
+function Shortcut({
+  icon,
+  tone,
+  title,
+  subtitle,
+  onPress,
+}: {
+  icon: IconName;
+  tone: keyof typeof shortcutTone;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={() => {
+        hapticTap();
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${subtitle}`}
+      className="flex-1 bg-ink-900 border border-ink-800 rounded-3xl p-3.5 active:opacity-80"
+    >
+      <View className={`w-11 h-11 rounded-xl items-center justify-center ${shortcutTone[tone].box}`}>
+        <Icon name={icon} size={22} color={shortcutTone[tone].color} />
+      </View>
+      <Text className="text-ink-50 text-base font-bold mt-3 leading-5">{title}</Text>
+      <Text className="text-ink-300 text-xs mt-1 leading-4">{subtitle}</Text>
+    </Pressable>
+  );
+}
+
+function Notice({
+  tone,
+  title,
+  body,
+  action,
+  onAction,
+}: {
+  tone: 'brand' | 'alert';
+  title: string;
+  body: string;
+  action: string;
+  onAction: () => void;
+}) {
+  const box = tone === 'alert' ? 'bg-alert-500/15' : 'bg-brand-500/20';
+  const titleColor = tone === 'alert' ? 'text-alert-500' : 'text-brand-300';
+  return (
+    <View accessibilityRole="alert" className={`rounded-3xl p-4 flex-row items-center gap-3 ${box}`}>
+      <Icon name="alert" size={22} color={tone === 'alert' ? colors.alert[500] : colors.brand[300]} />
+      <View className="flex-1">
+        <Text className={`text-sm font-bold ${titleColor}`}>{title}</Text>
+        <Text className="text-ink-50 text-sm mt-0.5">{body}</Text>
+      </View>
+      <Button size="sm" variant="outline" label={action} onPress={onAction} />
+    </View>
   );
 }

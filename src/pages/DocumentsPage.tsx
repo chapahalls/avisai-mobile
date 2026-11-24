@@ -1,15 +1,19 @@
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import Svg, { Path } from 'react-native-svg';
-import { Screen } from '../components/Screen';
-import { Badge } from '../components/Badge';
-import { DocumentList, useDocuments } from '../features/documents';
-import { useApiConfig } from '../services/api';
 import type { RootStackParams } from '../app/navigation';
+import { Icon } from '../components/Icon';
+import { Screen } from '../components/Screen';
+import { ScreenTitle } from '../components/ScreenTitle';
+import { DocumentList, useDocuments } from '../features/documents';
+import { useTrip } from '../features/trip';
+import { useAvisaiDock, useVoice } from '../features/voice';
+import { useApiConfig } from '../services/api';
+import { hapticTap } from '../utils/haptics';
 
+/** Documentos (mockup `09-documentos`): pedir ao AvisAI e a lista agrupada da viagem. */
 export function DocumentsPage() {
   const { t } = useTranslation();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParams>>();
@@ -17,6 +21,8 @@ export function DocumentsPage() {
   const syncFromBackend = useDocuments((s) => s.syncFromBackend);
   const apiMode = useApiConfig((s) => s.mode);
   const rotaId = useApiConfig((s) => s.rotaId);
+  const activeRoute = useTrip((s) => s.activeRoute);
+  const openPanel = useAvisaiDock((s) => s.openPanel);
 
   useEffect(() => {
     if (apiMode === 'http') {
@@ -24,31 +30,37 @@ export function DocumentsPage() {
     }
   }, [apiMode, rotaId, syncFromBackend]);
 
+  const askAvisai = () => {
+    hapticTap();
+    useVoice.getState().setContext('free');
+    openPanel();
+  };
+
   return (
     <Screen>
-      {/* Header com título e badge de contagem */}
-      <View className="flex-row items-center justify-between">
-        <Text className="text-ink-50 text-2xl font-bold tracking-tight">
-          {t('documents.title')}
-        </Text>
-        <Badge
-          tone="brand"
-          label={t('documents.countBadge', { count: documents.length })}
-        />
-      </View>
+      <ScreenTitle
+        eyebrow={t('documents.eyebrow', { trip: activeRoute.tripId, plate: activeRoute.plate })}
+        title={t('documents.title')}
+        right={
+          <Text className="text-ink-300 text-base mb-1">
+            {t('documents.countBadge', { count: documents.length })}
+          </Text>
+        }
+      />
 
-      {/* Banner de dica de consulta por voz */}
-      <View className="flex-row items-center gap-2.5 bg-brand-500/10 border border-brand-500/30 rounded-xl px-3.5 py-2.5">
-        <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-          <Path
-            d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM19 10v2a7 7 0 0 1-14 0v-2"
-            stroke="#099DFD"
-            strokeWidth={2}
-            strokeLinecap="round"
-          />
-        </Svg>
-        <Text className="text-ink-50 text-xs font-medium flex-1">{t('documents.hint')}</Text>
-      </View>
+      <Pressable
+        onPress={askAvisai}
+        accessibilityRole="button"
+        className="bg-brand-500/20 border border-brand-600 rounded-3xl p-4 flex-row items-center gap-4 active:opacity-85"
+      >
+        <View className="w-14 h-14 rounded-full bg-brand-500 items-center justify-center">
+          <Icon name="mic" size={24} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-ink-50 text-lg font-bold">{t('documents.askTitle')}</Text>
+          <Text className="text-ink-300 text-sm mt-0.5 leading-5">{t('documents.hint')}</Text>
+        </View>
+      </Pressable>
 
       <DocumentList onOpen={(d) => nav.navigate('DocumentViewer', { id: d.id })} />
     </Screen>

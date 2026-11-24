@@ -45,7 +45,7 @@ const OPEN_CTE_RE =
 const OPEN_DOCUMENTS_RE =
   /(abr(ir|e|a)|mostr(ar|e|a)|ver|ir para|open|show|go to).*(documento|document|pdf|arquivo|anexo|file|attachment)/;
 const OPEN_OUTBOX_RE =
-  /(abr(ir|e|a)|mostr(ar|e|a)|ver|ir para|open|show|go to).*(fila|outbox|sincroniza|sync|perfil|profile)/;
+  /(abr(ir|e|a)|mostr(ar|e|a)|ver|ir para|open|show|go to).*(mensage(m|ns)|messages?|fila|outbox|sincroniza|sync|perfil|profile)/;
 const OPEN_MAP_RE =
   /(abr(ir|e|a)|mostr(ar|e|a)|ver|ir para|open|show|go to).*(mapa|rota|map|route)/;
 const BACK_TO_TRIP_RE =
@@ -56,7 +56,7 @@ const START_GPS_RE =
 
 export type ClientAction = MensagensStream['acao_cliente']['acao'];
 
-function navigateToTab(screen: 'Trip' | 'Map' | 'Documents' | 'Outbox'): void {
+function navigateToTab(screen: 'Trip' | 'Map' | 'Documents' | 'Messages'): void {
   if (process.env.VITEST) return;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -151,7 +151,7 @@ export function tryExecuteVoiceCommand(text: string): boolean {
 
   if (OPEN_OUTBOX_RE.test(norm)) {
     if (isDuplicate(norm)) return false;
-    navigateToTab('Outbox');
+    navigateToTab('Messages');
     useVoiceCommandToast.getState().show(i18n.t('voiceCommands.toast.openOutbox'));
     return true;
   }

@@ -143,6 +143,8 @@ interface TripState {
   addTimelineEntry: (label: string, tone: TimelineTone, timestampIso?: string) => void;
   quickArrive: () => void;
   quickReportQueue: () => void;
+  /** Mensagem livre do motorista ao CCO: entra no outbox e na linha do tempo. */
+  sendDriverMessage: (text: string) => void;
   quickUnload: () => void;
   start: () => void;
   tick: (dtRealMs: number) => void;
@@ -301,6 +303,27 @@ export const useTrip = create<TripState>((set, get) => ({
       ),
     }));
     agentBus.emit('agent:say', { text: i18n.t('voice.agent.occurrenceRecorded') });
+  },
+
+  sendDriverMessage: (text) => {
+    const clean = text.trim();
+    if (!clean) return;
+    const s = get();
+    // Mesmo evento da ocorrência relatada por voz: é crítico e sai mesmo com rede fraca.
+    enqueue(
+      s.activeRoute.tripId,
+      'OccurrenceCreated',
+      { text: clean, descricao: clean, position: s.position, canal: 'mensagem' },
+      'driver',
+    );
+    set((curr) => ({
+      timeline: appendTimeline(
+        curr.timeline,
+        i18n.t('trip.timeline.occurrenceReported', { text: clean }),
+        'brand',
+        curr.simMinutes,
+      ),
+    }));
   },
 
   quickUnload: () => {

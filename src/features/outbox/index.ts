@@ -8,4 +8,4 @@ export {
 } from './api/outboxRepo';
 export { startSyncEngine, flushOutbox } from './api/syncEngine';
 export { useOutboxStore } from './hooks/useOutbox';
-export { OutboxList } from './components/OutboxList';
+export type { OutboxRow, OutboxStatus } from './types';

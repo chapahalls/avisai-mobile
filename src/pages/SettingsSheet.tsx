@@ -1,0 +1,150 @@
+import { useState } from 'react';
+import { Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Button } from '../components/Button';
+import { Icon } from '../components/Icon';
+import { LanguageSwitch } from '../components/LanguageSwitch';
+import { useSession } from '../features/auth';
+import { DemoControls, useTrip } from '../features/trip';
+import { useVoice } from '../features/voice';
+import { colors } from '../lib/theme';
+import { hapticTap } from '../utils/haptics';
+
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'MD';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
+}
+
+/**
+ * Ajustes do motorista: perfil, idioma, modo de voz e sair. O painel Demo (simulação,
+ * regra E8) fica aqui, com a borda tracejada que marca o que é simulado.
+ */
+export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const session = useSession((s) => s.session);
+  const logout = useSession((s) => s.logout);
+  const plate = useTrip((s) => s.activeRoute.plate);
+  const preferredMode = useVoice((s) => s.preferredMode);
+  const agoraStage = useVoice((s) => s.agoraStage);
+  const audioRoute = useVoice((s) => s.audioRoute);
+  const [demoOpen, setDemoOpen] = useState(false);
+
+  const driverName = session?.name || t('auth.demoDriverName');
+  const companyName = session?.company || t('auth.demoCompanyName');
+
+  const modeLabel =
+    preferredMode === 'agora'
+      ? agoraStage === 'live'
+        ? t('voice.modePill.agoraLive')
+        : agoraStage === 'waiting_agent' || agoraStage === 'connecting'
+          ? t('voice.modePill.agoraWaitingAgent')
+          : t('voice.modePill.agoraDisconnected')
+      : t('voice.modePill.mock');
+
+  const close = () => {
+    setDemoOpen(false);
+    onClose();
+  };
+
+  const confirmLogout = () => {
+    hapticTap();
+    Alert.alert(t('auth.confirmLogout.title'), t('auth.confirmLogout.message'), [
+      { text: t('auth.confirmLogout.cancel'), style: 'cancel' },
+      {
+        text: t('auth.confirmLogout.confirm'),
+        style: 'destructive',
+        onPress: () => {
+          close();
+          logout();
+        },
+      },
+    ]);
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
+      <View className="flex-1 justify-end bg-ink-950/80">
+        <Pressable className="flex-1" onPress={close} accessibilityLabel={t('demo.close')} />
+        <View className="bg-ink-950 border-t border-ink-800 rounded-t-[32px] px-4 pt-3 pb-8 max-h-[88%]">
+          <View className="w-10 h-1 rounded-full bg-ink-700 self-center mb-3" />
+          {demoOpen ? (
+            <DemoControls onClose={() => setDemoOpen(false)} />
+          ) : (
+            <ScrollView contentContainerStyle={{ gap: 16 }}>
+              <View className="flex-row items-center justify-between">
+                <Text accessibilityRole="header" className="text-ink-50 text-2xl font-display">
+                  {t('settings.title')}
+                </Text>
+                <Pressable
+                  onPress={close}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('demo.close')}
+                  className="w-11 h-11 rounded-full bg-ink-800 items-center justify-center active:opacity-80"
+                >
+                  <Icon name="x" size={20} />
+                </Pressable>
+              </View>
+
+              <View className="bg-ink-900 border border-ink-800 rounded-3xl p-4 flex-row items-center gap-3">
+                <View className="w-12 h-12 rounded-full bg-brand-500/20 items-center justify-center">
+                  <Text className="text-brand-300 text-base font-bold">{initialsOf(driverName)}</Text>
+                </View>
+                <View className="flex-1">
+                  <Text numberOfLines={1} className="text-ink-50 text-lg font-bold">
+                    {driverName}
+                  </Text>
+                  <Text numberOfLines={1} className="text-ink-300 text-sm">
+                    {companyName} · <Text className="text-brand-300 font-mono font-bold">{plate}</Text>
+                  </Text>
+                </View>
+              </View>
+
+              <View className="flex-row items-center justify-between">
+                <Text className="text-ink-50 text-base font-semibold">{t('lang.label')}</Text>
+                <LanguageSwitch />
+              </View>
+
+              <View className="bg-ink-900 border border-ink-800 rounded-3xl p-4 gap-1.5">
+                <Text className="text-ink-300 text-xs font-bold uppercase tracking-widest">
+                  {t('settings.voice')}
+                </Text>
+                <Text className="text-ink-50 text-base font-semibold">
+                  {modeLabel} · {t(`voice.audioRoute.${audioRoute}`)}
+                </Text>
+                <View className="flex-row items-center gap-1.5">
+                  <Icon name="check" size={14} color={colors.ok[500]} />
+                  <Text className="text-ink-300 text-sm">{t('voice.privacyBadge')}</Text>
+                </View>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  hapticTap();
+                  setDemoOpen(true);
+                }}
+                accessibilityRole="button"
+                className="border border-dashed border-ink-700 rounded-3xl p-4 flex-row items-center gap-3 active:opacity-80"
+              >
+                <Icon name="sliders" size={20} color={colors.wait[500]} />
+                <View className="flex-1">
+                  <Text className="text-ink-50 text-base font-bold">{t('trip.demoButton')}</Text>
+                  <Text className="text-ink-300 text-sm">{t('settings.demoHint')}</Text>
+                </View>
+                <Icon name="chevronRight" size={20} color={colors.ink[300]} />
+              </Pressable>
+
+              <Button
+                variant="outline"
+                label={t('auth.logout')}
+                onPress={confirmLogout}
+                icon={<Icon name="logout" size={18} color={colors.ink[300]} />}
+              />
+            </ScrollView>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}

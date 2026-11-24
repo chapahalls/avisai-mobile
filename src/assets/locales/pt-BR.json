@@ -1,6 +1,7 @@
 {
   "brand": {
-    "name": "AvisAI",
+    "name": "RODAR",
+    "tagline": "com AvisAI, seu copiloto de voz",
     "poweredBy": "Voice AI · Powered by Agora"
   },
   "lang": {
@@ -45,7 +46,11 @@
     "trip": "Viagem",
     "map": "Mapa",
     "documents": "Documentos",
-    "outbox": "Fila"
+    "outbox": "Fila",
+    "home": "Início",
+    "messages": "Mensagens",
+    "messagesPending_one": "Mensagens, {{count}} na fila",
+    "messagesPending_other": "Mensagens, {{count}} na fila"
   },
   "map": {
     "title": "Mapa da Rota",
@@ -54,7 +59,13 @@
     "etaShort": "ETA ~{{min}} min",
     "speedLabel": "{{kmh}} km/h",
     "focusTruck": "Caminhão",
-    "fitRoute": "Rota"
+    "fitRoute": "Rota",
+    "headingTo": "Indo para",
+    "kmAndMin": "{{km}} km · {{min}} min",
+    "navigate": "Navegar",
+    "navigateErrorTitle": "Não foi possível abrir a navegação",
+    "navigateError": "Verifique se há um app de mapas instalado.",
+    "arrivalA11y": "Chegada prevista às {{time}}"
   },
   "headsUp": {
     "receiverConfirmedTitle": "Recebedor confirmou doca!",
@@ -220,7 +231,8 @@
       "openButton": "Modo Cabine",
       "exitButton": "Sair do Modo Cabine",
       "lastAgentSpeech": "AvisAI · Última fala",
-      "directVoice": "AvisAI · Voz direta"
+      "directVoice": "AvisAI · Voz direta",
+      "voiceOnlyWhileMoving": "Só voz em movimento"
     },
     "activeBar": {
       "agentSpeaking": "AvisAI falando",
@@ -266,22 +278,32 @@
         "unload": "Descarga registrada. Estadia encerrada e enviada ao CCO.",
         "free": ""
       },
-    "occurrenceRecorded": "Entendi, registrei a ocorrência e avisei o CCO.",
-    "occurrenceStart": "Claro. Qual é o problema? Depois me diga o km e em qual BR você está.",
-    "occurrenceAsk": {
-      "problema": "Qual é o problema?",
-      "km": "Em qual km aconteceu?",
-      "br": "Em qual BR você está?"
-    },
+      "occurrenceRecorded": "Entendi, registrei a ocorrência e avisei o CCO.",
+      "occurrenceStart": "Claro. Qual é o problema? Depois me diga o km e em qual BR você está.",
+      "occurrenceAsk": {
+        "problema": "Qual é o problema?",
+        "km": "Em qual km aconteceu?",
+        "br": "Em qual BR você está?"
+      },
       "returningToTopic": " Voltando: {{question}}",
       "freePrompt": "Estou aqui. Pode falar de uma ocorrência ou perguntar sobre a nota.",
       "gotItPrefix": "Anotado. ",
       "didNotCatchPrefix": "Não peguei essa. "
+    },
+    "dock": {
+      "open": "Abrir AvisAI, {{state}}",
+      "openHint": "Abre os comandos de voz",
+      "bubbleDismissHint": "Toque para esconder",
+      "panelTitle": "AvisAI {{state}}",
+      "panelSubtitle": "Fale de qualquer tela. Eu troco a tela para você.",
+      "simulateLabel": "Toque para simular o que você diria:",
+      "openChat": "Abrir conversa em tela cheia",
+      "dismissErrorHint": "Toque para dispensar o erro"
     }
   },
   "documents": {
-    "title": "Documentos da viagem",
-    "hint": "Pergunte por voz: “qual o peso da nota?”",
+    "title": "Documentos",
+    "hint": "“Mostra a nota fiscal” e ele abre para você.",
     "viewer": "Documento",
     "mockNotice": "Visualizador simulado (PDF fictício).",
     "realFileReady": "Anexo real da rota pronto para abrir",
@@ -291,7 +313,6 @@
     "openFileError": "Verifique sua conexão e se há um aplicativo compatível instalado.",
     "page": "Página {{n}} de {{total}}",
     "extractedFields": "{{count}} campos extraídos",
-    "countBadge": "{{count}} docs",
     "verifiedTitle": "Campos verificados (anti-alucinação)",
     "verifiedSubtitle": "O agente de voz responde exclusivamente com base nestes dados extraídos.",
     "openDoc": "Abrir",
@@ -321,6 +342,22 @@
       "arquivo": "arquivo",
       "tipo": "tipo",
       "descricao": "descrição"
+    },
+    "eyebrow": "Viagem {{trip}} · {{plate}}",
+    "askTitle": "Peça ao AvisAI",
+    "openHint": "Abre o documento",
+    "allDocuments": "Todos os documentos",
+    "numberShort": "Nº {{number}}",
+    "countBadge_one": "{{count}} documento",
+    "countBadge_other": "{{count}} documentos",
+    "groups": {
+      "cargo": "Carga",
+      "transport": "Transporte",
+      "files": "Anexos"
+    },
+    "badge": {
+      "verified": "Verificado",
+      "file": "Anexo"
     }
   },
   "outbox": {
@@ -422,5 +459,73 @@
     "TaskAcknowledged": "CCO assumiu",
     "UnloadConfirmed": "Descarga",
     "DocumentQuestionAnswered": "Pergunta sobre documento"
+  },
+  "common": {
+    "back": "Voltar"
+  },
+  "splash": {
+    "loading": "conectando ao CCO · carregando viagem"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "voice": "Voz",
+    "demoHint": "Simulação: rede, CCO, tempo, voz, mapa e backend"
+  },
+  "home": {
+    "greeting": {
+      "morning": "Bom dia,",
+      "afternoon": "Boa tarde,",
+      "evening": "Boa noite,"
+    },
+    "avisaiState": "AvisAI {{state}}",
+    "nextTrip": "Próxima viagem",
+    "currentTrip": "Viagem",
+    "windowAndKm": "Janela {{window}} · {{km}} km",
+    "startHint": "ou só diga “Iniciar viagem, AvisAI!”",
+    "stepProgress": "Etapa {{step}} de {{total}}: {{name}}",
+    "tripMode": "Modo viagem",
+    "tripModeSpeed": "Modo viagem · {{kmh}} km/h",
+    "shortcuts": {
+      "cco": {
+        "title": "Falar com o CCO",
+        "subtitle": "mensagem para a central"
+      },
+      "queue": {
+        "title": "Fila no recebedor",
+        "subtitle": "doca e tempo parado"
+      },
+      "map": {
+        "title": "Ver no mapa",
+        "subtitle": "onde estou e para onde vou"
+      }
+    }
+  },
+  "messages": {
+    "eyebrow": "Para o CCO",
+    "title": "Mensagens",
+    "counts": {
+      "queued_one": "{{count}} na fila",
+      "queued_other": "{{count}} na fila",
+      "sending_one": "{{count}} enviando",
+      "sending_other": "{{count}} enviando",
+      "sent_one": "{{count}} entregue",
+      "sent_other": "{{count}} entregues",
+      "failed_one": "{{count}} falhou",
+      "failed_other": "{{count}} falharam"
+    },
+    "offline": "Sem sinal. As mensagens ficam na fila e saem sozinhas quando a rede voltar.",
+    "placeholder": "Escreva (só com o veículo parado)",
+    "voiceOnlyWhileMoving": "Em movimento, só por voz",
+    "dictate": "Ditar mensagem ao AvisAI",
+    "send": "Enviar",
+    "progressA11y": "Envio: trecho {{step}} de {{total}}"
+  },
+  "queue": {
+    "title": "Fila de descarga",
+    "expectedDock": "Doca prevista",
+    "dockAt": "Doca {{dock}} · {{time}}",
+    "stoppedTime": "Tempo parado",
+    "stayStartsOnArrival": "A contagem começa quando você chega ao recebedor (cerca + voz).",
+    "noPositionNote": "A posição na fila ainda não é informada pelo recebedor."
   }
 }

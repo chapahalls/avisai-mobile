@@ -1,6 +1,7 @@
 {
   "brand": {
-    "name": "AvisAI",
+    "name": "RODAR",
+    "tagline": "with AvisAI, your voice copilot",
     "poweredBy": "Voice AI · Powered by Agora"
   },
   "lang": {
@@ -45,7 +46,11 @@
     "trip": "Trip",
     "map": "Map",
     "documents": "Documents",
-    "outbox": "Queue"
+    "outbox": "Queue",
+    "home": "Home",
+    "messages": "Messages",
+    "messagesPending_one": "Messages, {{count}} queued",
+    "messagesPending_other": "Messages, {{count}} queued"
   },
   "map": {
     "title": "Route Map",
@@ -54,7 +59,13 @@
     "etaShort": "ETA ~{{min}} min",
     "speedLabel": "{{kmh}} km/h",
     "focusTruck": "Truck",
-    "fitRoute": "Route"
+    "fitRoute": "Route",
+    "headingTo": "Heading to",
+    "kmAndMin": "{{km}} km · {{min}} min",
+    "navigate": "Navigate",
+    "navigateErrorTitle": "Could not open navigation",
+    "navigateError": "Check that a maps app is installed.",
+    "arrivalA11y": "Expected arrival at {{time}}"
   },
   "headsUp": {
     "receiverConfirmedTitle": "Receiver confirmed dock!",
@@ -220,7 +231,8 @@
       "openButton": "Cabin Mode",
       "exitButton": "Exit Cabin Mode",
       "lastAgentSpeech": "AvisAI · Last speech",
-      "directVoice": "AvisAI · Direct voice"
+      "directVoice": "AvisAI · Direct voice",
+      "voiceOnlyWhileMoving": "Voice only while moving"
     },
     "activeBar": {
       "agentSpeaking": "AvisAI speaking",
@@ -277,11 +289,21 @@
       "freePrompt": "I'm here. You can report an incident or ask about the invoice.",
       "gotItPrefix": "Got it. ",
       "didNotCatchPrefix": "Didn't catch that. "
+    },
+    "dock": {
+      "open": "Open AvisAI, {{state}}",
+      "openHint": "Opens voice commands",
+      "bubbleDismissHint": "Tap to hide",
+      "panelTitle": "AvisAI {{state}}",
+      "panelSubtitle": "Talk from any screen. I'll switch screens for you.",
+      "simulateLabel": "Tap to simulate what you'd say:",
+      "openChat": "Open full-screen conversation",
+      "dismissErrorHint": "Tap to dismiss the error"
     }
   },
   "documents": {
-    "title": "Trip documents",
-    "hint": "Ask by voice: “what is the invoice weight?”",
+    "title": "Documents",
+    "hint": "“Show me the invoice” and it opens it for you.",
     "viewer": "Document",
     "mockNotice": "Simulated viewer (fictitious PDF).",
     "realFileReady": "Real route attachment ready to open",
@@ -291,7 +313,6 @@
     "openFileError": "Check your connection and that a compatible app is installed.",
     "page": "Page {{n}} of {{total}}",
     "extractedFields": "{{count}} extracted fields",
-    "countBadge": "{{count}} docs",
     "verifiedTitle": "Verified fields (anti-hallucination)",
     "verifiedSubtitle": "The voice agent answers strictly from these extracted data points.",
     "openDoc": "Open",
@@ -321,6 +342,22 @@
       "arquivo": "file",
       "tipo": "type",
       "descricao": "description"
+    },
+    "eyebrow": "Trip {{trip}} · {{plate}}",
+    "askTitle": "Ask AvisAI",
+    "openHint": "Opens the document",
+    "allDocuments": "All documents",
+    "numberShort": "No. {{number}}",
+    "countBadge_one": "{{count}} document",
+    "countBadge_other": "{{count}} documents",
+    "groups": {
+      "cargo": "Cargo",
+      "transport": "Transport",
+      "files": "Attachments"
+    },
+    "badge": {
+      "verified": "Verified",
+      "file": "Attachment"
     }
   },
   "outbox": {
@@ -422,5 +459,73 @@
     "TaskAcknowledged": "Control center took it",
     "UnloadConfirmed": "Unloaded",
     "DocumentQuestionAnswered": "Document question"
+  },
+  "common": {
+    "back": "Back"
+  },
+  "splash": {
+    "loading": "connecting to CCO · loading trip"
+  },
+  "settings": {
+    "title": "Settings",
+    "voice": "Voice",
+    "demoHint": "Simulation: network, CCO, time, voice, map and backend"
+  },
+  "home": {
+    "greeting": {
+      "morning": "Good morning,",
+      "afternoon": "Good afternoon,",
+      "evening": "Good evening,"
+    },
+    "avisaiState": "AvisAI {{state}}",
+    "nextTrip": "Next trip",
+    "currentTrip": "Trip",
+    "windowAndKm": "Window {{window}} · {{km}} km",
+    "startHint": "or just say “Start trip, AvisAI!”",
+    "stepProgress": "Step {{step}} of {{total}}: {{name}}",
+    "tripMode": "Trip mode",
+    "tripModeSpeed": "Trip mode · {{kmh}} km/h",
+    "shortcuts": {
+      "cco": {
+        "title": "Talk to CCO",
+        "subtitle": "message the control room"
+      },
+      "queue": {
+        "title": "Receiver queue",
+        "subtitle": "dock and time stopped"
+      },
+      "map": {
+        "title": "See on map",
+        "subtitle": "where I am and where I'm going"
+      }
+    }
+  },
+  "messages": {
+    "eyebrow": "To the CCO",
+    "title": "Messages",
+    "counts": {
+      "queued_one": "{{count}} queued",
+      "queued_other": "{{count}} queued",
+      "sending_one": "{{count}} sending",
+      "sending_other": "{{count}} sending",
+      "sent_one": "{{count}} delivered",
+      "sent_other": "{{count}} delivered",
+      "failed_one": "{{count}} failed",
+      "failed_other": "{{count}} failed"
+    },
+    "offline": "No signal. Messages wait in the queue and go out on their own when the network is back.",
+    "placeholder": "Type (only while parked)",
+    "voiceOnlyWhileMoving": "While moving, voice only",
+    "dictate": "Dictate a message to AvisAI",
+    "send": "Send",
+    "progressA11y": "Delivery: stage {{step}} of {{total}}"
+  },
+  "queue": {
+    "title": "Unloading queue",
+    "expectedDock": "Expected dock",
+    "dockAt": "Dock {{dock}} · {{time}}",
+    "stoppedTime": "Time stopped",
+    "stayStartsOnArrival": "The count starts when you arrive at the receiver (geofence + voice).",
+    "noPositionNote": "The receiver does not report your queue position yet."
   }
 }

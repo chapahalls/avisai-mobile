@@ -1,18 +1,22 @@
-import { Alert, Linking, Pressable, Text, View } from 'react-native';
+import { Alert, Linking, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import Svg, { Path } from 'react-native-svg';
-import { DOCUMENTS, MockPdfViewer, useDocuments } from '../features/documents';
-import { useVoice } from '../features/voice';
-import { hapticTap } from '../utils/haptics';
 import type { RootStackParams } from '../app/navigation';
+import { Button } from '../components/Button';
+import { Icon } from '../components/Icon';
+import { DOCUMENTS, MockPdfViewer, useDocuments } from '../features/documents';
+import { useAvisaiDock, useVoice } from '../features/voice';
+import { colors } from '../lib/theme';
+import { hapticTap } from '../utils/haptics';
 
+/** Documento aberto (mockup `10-documento-guiado`), também quando o AvisAI abre por voz. */
 export function DocumentViewerPage({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParams, 'DocumentViewer'>) {
   const { t } = useTranslation();
   const documents = useDocuments((s) => s.documents);
+  const openPanel = useAvisaiDock((s) => s.openPanel);
   const doc =
     documents.find(
       (d) =>
@@ -31,7 +35,7 @@ export function DocumentViewerPage({
     if (voice.state === 'idle' && !voice.sessionConnected) {
       voice.listen();
     }
-    navigation.navigate('Main', { screen: 'Trip' });
+    openPanel();
   };
 
   const handleOpenFile = async () => {
@@ -49,60 +53,41 @@ export function DocumentViewerPage({
   return (
     <View className="flex-1 bg-ink-950">
       {doc.fileUrl ? (
-        <View className="flex-1 p-4 justify-between">
-          <View className="bg-ink-900 border border-ink-700/80 rounded-2xl p-5">
-            <Text className="text-ink-50 text-lg font-bold">{doc.title}</Text>
-            <Text className="text-ink-300 text-sm mt-2">{t('documents.realFileNotice')}</Text>
+        <View className="flex-1 p-4">
+          <View className="bg-ink-900 border border-ink-800 rounded-3xl p-5">
+            <Text className="text-ink-50 text-2xl font-display">{doc.title}</Text>
+            <Text className="text-ink-300 text-base mt-2 leading-6">{t('documents.realFileNotice')}</Text>
             {doc.description ? (
-              <Text className="text-ink-100 text-sm mt-4">{doc.description}</Text>
+              <Text className="text-ink-50 text-base mt-4">{doc.description}</Text>
             ) : null}
-            {doc.mimeType ? (
-              <Text className="text-ink-300 text-xs mt-4">{doc.mimeType}</Text>
-            ) : null}
+            {doc.mimeType ? <Text className="text-ink-300 text-sm mt-4">{doc.mimeType}</Text> : null}
           </View>
-
-          <Pressable
-            onPress={() => void handleOpenFile()}
-            accessibilityRole="button"
-            className="bg-brand-500 active:opacity-85 rounded-2xl py-3.5 px-4 flex-row items-center justify-center gap-2"
-          >
-            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14"
-                stroke="#F4F6FA"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-            <Text className="text-ink-50 text-sm font-bold">{t('documents.openRealFileButton')}</Text>
-          </Pressable>
         </View>
       ) : (
-        <>
-          <MockPdfViewer doc={doc} />
-          <View className="px-4 py-3 bg-ink-900 border-t border-ink-700/80">
-            <Pressable
-              onPress={handleAskAvisai}
-              accessibilityRole="button"
-              className="bg-brand-500 active:opacity-85 rounded-2xl py-3.5 px-4 flex-row items-center justify-center gap-2"
-            >
-              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM19 10v2a7 7 0 0 1-14 0v-2M12 19v3"
-                  stroke="#F4F6FA"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
-              <Text className="text-ink-50 text-sm font-bold">
-                {t('documents.askAboutDocumentButton')}
-              </Text>
-            </Pressable>
-          </View>
-        </>
+        <MockPdfViewer doc={doc} />
       )}
+
+      <View className="px-4 pt-3 pb-6 gap-3 border-t border-ink-800">
+        {doc.fileUrl ? (
+          <Button
+            label={t('documents.openRealFileButton')}
+            onPress={() => void handleOpenFile()}
+            icon={<Icon name="file" size={20} />}
+          />
+        ) : (
+          <Button
+            label={t('documents.askAboutDocumentButton')}
+            onPress={handleAskAvisai}
+            icon={<Icon name="mic" size={20} />}
+          />
+        )}
+        <Button
+          variant="outline"
+          label={t('documents.allDocuments')}
+          onPress={() => navigation.goBack()}
+          icon={<Icon name="chevronLeft" size={18} color={colors.ink[300]} />}
+        />
+      </View>
     </View>
   );
 }
