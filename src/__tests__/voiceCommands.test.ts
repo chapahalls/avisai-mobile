@@ -59,6 +59,7 @@ describe('modo simulado: a fala vira a mesma ação', () => {
     const casos: Array<[string, string]> = [
       ['Abrir mapa da rota', 'Comando de voz: Abrindo Mapa'],
       ['Vai pras mensagens', 'Comando de voz: Abrindo Mensagens'],
+      ['Mudar para documentos', 'Comando de voz: Abrindo Documentos'],
       ['Ver fila de sincronização', 'Comando de voz: Abrindo Mensagens'],
       ['Abre a fila do recebedor', 'Comando de voz: Abrindo Fila no recebedor'],
       ['Abrir os arquivos anexados', 'Comando de voz: Abrindo Documentos'],

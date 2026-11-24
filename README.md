@@ -170,7 +170,7 @@ Nenhum código proprietário anterior ao hackathon foi utilizado. Apenas pacotes
 
 ## Comandos de voz e wake word
 
-**Wake word:** com o app aberto, logado e sem conversa ativa, diga **"Ei AvisAI"**. O painel do AvisAI abre e a conversa começa sem tocar na tela. Usa o reconhecedor de fala do Android (`expo-speech-recognition`), no próprio aparelho quando ele tem o pacote de idioma e, sem ele, o reconhecedor padrão do Google. O texto serve só para achar a wake word e é descartado. A escuta para durante a conversa e em segundo plano, e liga/desliga em **Ajustes → Escutar "Ei AvisAI"**. Precisa do Dev Build (não roda no Expo Go).
+**Wake word:** com o app aberto, logado e sem conversa ativa, diga **"Ei AvisAI"**. O painel do AvisAI abre e a conversa começa sem tocar na tela. Usa o reconhecedor de fala padrão do Android (`expo-speech-recognition`, serviço do Google) em modo contínuo: o app abre o microfone uma vez e o Android não toca o bipe a cada frase (o indicador de microfone em uso fica aceso enquanto escuta). O reconhecimento sem internet fica desligado (`WAKE_WORD.preferOnDevice`): no Galaxy A17 o modelo "instalado" devolvia texto vazio. O texto serve só para achar a wake word e é descartado. A escuta para durante a conversa e em segundo plano, e liga/desliga em **Ajustes → Escutar "Ei AvisAI"**. Precisa do Dev Build (não roda no Expo Go).
 
 **Comandos durante a conversa:** o agente entende o pedido e o backend manda a ação ao app (`acao_cliente` no `/ws`):
 

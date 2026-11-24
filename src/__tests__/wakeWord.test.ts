@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('../lib/config', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../lib/config')>();
+  // Os testes cobrem também o caminho do reconhecimento no aparelho.
+  return { ...mod, WAKE_WORD: { ...mod.WAKE_WORD, preferOnDevice: true } };
+});
 vi.mock('react-native', () => ({
   AppState: { currentState: 'active', addEventListener: () => ({ remove: () => undefined }) },
 }));
@@ -47,7 +52,7 @@ function fakeEngine(opts: { onDevice?: boolean; permission?: boolean } = {}) {
   let handlers: WakeEngineHandlers | null = null;
   const engine = {
     available: () => true,
-    supportsOnDevice: () => opts.onDevice ?? false,
+    canRunOnDevice: vi.fn(async () => opts.onDevice ?? false),
     requestPermission: vi.fn(async () => opts.permission ?? true),
     start: vi.fn(),
     abort: vi.fn(),
@@ -98,10 +103,10 @@ describe('startWakeWordWatcher', () => {
     expect(engine.start).toHaveBeenCalledWith('pt-BR', false);
     expect(useWakeWord.getState().status).toBe('listening');
 
-    emit().onTexts(['vou avisar ele']);
+    emit().onTexts(['vou avisar ele'], false);
     expect(engine.abort).not.toHaveBeenCalled();
 
-    emit().onTexts(['ei avisa aí']);
+    emit().onTexts(['ei avisa aí'], false);
     expect(engine.abort).toHaveBeenCalled();
     await settle(WAKE_WORD.handoffMs);
     expect(useAvisaiDock.getState().panelOpen).toBe(true);
@@ -152,6 +157,19 @@ describe('startWakeWordWatcher', () => {
     await settle();
     expect(engine.start).toHaveBeenLastCalledWith('pt-BR', true);
     emit().onError('language-not-supported');
+    await settle();
+    expect(engine.start).toHaveBeenLastCalledWith('pt-BR', false);
+  });
+
+  it('no aparelho, se a fala volta sem texto, troca para o reconhecedor padrão', async () => {
+    const { engine, emit } = fakeEngine({ onDevice: true });
+    stop = startWakeWordWatcher(engine);
+    await settle();
+    expect(engine.start).toHaveBeenLastCalledWith('pt-BR', true);
+    emit().onTexts([''], true);
+    expect(engine.abort).not.toHaveBeenCalled();
+    emit().onTexts([''], true);
+    expect(engine.abort).toHaveBeenCalled();
     await settle();
     expect(engine.start).toHaveBeenLastCalledWith('pt-BR', false);
   });

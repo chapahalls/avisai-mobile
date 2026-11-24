@@ -267,7 +267,7 @@ export function executeClientAction(action: ClientAction, opts: ClientActionOpti
 
 // ---------- modo simulado (sem backend): a fala vira a mesma ação ----------
 
-const VERB = /\b(abr\w*|mostr\w*|ver|veja|exib\w*|ir (pras?|para|pros?|ao|as?|nos?|nas?)|vai (pras?|para|pros?)|volt\w* (pras?|para|pros?|ao|as?)|open|show|go( back)? to)\b/;
+const VERB = /\b(abr\w*|mostr\w*|ver|veja|exib\w*|(mud|troc|pass)\w* (pras?|para|pros?)|ir (pras?|para|pros?|ao|as?|nos?|nas?)|vai (pras?|para|pros?)|volt\w* (pras?|para|pros?|ao|as?)|open|show|go( back)? to)\b/;
 const START_TRIP_RE = /(inici(ar|e)|comec(ar|e)|start).*(viagem|rota|trip|route)/;
 const START_GPS_RE =
   /(inici(ar|e)|ativ(ar|e)|lig(ar|e)|start|enable|turn on).*(gps|localiza[cç][aã]o|rastreamento|tracking|location)/;

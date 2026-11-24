@@ -12,14 +12,16 @@ export type WakeEngineError =
   | 'other';
 
 export interface WakeEngineHandlers {
-  onTexts: (texts: string[]) => void;
+  /** Hipóteses do reconhecedor; `isFinal` marca o fim de um trecho de fala. */
+  onTexts: (texts: string[], isFinal: boolean) => void;
   onEnd: () => void;
   onError: (error: WakeEngineError) => void;
 }
 
 export interface WakeWordEngine {
   available(): boolean;
-  supportsOnDevice(): boolean;
+  /** O aparelho reconhece este idioma sem internet (modelo instalado)? */
+  canRunOnDevice(lang: string): Promise<boolean>;
   requestPermission(): Promise<boolean>;
   start(lang: string, onDevice: boolean): void;
   abort(): void;
@@ -38,6 +40,9 @@ function loadModule(): SpeechModule | null {
     return null; // build sem o módulo nativo
   }
 }
+
+/** Serviço do Android que faz o reconhecimento no aparelho (Android System Intelligence). */
+const ON_DEVICE_SERVICE = 'com.google.android.as';
 
 const KNOWN_ERRORS: WakeEngineError[] = [
   'not-allowed',
@@ -60,9 +65,16 @@ export function createWakeWordEngine(): WakeWordEngine {
         return false;
       }
     },
-    supportsOnDevice() {
+    async canRunOnDevice(lang) {
+      if (!mod || !native) return false;
       try {
-        return Boolean(native?.supportsOnDeviceRecognition());
+        if (!native.supportsOnDeviceRecognition()) return false;
+        // Sem o modelo do idioma, o reconhecimento no aparelho ouve a fala mas devolve texto vazio.
+        const { installedLocales } = await mod.getSupportedLocales({
+          androidRecognitionServicePackage: ON_DEVICE_SERVICE,
+        });
+        const want = lang.toLowerCase().replace('_', '-');
+        return installedLocales.some((l) => l.toLowerCase().replace('_', '-') === want);
       } catch {
         return false;
       }
@@ -80,6 +92,9 @@ export function createWakeWordEngine(): WakeWordEngine {
       native?.start({
         lang,
         interimResults: true,
+        // Contínuo: no Android 13+ o próprio app captura o microfone e o Android não toca o
+        // bipe de início a cada frase. (Com o modelo offline do Galaxy A17 vinha vazio; com o
+        // reconhecedor padrão do Google funciona.)
         continuous: true,
         maxAlternatives: 3,
         requiresOnDeviceRecognition: onDevice,
@@ -94,13 +109,18 @@ export function createWakeWordEngine(): WakeWordEngine {
       }
     },
     attach(handlers) {
-      if (!mod) return () => undefined;
+      if (!native) return () => undefined;
+      // Direto no módulo nativo: o `addSpeechRecognitionListener` do pacote é o `addListener`
+      // sem `this` e não entrega os eventos quando chamado como método de outro objeto.
       const subs = [
-        mod.addSpeechRecognitionListener('result', (ev) => {
-          handlers.onTexts(ev.results.map((r) => r.transcript));
+        native.addListener('result', (ev) => {
+          handlers.onTexts(
+            ev.results.map((r) => r.transcript),
+            ev.isFinal,
+          );
         }),
-        mod.addSpeechRecognitionListener('end', () => handlers.onEnd()),
-        mod.addSpeechRecognitionListener('error', (ev) => {
+        native.addListener('end', () => handlers.onEnd()),
+        native.addListener('error', (ev) => {
           const code = KNOWN_ERRORS.includes(ev.error as WakeEngineError)
             ? (ev.error as WakeEngineError)
             : 'other';

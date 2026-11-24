@@ -52,7 +52,9 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
   let running = false;
   let waking = false;
   let unavailable = false;
-  let onDevice = engine.supportsOnDevice();
+  /** `null` = ainda não sabe se o idioma atual roda no aparelho. */
+  let onDevice: boolean | null = null;
+  let emptyFinals = 0;
   let permission: 'unknown' | 'granted' | 'denied' = 'unknown';
   let appActive = AppState.currentState === 'active';
   let restartTimer: ReturnType<typeof setTimeout> | null = null;
@@ -119,10 +121,15 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
       }
       if (running || !shouldListen()) return;
     }
+    const lang = i18n.language?.startsWith('en') ? 'en-US' : 'pt-BR';
+    if (onDevice === null) {
+      onDevice = WAKE_WORD.preferOnDevice && (await engine.canRunOnDevice(lang));
+      if (running || !shouldListen()) return;
+    }
     running = true;
     setStatus('listening');
     try {
-      engine.start(i18n.language?.startsWith('en') ? 'en-US' : 'pt-BR', onDevice);
+      engine.start(lang, onDevice);
     } catch {
       running = false;
       schedule(WAKE_WORD.errorBackoffMs);
@@ -154,8 +161,22 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
   };
 
   const detach = engine.attach({
-    onTexts: (texts) => {
-      if (running && !waking && texts.some(matchWakePhrase)) wake();
+    onTexts: (texts, isFinal) => {
+      if (!running || waking) return;
+      if (texts.some(matchWakePhrase)) {
+        emptyFinals = 0;
+        wake();
+        return;
+      }
+      if (!isFinal) return;
+      // Fala ouvida, texto vazio: o modelo do aparelho não entende o idioma. Usa o reconhecedor padrão.
+      emptyFinals = texts.every((t) => !t.trim()) ? emptyFinals + 1 : 0;
+      if (onDevice && emptyFinals >= WAKE_WORD.emptyResultsBeforeFallback) {
+        onDevice = false;
+        emptyFinals = 0;
+        stopNow();
+        schedule(WAKE_WORD.restartDelayMs);
+      }
     },
     onEnd: () => {
       if (!running) return;
@@ -198,6 +219,8 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
     sync();
   });
   const onLanguage = () => {
+    onDevice = null;
+    emptyFinals = 0;
     stopNow();
     sync();
   };

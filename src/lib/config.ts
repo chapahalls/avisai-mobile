@@ -57,12 +57,19 @@ export const VOICE_COMMANDS = {
 export const WAKE_WORD = {
   /** Ligada por padrão; o motorista desliga nas configurações. */
   enabledByDefault: true,
+  /**
+   * Reconhecer sem internet quando o aparelho diz ter o idioma instalado. Desligado: no Galaxy A17
+   * o modelo "instalado" devolve texto vazio. O reconhecedor padrão do Google é o que funciona.
+   */
+  preferOnDevice: false,
   /** Pausa antes de reabrir a escuta quando o reconhecedor encerra sozinho. */
   restartDelayMs: 400,
   /** Pausa maior depois de erro, para não ficar em laço. */
   errorBackoffMs: 3000,
   /** Tempo para o microfone ser liberado antes de a Agora assumir. */
   handoffMs: 350,
+  /** Trechos de fala seguidos com texto vazio antes de trocar o reconhecimento no aparelho pelo padrão. */
+  emptyResultsBeforeFallback: 2,
 } as const;
 
 export type ApiMode = 'mock' | 'http';
