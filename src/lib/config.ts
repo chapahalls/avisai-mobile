@@ -31,11 +31,38 @@ export type BusinessConfig = {
 /** Relógio simulado: 1 s real = TIME_SCALE s simulados (60 = 1 s vira 1 min). */
 export const TIME_SCALE = 60;
 
-/** Voz RTC direta: sem gravação nem legendas/transcrição consumidas pelo cliente. */
+/**
+ * Voz RTC direta: sem gravação nem legendas/transcrição consumidas pelo cliente.
+ * Os comandos do app chegam do backend como intenção (`acao_cliente`), nunca da transcrição.
+ * A wake word usa o reconhecedor do aparelho só para achar "Ei AvisAI": o texto é descartado
+ * na hora (não aparece, não é salvo nem enviado).
+ */
 export const VOICE_PRIVACY = {
   recordAudio: false,
   showTranscript: false,
   clientTranscriptCommands: false,
+} as const;
+
+/** Tempos dos comandos que encerram a conversa ou a conta: o agente se despede antes. */
+export const VOICE_COMMANDS = {
+  /** Espera o agente começar a se despedir (a ação chega antes do áudio). */
+  farewellStartWaitMs: 4000,
+  /** Limite para a despedida terminar antes de desligar mesmo assim. */
+  farewellMaxMs: 10000,
+  /** Mesma ação repetida dentro deste intervalo é ignorada. */
+  dedupeMs: 2500,
+} as const;
+
+/** Escuta da wake word ("Ei AvisAI") com o reconhecedor de fala do aparelho. */
+export const WAKE_WORD = {
+  /** Ligada por padrão; o motorista desliga nas configurações. */
+  enabledByDefault: true,
+  /** Pausa antes de reabrir a escuta quando o reconhecedor encerra sozinho. */
+  restartDelayMs: 400,
+  /** Pausa maior depois de erro, para não ficar em laço. */
+  errorBackoffMs: 3000,
+  /** Tempo para o microfone ser liberado antes de a Agora assumir. */
+  handoffMs: 350,
 } as const;
 
 export type ApiMode = 'mock' | 'http';

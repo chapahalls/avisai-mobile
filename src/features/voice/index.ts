@@ -15,3 +15,6 @@ export type {
   VoiceSession,
   VoiceSessionCallbacks,
 } from './api/voiceSession';
+export { matchWakePhrase } from './rules/wakePhrase';
+export { createWakeWordEngine } from './api/wakeWordEngine';
+export type { WakeWordEngine, WakeEngineError } from './api/wakeWordEngine';

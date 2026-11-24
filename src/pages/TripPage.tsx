@@ -16,6 +16,7 @@ import { useSession } from '../features/auth';
 import { JourneyTimeline, StayCounter, useTrip, type TripPhase } from '../features/trip';
 import { useAvisaiDock, useVoice } from '../features/voice';
 import { colors } from '../lib/theme';
+import { useWakeWord } from '../services/wakeWord';
 import { distanceKm } from '../utils/geo';
 import { hapticTap } from '../utils/haptics';
 import { SettingsSheet } from './SettingsSheet';
@@ -78,6 +79,7 @@ export function TripPage() {
     clearRouteAssignedBanner,
   } = useTrip();
   const voiceState = useVoice((s) => s.state);
+  const wakeListening = useWakeWord((s) => s.status === 'listening');
   const session = useSession((s) => s.session);
   const openPanel = useAvisaiDock((s) => s.openPanel);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -121,10 +123,14 @@ export function TripPage() {
           className="flex-row items-center gap-2 bg-ink-900 border border-ink-800 rounded-full px-3.5 py-2 active:opacity-80"
         >
           <View
-            className={`w-2.5 h-2.5 rounded-full ${voiceState === 'idle' ? 'bg-ink-300' : 'bg-ok-500'}`}
+            className={`w-2.5 h-2.5 rounded-full ${
+              voiceState !== 'idle' ? 'bg-ok-500' : wakeListening ? 'bg-brand-400' : 'bg-ink-300'
+            }`}
           />
           <Text className="text-ink-50 text-sm font-semibold">
-            {t('home.avisaiState', { state: t(`voice.state.${voiceState}`) })}
+            {voiceState === 'idle' && wakeListening
+              ? t('voice.wake.listening')
+              : t('home.avisaiState', { state: t(`voice.state.${voiceState}`) })}
           </Text>
         </Pressable>
         <Pressable

@@ -292,6 +292,9 @@ export interface SsoBackendResponse {
   };
 }
 
+/** Telas que o agente pode abrir por voz (contrato `acao_cliente` do backend). */
+export type AppScreen = 'inicio' | 'mapa' | 'documentos' | 'mensagens' | 'fila';
+
 /** Mensagens do SSE (/cco/stream, `event:`) e do WS (/ws, campo `canal`). */
 export interface MensagensStream {
   snapshot: Snapshot;
@@ -312,7 +315,20 @@ export interface MensagensStream {
    */
   acao_cliente: {
     rota_id: number;
-    acao: 'open_documents' | 'open_map' | 'start_gps' | 'start_trip';
+    acao:
+      | 'open_documents'
+      | 'open_map'
+      | 'start_gps'
+      | 'start_trip'
+      | 'open_screen'
+      | 'open_document'
+      | 'go_back'
+      | 'end_voice'
+      | 'logout';
+    /** Para `open_screen`. */
+    tela?: AppScreen;
+    /** Para `open_document`: "NF-e", "CT-e", "MDF-e" ou o nome do anexo. */
+    documento?: string;
   };
   contador: { estadias: Estadia[] };
   reset: { rota_id: number };

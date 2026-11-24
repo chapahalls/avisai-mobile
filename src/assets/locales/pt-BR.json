@@ -74,11 +74,16 @@
   "voiceCommands": {
     "toast": {
       "openMap": "Comando de voz: Abrindo Mapa",
-      "openNfe": "Comando de voz: Abrindo NF-e",
-      "openCte": "Comando de voz: Abrindo CT-e",
       "openDocuments": "Comando de voz: Abrindo Documentos",
-      "openOutbox": "Comando de voz: Abrindo Fila",
-      "backToTrip": "Comando de voz: Voltando para Viagem",
+      "openDocument": "Comando de voz: Abrindo {{name}}",
+      "documentNotFound": "Comando de voz: não achei “{{name}}”, abrindo Documentos",
+      "openMessages": "Comando de voz: Abrindo Mensagens",
+      "openQueue": "Comando de voz: Abrindo Fila no recebedor",
+      "backToTrip": "Comando de voz: Voltando para o Início",
+      "goBack": "Comando de voz: Voltando",
+      "endVoice": "Comando de voz: Encerrando a conversa",
+      "logout": "Comando de voz: Saindo da conta",
+      "logoutConfirmHint": "Para sair da conta, diga “confirmo, sair da conta”",
       "startTrip": "Comando de voz: Viagem iniciada",
       "startGps": "Comando de voz: GPS ativado"
     }
@@ -298,7 +303,17 @@
       "panelSubtitle": "Fale de qualquer tela. Eu troco a tela para você.",
       "simulateLabel": "Toque para simular o que você diria:",
       "openChat": "Abrir conversa em tela cheia",
-      "dismissErrorHint": "Toque para dispensar o erro"
+      "dismissErrorHint": "Toque para dispensar o erro",
+      "commandsHint": "Diga, por exemplo: “abre o mapa”, “mostra a nota fiscal”, “volta” ou “tchau, AvisAI”."
+    },
+    "wake": {
+      "title": "Escutar “Ei AvisAI”",
+      "hint": "Com o app aberto, diga “Ei AvisAI” para começar a conversa sem tocar na tela. O aparelho só procura essas palavras e descarta o resto.",
+      "listening": "Diga “Ei AvisAI”",
+      "unavailable": "Este aparelho não tem reconhecimento de fala para a wake word.",
+      "permissionDenied": "Sem permissão de microfone: a wake word ficou desligada.",
+      "on": "Ligada",
+      "off": "Desligada"
     }
   },
   "documents": {

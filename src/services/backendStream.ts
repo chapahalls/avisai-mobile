@@ -94,7 +94,7 @@ export function handleStreamMessage(raw: string) {
     }
     case 'acao_cliente': {
       if (dado?.acao) {
-        executeClientAction(dado.acao);
+        executeClientAction(dado.acao, { tela: dado.tela, documento: dado.documento });
       }
       break;
     }

@@ -55,6 +55,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-sqlite',
       'expo-localization',
       [
+        'expo-speech-recognition',
+        {
+          microphonePermission: 'O RODAR usa o microfone para você conversar com o AvisAI.',
+          speechRecognitionPermission:
+            'O RODAR escuta “Ei AvisAI” com o app aberto para começar a conversa sem tocar na tela.',
+          androidSpeechServicePackages: ['com.google.android.googlequicksearchbox', 'com.google.android.as'],
+        },
+      ],
+      [
         'expo-location',
         {
           locationWhenInUsePermission:

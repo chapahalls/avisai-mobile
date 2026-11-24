@@ -161,10 +161,28 @@ O mobile **não** publica rota, atribui motorista, confirma Task do CCO, chama o
 
 Nenhum código proprietário anterior ao hackathon foi utilizado. Apenas pacotes open-source públicos fixados para o **Expo SDK 52** (`package.json`):
 - **Core:** Expo SDK 52 (`~52.0.37`), React `18.3.1`, React Native `0.76.7`, TypeScript `~5.3.3`, `expo-dev-client`, `expo-build-properties`, `expo-constants`.
-- **Voz e RTC:** `react-native-agora` (`^4.5.1`), `expo-speech` (`~13.0.1`).
+- **Voz e RTC:** `react-native-agora` (`^4.5.1`), `expo-speech` (`~13.0.1`), `expo-speech-recognition` (`1.1.1`, wake word).
 - **Mapa e UI:** `react-native-maps` (`1.18.0`), `react-native-svg` (`15.8.0`), NativeWind `^4.1.23` + Tailwind CSS `^3.4.17`, React Navigation v7, `react-native-reanimated` (`~3.16.1`), `react-native-safe-area-context`, `react-native-screens`.
 - **Dados, Estado e i18n:** `expo-sqlite` (`~15.1.2`), `zustand` (`^5.0.3`), `i18next` (`^24.2.2`), `react-i18next` (`^15.4.0`), `expo-localization` (`~16.0.1`), `expo-crypto` (`~14.0.2`), `@react-native-community/netinfo` (`11.4.1`).
 - **Testes:** `vitest` (`^3.0.5`).
+
+---
+
+## Comandos de voz e wake word
+
+**Wake word:** com o app aberto, logado e sem conversa ativa, diga **"Ei AvisAI"**. O painel do AvisAI abre e a conversa começa sem tocar na tela. Usa o reconhecedor de fala do Android (`expo-speech-recognition`), no próprio aparelho quando ele tem o pacote de idioma e, sem ele, o reconhecedor padrão do Google. O texto serve só para achar a wake word e é descartado. A escuta para durante a conversa e em segundo plano, e liga/desliga em **Ajustes → Escutar "Ei AvisAI"**. Precisa do Dev Build (não roda no Expo Go).
+
+**Comandos durante a conversa:** o agente entende o pedido e o backend manda a ação ao app (`acao_cliente` no `/ws`):
+
+| Fale | O app |
+|---|---|
+| "abre o mapa", "vai pras mensagens", "mostra os documentos", "abre a fila do recebedor", "volta pro início" | abre a tela |
+| "mostra a nota fiscal", "abre o CT-e", "abre o comprovante de pesagem" | abre o documento |
+| "volta" | volta uma tela |
+| "tchau, AvisAI", "pode encerrar a conversa" | o agente se despede e a conversa encerra |
+| "sair da conta" | o agente pede confirmação; depois do "sim", sai da conta |
+
+No modo de voz simulado (sem backend), as mesmas frases dos chips viram as mesmas ações (`services/voiceCommands.ts`).
 
 ---
 

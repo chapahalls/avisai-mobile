@@ -206,7 +206,10 @@ function AvisaiPanel({ visible, onClose }: { visible: boolean; onClose: () => vo
           ) : null}
 
           {directVoice ? (
-            <Text className="text-ink-50 text-base mt-4 leading-6">{t('voice.directVoiceHint')}</Text>
+            <>
+              <Text className="text-ink-50 text-base mt-4 leading-6">{t('voice.directVoiceHint')}</Text>
+              <Text className="text-ink-300 text-sm mt-2 leading-5">{t('voice.dock.commandsHint')}</Text>
+            </>
           ) : (
             <>
               <Text className="text-ink-300 text-sm mt-4 mb-2">{t('voice.dock.simulateLabel')}</Text>
