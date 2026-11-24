@@ -53,6 +53,24 @@ export const VOICE_COMMANDS = {
   dedupeMs: 2500,
 } as const;
 
+/** Layout responsivo (celular pequeno e fonte grande de acessibilidade). */
+export const LAYOUT = {
+  /** Abaixo desta largura útil (dp ÷ escala da fonte), colunas viram lista. */
+  compactWidthDp: 340,
+  /** Altura da linha de escrever da tela Mensagens: a esfera do AvisAI sobe acima dela. */
+  messagesComposerDp: 80,
+  /** Limite de aumento da fonte em rótulos curtos (abas), para não cortar a palavra. */
+  tabLabelMaxScale: 1.15,
+} as const;
+
+/** Avisos do agente que chegam sem conversa aberta (`aviso_motorista`). */
+export const DRIVER_NOTICES = {
+  /** Aviso que é pergunta abre a conversa para o motorista responder. */
+  openConversationOnQuestion: true,
+  /** Pausa depois da fala local antes de liberar o microfone para a wake word. */
+  tailMs: 500,
+} as const;
+
 /** Escuta da wake word ("Ei AvisAI") com o reconhecedor de fala do aparelho. */
 export const WAKE_WORD = {
   /** Ligada por padrão; o motorista desliga nas configurações. */

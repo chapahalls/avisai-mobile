@@ -3,6 +3,7 @@ import { useTrip } from '../features/trip/hooks/useTrip';
 import { useVoice } from '../features/voice/hooks/useVoice';
 import type { EventoStream, MensagensStream } from '../types/backend';
 import { useApiConfig } from './api';
+import { announceDriverNotice } from './driverNotices';
 import { executeClientAction } from './voiceCommands';
 
 export type WsConnectionStatus = 'disconnected' | 'connecting' | 'connected';
@@ -96,6 +97,10 @@ export function handleStreamMessage(raw: string) {
       if (dado?.acao) {
         executeClientAction(dado.acao, { tela: dado.tela, documento: dado.documento });
       }
+      break;
+    }
+    case 'aviso_motorista': {
+      if (dado?.texto) announceDriverNotice(dado);
       break;
     }
     case 'evento': {

@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +29,9 @@ export function QueuePage({ navigation }: NativeStackScreenProps<RootStackParams
   const stay = useStaySummary();
   const openPanel = useAvisaiDock((s) => s.openPanel);
 
+  const { width } = useWindowDimensions();
+  // Anel proporcional à tela: num celular pequeno, 132 dp espremia o anel e cortava o desenho.
+  const ring = Math.min(RING, Math.round(width * 0.3));
   const tone = receiverTone(receiver);
   const ringColor =
     tone === 'ok'
@@ -66,12 +69,12 @@ export function QueuePage({ navigation }: NativeStackScreenProps<RootStackParams
         </View>
 
         <Card className="p-5 flex-row items-center gap-5">
-          <View style={{ width: RING, height: RING }} className="items-center justify-center">
-            <Svg width={RING} height={RING} style={{ position: 'absolute' }}>
+          <View style={{ width: ring, height: ring, flexShrink: 0 }} className="items-center justify-center">
+            <Svg width={ring} height={ring} style={{ position: 'absolute' }}>
               <Circle
-                cx={RING / 2}
-                cy={RING / 2}
-                r={(RING - STROKE) / 2}
+                cx={ring / 2}
+                cy={ring / 2}
+                r={(ring - STROKE) / 2}
                 stroke={ringColor}
                 strokeWidth={STROKE}
                 fill="none"

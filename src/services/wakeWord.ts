@@ -4,6 +4,7 @@ import i18n from '../lib/i18n';
 import { WAKE_WORD } from '../lib/config';
 import { getSetting, setSetting } from '../lib/db';
 import { hapticTap } from '../utils/haptics';
+import { useDriverNotices } from './driverNotices';
 import { useSession } from '../features/auth';
 import {
   createWakeWordEngine,
@@ -76,6 +77,7 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
     permission !== 'denied' &&
     appActive &&
     !waking &&
+    !useDriverNotices.getState().speaking && // não se ouvir lendo um aviso
     Boolean(useSession.getState().session) &&
     voiceIdle();
 
@@ -209,6 +211,7 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
 
   const offVoice = useVoice.subscribe(sync);
   const offSession = useSession.subscribe(sync);
+  const offNotices = useDriverNotices.subscribe(sync);
   const offWake = useWakeWord.subscribe((s, prev) => {
     if (s.enabled === prev.enabled) return;
     if (s.enabled && permission === 'denied') permission = 'unknown'; // religou: pede de novo
@@ -234,6 +237,7 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
     detach();
     offVoice();
     offSession();
+    offNotices();
     offWake();
     appSub.remove();
     i18n.off('languageChanged', onLanguage);

@@ -85,7 +85,11 @@
       "logout": "Comando de voz: Saindo da conta",
       "logoutConfirmHint": "Para sair da conta, diga “confirmo, sair da conta”",
       "startTrip": "Comando de voz: Viagem iniciada",
-      "startGps": "Comando de voz: GPS ativado"
+      "startGps": "Comando de voz: GPS ativado",
+      "openNavigation": "Comando de voz: Abrindo a rota no mapa do celular",
+      "navigationError": "Não consegui abrir o app de mapas",
+      "deferredWhileMoving": "Comando de voz: com o caminhão andando, abro quando você parar",
+      "messageSent": "Comando de voz: Recado enviado ao CCO"
     }
   },
   "trip": {
@@ -94,7 +98,7 @@
     "viewMapShortcut": "Ver mapa →",
     "mapMock": "Mapa simulado (SVG)",
     "mapGoogle": "Google Maps",
-    "left": "Faltam {{km}} km",
+    "left": "Faltam {{km}} km",
     "receiver": "Recebedor:",
     "ccoOperatorMock": "Operador CCO (mock)",
     "receiverEscalationEta": "em 40 minutos",
@@ -213,7 +217,7 @@
     "emptyTitle": "Copiloto de voz pronto",
     "emptyHint": "Toque no microfone abaixo para falar com o AvisAI ou relatar ocorrências.",
     "directVoiceTitle": "Voz direta ativa",
-    "directVoiceHint": "Diga “AvisAI” antes do comando. Para sair: “AvisAI, encerrar sessão”.",
+    "directVoiceHint": "Fale normalmente, sem tocar na tela. Para encerrar: “tchau, AvisAI”.",
     "agentTag": "AvisAI",
     "driverTag": "Você",
     "liveStreamingTag": "ao vivo",
@@ -304,7 +308,7 @@
       "simulateLabel": "Toque para simular o que você diria:",
       "openChat": "Abrir conversa em tela cheia",
       "dismissErrorHint": "Toque para dispensar o erro",
-      "commandsHint": "Diga, por exemplo: “abre o mapa”, “mostra a nota fiscal”, “volta” ou “tchau, AvisAI”."
+      "commandsHint": "Diga, por exemplo: “abre o mapa”, “me leva até o recebedor”, “avisa o CCO que…”, “repete” ou “tchau, AvisAI”."
     },
     "wake": {
       "title": "Escutar “Ei AvisAI”",
@@ -314,6 +318,9 @@
       "permissionDenied": "Sem permissão de microfone: a wake word ficou desligada.",
       "on": "Ligada",
       "off": "Desligada"
+    },
+    "notice": {
+      "toast": "AvisAI: {{text}}"
     }
   },
   "documents": {
@@ -495,7 +502,7 @@
     "avisaiState": "AvisAI {{state}}",
     "nextTrip": "Próxima viagem",
     "currentTrip": "Viagem",
-    "windowAndKm": "Janela {{window}} · {{km}} km",
+    "windowAndKm": "Janela {{window}} · {{km}} km",
     "startHint": "ou só diga “Iniciar viagem, AvisAI!”",
     "stepProgress": "Etapa {{step}} de {{total}}: {{name}}",
     "tripMode": "Modo viagem",

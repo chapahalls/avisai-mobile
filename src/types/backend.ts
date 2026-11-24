@@ -324,11 +324,21 @@ export interface MensagensStream {
       | 'open_document'
       | 'go_back'
       | 'end_voice'
-      | 'logout';
+      | 'logout'
+      | 'open_navigation';
     /** Para `open_screen`. */
     tela?: AppScreen;
     /** Para `open_document`: "NF-e", "CT-e", "MDF-e" ou o nome do anexo. */
     documento?: string;
+  };
+  /** Aviso do agente que não foi falado porque não havia conversa aberta. */
+  aviso_motorista: {
+    id: number;
+    rota_id: number;
+    texto: string;
+    prioridade: string;
+    /** O aviso é uma pergunta: o app abre a conversa para o motorista responder. */
+    pede_resposta: boolean;
   };
   contador: { estadias: Estadia[] };
   reset: { rota_id: number };
@@ -343,6 +353,7 @@ export const CANAIS: CanalStream[] = [
   'posicao',
   'fala',
   'acao_cliente',
+  'aviso_motorista',
   'contador',
   'reset',
   'chamado',

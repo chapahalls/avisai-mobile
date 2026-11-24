@@ -85,7 +85,11 @@
       "logout": "Voice command: Signing out",
       "logoutConfirmHint": "To sign out, say “confirm, sign out”",
       "startTrip": "Voice command: Trip started",
-      "startGps": "Voice command: GPS enabled"
+      "startGps": "Voice command: GPS enabled",
+      "openNavigation": "Voice command: Opening the route in your maps app",
+      "navigationError": "Couldn't open the maps app",
+      "deferredWhileMoving": "Voice command: the truck is moving, I'll open it when you stop",
+      "messageSent": "Voice command: Message sent to the CCO"
     }
   },
   "trip": {
@@ -94,7 +98,7 @@
     "viewMapShortcut": "View map →",
     "mapMock": "Simulated map (SVG)",
     "mapGoogle": "Google Maps",
-    "left": "{{km}} km to go",
+    "left": "{{km}} km to go",
     "receiver": "Receiver:",
     "ccoOperatorMock": "Control Center Operator (mock)",
     "receiverEscalationEta": "in 40 minutes",
@@ -213,7 +217,7 @@
     "emptyTitle": "Voice copilot ready",
     "emptyHint": "Tap the microphone below to talk to AvisAI or report an incident.",
     "directVoiceTitle": "Direct voice is active",
-    "directVoiceHint": "Say “AvisAI” before the command. To leave: “AvisAI, end session”.",
+    "directVoiceHint": "Just talk, no need to touch the screen. To end: “bye, AvisAI”.",
     "agentTag": "AvisAI",
     "driverTag": "You",
     "liveStreamingTag": "live",
@@ -304,7 +308,7 @@
       "simulateLabel": "Tap to simulate what you'd say:",
       "openChat": "Open full-screen conversation",
       "dismissErrorHint": "Tap to dismiss the error",
-      "commandsHint": "Try: “open the map”, “show the invoice”, “go back” or “bye, AvisAI”."
+      "commandsHint": "Try: “open the map”, “take me to the receiver”, “tell the CCO that…”, “repeat” or “bye, AvisAI”."
     },
     "wake": {
       "title": "Listen for “Hey AvisAI”",
@@ -314,6 +318,9 @@
       "permissionDenied": "No microphone permission: the wake word was turned off.",
       "on": "On",
       "off": "Off"
+    },
+    "notice": {
+      "toast": "AvisAI: {{text}}"
     }
   },
   "documents": {
@@ -495,7 +502,7 @@
     "avisaiState": "AvisAI {{state}}",
     "nextTrip": "Next trip",
     "currentTrip": "Trip",
-    "windowAndKm": "Window {{window}} · {{km}} km",
+    "windowAndKm": "Window {{window}} · {{km}} km",
     "startHint": "or just say “Start trip, AvisAI!”",
     "stepProgress": "Step {{step}} of {{total}}: {{name}}",
     "tripMode": "Trip mode",

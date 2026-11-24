@@ -197,6 +197,101 @@ function tryStartGps(): boolean {
   }
 }
 
+// ---------- navegação até o destino e recado ao CCO ----------
+
+function openNavigation(): void {
+  if (isTest()) return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTrip } = require('../features/trip') as typeof import('../features/trip');
+    const { lat, lng } = useTrip.getState().activeRoute.destination.position;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { openDirectionsTo } = require('./directions') as typeof import('./directions');
+    void openDirectionsTo(lat, lng).then((ok) => {
+      if (!ok) toast('voiceCommands.toast.navigationError');
+    });
+  } catch {
+    toast('voiceCommands.toast.navigationError');
+  }
+}
+
+/** Modo simulado: o recado vai pelo outbox, como a mensagem digitada na tela Mensagens. */
+function sendToCco(text: string): void {
+  if (isTest()) return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTrip } = require('../features/trip') as typeof import('../features/trip');
+    useTrip.getState().sendDriverMessage(text);
+  } catch {
+    // sem viagem carregada: nada a enviar
+  }
+}
+
+// ---------- telas de leitura só com o caminhão parado ----------
+
+const READING_SCREENS: AppScreen[] = ['documentos', 'mensagens'];
+
+/** Documentos e mensagens pedem leitura: em movimento, só voz (CTB art. 252). */
+export function needsStop(action: ClientAction, opts: ClientActionOptions = {}): boolean {
+  return (
+    action === 'open_document' ||
+    action === 'open_documents' ||
+    (action === 'open_screen' && READING_SCREENS.includes(opts.tela ?? 'inicio'))
+  );
+}
+
+function tripIsMoving(): boolean {
+  if (isTest()) return false;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTrip } = require('../features/trip') as typeof import('../features/trip');
+    const { phase } = useTrip.getState();
+    return phase === 'driving' || phase === 'approaching';
+  } catch {
+    return false;
+  }
+}
+
+let movingProbe: () => boolean = tripIsMoving;
+let pending: { action: ClientAction; opts: ClientActionOptions } | null = null;
+let unsubPending: (() => void) | null = null;
+
+/** Só para testes: simula o caminhão andando ou parado. */
+export function setMovingProbeForTests(probe: (() => boolean) | null): void {
+  movingProbe = probe ?? tripIsMoving;
+  pending = null;
+}
+
+/** O que ficou esperando o caminhão parar. */
+export function pendingWhileMoving(): { action: ClientAction; opts: ClientActionOptions } | null {
+  return pending;
+}
+
+/** Executa o que ficou esperando, se o caminhão já parou. */
+export function resumeWhenStopped(): boolean {
+  if (!pending || movingProbe()) return false;
+  const p = pending;
+  pending = null;
+  unsubPending?.();
+  unsubPending = null;
+  lastExecutedKey = '';
+  return executeClientAction(p.action, p.opts);
+}
+
+function deferUntilStopped(action: ClientAction, opts: ClientActionOptions): void {
+  pending = { action, opts };
+  if (unsubPending || isTest()) return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTrip } = require('../features/trip') as typeof import('../features/trip');
+    unsubPending = useTrip.subscribe(() => {
+      resumeWhenStopped();
+    });
+  } catch {
+    // sem viagem: fica pendente até o próximo comando
+  }
+}
+
 function isDuplicate(key: string): boolean {
   const now = Date.now();
   if (key === lastExecutedKey && now - lastExecutedAt < VOICE_COMMANDS.dedupeMs) return true;
@@ -211,6 +306,12 @@ function isDuplicate(key: string): boolean {
  */
 export function executeClientAction(action: ClientAction, opts: ClientActionOptions = {}): boolean {
   if (isDuplicate(`action:${action}:${opts.tela ?? ''}:${opts.documento ?? ''}`)) return false;
+
+  if (needsStop(action, opts) && movingProbe()) {
+    deferUntilStopped(action, opts);
+    toast('voiceCommands.toast.deferredWhileMoving');
+    return true;
+  }
 
   switch (action) {
     case 'open_screen': {
@@ -251,6 +352,10 @@ export function executeClientAction(action: ClientAction, opts: ClientActionOpti
       toast('voiceCommands.toast.logout');
       logout();
       return true;
+    case 'open_navigation':
+      openNavigation();
+      toast('voiceCommands.toast.openNavigation');
+      return true;
     case 'start_gps':
       if (!tryStartGps()) return false;
       toast('voiceCommands.toast.startGps');
@@ -278,6 +383,10 @@ const END_VOICE_RE =
   /\b(encerr|finaliz|termin|deslig|fech)\w* (a |essa |esta )?(conversa|ligacao|chamada|sessao|voz)\b|\b(tchau|ate mais|bye)\b.*\bavis\s?a?\s?a?i\b|\bpode (desligar|encerrar)\b|\b(end|stop) (the )?(conversation|call)\b/;
 const LOGOUT_CONFIRMED_RE = /\bconfirm\w*\b.*\b(sair|logout|log out|deslog)/;
 const LOGOUT_RE = /\b(sair|saia|sai) da (minha )?conta\b|\bfaz(er)? logout\b|\bdeslog\w*\b|\blog ?out\b|\bsign out\b/;
+const NAVIGATE_RE =
+  /\bme lev\w*\b|\bnaveg\w* (ate|pras?|pros?|para)\b|\bcomo (eu )?chego\b|\babr\w* (o )?(google maps|waze|navegacao)\b|\b(take me|navigate) to\b/;
+const MESSAGE_CCO_RE =
+  /\b(?:avis\w*|fal\w*|diz\w*|manda\w*(?: uma)?(?: mensagem| recado)?) (?:pro|pra|para o|ao|o)? ?(?:cco|central|operador)\b[,:]?\s*(?:que\s+)?(.+)/;
 const SCREENS: Array<[AppScreen, RegExp]> = [
   ['fila', /\bfila (do|no|da) (recebedor|recebimento|doca|descarga)\b|\bdoca\b|\breceiver queue\b|\bdock\b/],
   ['mensagens', /\bmensage(m|ns)\b|\bmessages?\b|\bfila\b|\boutbox\b|\bsincroniza\w*|\bsync\b|\bchat\b/],
@@ -302,6 +411,15 @@ export function tryExecuteVoiceCommand(text: string): boolean {
   if (END_VOICE_RE.test(norm)) return executeClientAction('end_voice');
   if (START_TRIP_RE.test(norm)) return executeClientAction('start_trip');
   if (START_GPS_RE.test(norm)) return executeClientAction('start_gps');
+  if (NAVIGATE_RE.test(norm)) return executeClientAction('open_navigation');
+  const message = MESSAGE_CCO_RE.exec(norm);
+  if (message?.[1]?.trim()) {
+    // normalize() preserva o comprimento: recorta a fala original, com acentos.
+    const original = text.trim().slice(message.index + message[0].length - message[1].length).trim();
+    sendToCco(original);
+    toast('voiceCommands.toast.messageSent');
+    return true;
+  }
   if (/^(volt\w*|go back|back)$/.test(norm)) return executeClientAction('go_back');
   if (!VERB.test(norm) || DOC_FIELD_RE.test(norm)) return false;
 

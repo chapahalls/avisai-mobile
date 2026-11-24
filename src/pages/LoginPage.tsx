@@ -16,7 +16,9 @@ export function LoginPage() {
       >
         {/* Top bar */}
         <View className="flex-row items-start justify-between gap-3">
-          <RodarLogo size={44} tagline={t('brand.tagline')} />
+          <View className="flex-1">
+            <RodarLogo size={44} tagline={t('brand.tagline')} />
+          </View>
           <LanguageSwitch />
         </View>
 

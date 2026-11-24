@@ -181,6 +181,14 @@ Nenhum código proprietário anterior ao hackathon foi utilizado. Apenas pacotes
 | "volta" | volta uma tela |
 | "tchau, AvisAI", "pode encerrar a conversa" | o agente se despede e a conversa encerra |
 | "sair da conta" | o agente pede confirmação; depois do "sim", sai da conta |
+| "me leva até o recebedor", "abre o Waze" | abre a rota até o destino no app de mapas |
+| "liga o GPS" | liga o GPS do aparelho |
+| "avisa o CCO que vou parar pra almoçar" | manda o recado ao CCO (problema, como fila ou avaria, vira ocorrência) |
+| "repete", "o que eu perdi?" | o agente repete os últimos avisos |
+
+**Telas de leitura só com o caminhão parado:** documentos e mensagens pedidos por voz com o caminhão andando ficam esperando; abrem sozinhos quando ele para, e o agente avisa isso em vez de dizer "abrindo".
+
+**Avisos com a conversa fechada:** quando o agente precisa falar e não há conversa aberta (aproximação, resposta do CCO ou do recebedor, rota nova, pergunta da central), o backend manda `aviso_motorista` pelo `/ws`. O app fala o aviso em voz local (`expo-speech`, sem gastar minutos da Agora), mostra na tela e, se for pergunta, abre a conversa para o motorista responder. A wake word pausa enquanto o aviso é falado.
 
 No modo de voz simulado (sem backend), as mesmas frases dos chips viram as mesmas ações (`services/voiceCommands.ts`).
 

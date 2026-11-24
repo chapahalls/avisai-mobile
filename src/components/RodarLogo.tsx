@@ -41,15 +41,17 @@ export function RodarLogo({ size, tagline }: { size: number; tagline?: string })
   const fontSize = Math.round(size * 0.724);
   return (
     <View
-      className="flex-row items-center"
+      className="flex-row items-center shrink"
       style={{ gap: Math.round(size * 0.2) }}
       accessible
       accessibilityRole="header"
       accessibilityLabel={tagline ? `${t('brand.name')}, ${tagline}` : t('brand.name')}
     >
       <RodarMark size={size} />
-      <View>
+      {/* `shrink`: com fonte grande a assinatura quebra a linha em vez de empurrar o que está ao lado. */}
+      <View className="shrink">
         <Text
+          allowFontScaling={false}
           className="font-brand text-ink-50"
           style={{ fontSize, lineHeight: Math.round(fontSize * 1.05), letterSpacing: fontSize * 0.01 }}
         >

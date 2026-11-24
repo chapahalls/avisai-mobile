@@ -36,6 +36,8 @@ import i18n from '../lib/i18n';
 import { WAKE_WORD } from '../lib/config';
 import { setSetting } from '../lib/db';
 import { startWakeWordWatcher, useWakeWord } from '../services/wakeWord';
+import { announceDriverNotice, resetDriverNoticesForTests, useDriverNotices } from '../services/driverNotices';
+import { useVoiceCommandToast } from '../services/voiceCommands';
 
 describe('matchWakePhrase', () => {
   it.each(['Ei AvisAI', 'ei avisa aí', 'Hey Avis AI', 'avisaí', 'AvisAI, abre o mapa', 'oi avisa i'])(
@@ -181,5 +183,61 @@ describe('startWakeWordWatcher', () => {
     emit().onEnd();
     await settle();
     expect(engine.start).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('avisos do agente sem conversa aberta', () => {
+  const listen = vi.fn();
+
+  beforeEach(async () => {
+    vi.useFakeTimers();
+    await i18n.changeLanguage('pt-BR');
+    resetDriverNoticesForTests();
+    listen.mockReset();
+    useVoice.setState({ state: 'idle', sessionConnected: false, agoraStage: 'disconnected', listen });
+    useAvisaiDock.setState({ panelOpen: false });
+  });
+
+  afterEach(() => vi.useRealTimers());
+
+  const aviso = (id: number, texto: string, pede_resposta = false) => ({
+    id, rota_id: 1, texto, prioridade: 'APPEND', pede_resposta,
+  });
+
+  it('mostra o aviso e não abre a conversa quando não é pergunta', async () => {
+    expect(announceDriverNotice(aviso(1, 'Faltam uns 15 minutos.'))).toBe(true);
+    expect(useVoiceCommandToast.getState().message).toBe('AvisAI: Faltam uns 15 minutos.');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(listen).not.toHaveBeenCalled();
+    expect(announceDriverNotice(aviso(1, 'Faltam uns 15 minutos.'))).toBe(false); // mesmo id
+  });
+
+  it('pergunta abre a conversa para o motorista responder', async () => {
+    announceDriverNotice(aviso(2, 'A central pergunta: a carga está lacrada?', true));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(useAvisaiDock.getState().panelOpen).toBe(true);
+    expect(listen).toHaveBeenCalledTimes(1);
+  });
+
+  it('com a conversa aberta, quem fala é o agente', () => {
+    useVoice.setState({ sessionConnected: true });
+    expect(announceDriverNotice(aviso(3, 'O CCO respondeu: doca 2.'))).toBe(false);
+  });
+
+  it('a wake word pausa enquanto o aviso é falado', async () => {
+    useSession.setState({ session: SESSION });
+    setSetting('wake_word', 'on');
+    useWakeWord.setState({ enabled: true });
+    const { engine } = fakeEngine();
+    const stop = startWakeWordWatcher(engine);
+    await vi.advanceTimersByTimeAsync(WAKE_WORD.restartDelayMs + 1);
+    expect(engine.start).toHaveBeenCalledTimes(1);
+    useDriverNotices.setState({ speaking: true });
+    expect(engine.abort).toHaveBeenCalled();
+    expect(useWakeWord.getState().status).toBe('paused');
+    useDriverNotices.setState({ speaking: false });
+    await vi.advanceTimersByTimeAsync(WAKE_WORD.restartDelayMs + 1);
+    expect(engine.start).toHaveBeenCalledTimes(2);
+    stop();
   });
 });

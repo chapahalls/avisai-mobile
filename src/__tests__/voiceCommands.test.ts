@@ -4,6 +4,10 @@ import { DOCUMENTS } from '../features/documents/api/documents.mock';
 import { findDocumentByName } from '../features/documents/rules/find';
 import {
   executeClientAction,
+  needsStop,
+  pendingWhileMoving,
+  resumeWhenStopped,
+  setMovingProbeForTests,
   tryExecuteVoiceCommand,
   useVoiceCommandToast,
 } from '../services/voiceCommands';
@@ -115,5 +119,51 @@ describe('findDocumentByName', () => {
     const outro = DOCUMENTS.find((d) => d.kind === 'NF-e')!;
     expect(findDocumentByName(DOCUMENTS, outro.title)?.id).toBe(outro.id);
     expect(findDocumentByName(DOCUMENTS, 'carta de amor')).toBeNull();
+  });
+});
+
+describe('navegar, recado ao CCO e telas de leitura com o caminhão andando', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('pt-BR');
+    useVoiceCommandToast.getState().clear();
+    setMovingProbeForTests(null);
+  });
+
+  it('abre a navegação pelo backend e pela fala no modo simulado', () => {
+    expect(executeClientAction('open_navigation')).toBe(true);
+    expect(msg()).toBe('Comando de voz: Abrindo a rota no mapa do celular');
+    useVoiceCommandToast.getState().clear();
+    expect(tryExecuteVoiceCommand('me leva até o recebedor')).toBe(true);
+    expect(msg()).toBe('Comando de voz: Abrindo a rota no mapa do celular');
+  });
+
+  it('manda recado ao CCO no modo simulado', () => {
+    expect(tryExecuteVoiceCommand('avisa o CCO que vou parar pra almoçar')).toBe(true);
+    expect(msg()).toBe('Comando de voz: Recado enviado ao CCO');
+  });
+
+  it('documentos e mensagens esperam o caminhão parar; mapa abre na hora', () => {
+    let moving = true;
+    setMovingProbeForTests(() => moving);
+
+    expect(executeClientAction('open_document', { documento: 'NF-e' })).toBe(true);
+    expect(msg()).toBe('Comando de voz: com o caminhão andando, abro quando você parar');
+    expect(pendingWhileMoving()?.action).toBe('open_document');
+
+    expect(executeClientAction('open_screen', { tela: 'mapa' })).toBe(true);
+    expect(msg()).toBe('Comando de voz: Abrindo Mapa');
+
+    expect(resumeWhenStopped()).toBe(false); // ainda andando
+    moving = false;
+    expect(resumeWhenStopped()).toBe(true);
+    expect(msg()).toBe('Comando de voz: Abrindo NF-e');
+    expect(pendingWhileMoving()).toBeNull();
+  });
+
+  it('marca só as telas de leitura', () => {
+    expect(needsStop('open_document')).toBe(true);
+    expect(needsStop('open_screen', { tela: 'mensagens' })).toBe(true);
+    expect(needsStop('open_screen', { tela: 'mapa' })).toBe(false);
+    expect(needsStop('open_navigation')).toBe(false);
   });
 });

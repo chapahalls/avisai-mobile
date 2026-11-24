@@ -8,6 +8,7 @@ import { DOCUMENTS, MockPdfViewer, useDocuments } from '../features/documents';
 import { useAvisaiDock, useVoice } from '../features/voice';
 import { colors } from '../lib/theme';
 import { hapticTap } from '../utils/haptics';
+import { useBottomInset } from '../utils/layout';
 
 /** Documento aberto (mockup `10-documento-guiado`), também quando o AvisAI abre por voz. */
 export function DocumentViewerPage({
@@ -17,6 +18,7 @@ export function DocumentViewerPage({
   const { t } = useTranslation();
   const documents = useDocuments((s) => s.documents);
   const openPanel = useAvisaiDock((s) => s.openPanel);
+  const bottomInset = useBottomInset();
   const doc =
     documents.find(
       (d) =>
@@ -67,7 +69,7 @@ export function DocumentViewerPage({
         <MockPdfViewer doc={doc} />
       )}
 
-      <View className="px-4 pt-3 pb-6 gap-3 border-t border-ink-800">
+      <View className="px-4 pt-3 gap-3 border-t border-ink-800" style={{ paddingBottom: 12 + bottomInset }}>
         {doc.fileUrl ? (
           <Button
             label={t('documents.openRealFileButton')}

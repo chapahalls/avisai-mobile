@@ -67,3 +67,14 @@ Regra: cor nunca comunica sozinha. Todo estado tem texto ao lado.
 | Contador de espera | número grande; fica âmbar depois da franquia e mostra a estadia em R$; barra de tentativas ao CCO (1/3, 2/3, 3/3) |
 | Card do recebedor | etiqueta: não avisado / ligando… / doca 4, 15:00 / não recebe hoje / não atendeu |
 | Controles da demo | borda tracejada para deixar claro que é simulação: rede, CCO responde, +1 h |
+
+## Responsividade (celular pequeno e fonte grande)
+
+Testado no aparelho em 360×640 dp e com fonte do sistema em 1,3×, inclusive os dois juntos.
+
+- **Tela apertada** = largura em dp ÷ escala da fonte abaixo de `LAYOUT.compactWidthDp` (340, em `src/lib/config.ts`); o hook é `useCompactLayout()` (`src/utils/layout.ts`). Nela, o estado do AvisAI desce para baixo da saudação, o rótulo da viagem pode quebrar em duas linhas e os três atalhos do Início viram lista (em colunas, "recebedor" quebrava no meio da palavra).
+- **Rodapés fixos** (botões no fim da tela) somam `useBottomInset()` para não ficar embaixo da barra de navegação do Android.
+- **Esfera do AvisAI** sobe acima da linha de escrever em Mensagens (`LAYOUT.messagesComposerDp`), em vez de espremer o campo de texto.
+- **Rótulos curtos** (abas) crescem no máximo `LAYOUT.tabLabelMaxScale` com a fonte do sistema; a assinatura RODAR é logotipo e não cresce.
+- Desenhos de tamanho fixo (anel da Fila) acompanham a largura e não encolhem (`flexShrink: 0`).
+- Número e unidade usam espaço não separável (`55 km`), para "km" não ficar sozinho na linha.
