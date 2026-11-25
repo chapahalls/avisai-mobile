@@ -32,7 +32,8 @@ export type BusinessConfig = {
 export const TIME_SCALE = 60;
 
 /**
- * Voz RTC direta: sem gravação nem legendas/transcrição consumidas pelo cliente.
+ * Voz RTC direta (com rede): sem gravação nem legendas/transcrição consumidas pelo cliente.
+ * Sem rede é diferente: o app grava cada fala em WAV até o envio (ver OFFLINE_VOICE).
  * Os comandos do app chegam do backend como intenção (`acao_cliente`), nunca da transcrição.
  * A wake word usa o reconhecedor do aparelho só para achar "Ei AvisAI": o texto é descartado
  * na hora (não aparece, não é salvo nem enviado).

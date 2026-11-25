@@ -57,7 +57,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         'expo-speech-recognition',
         {
-          microphonePermission: 'O RODAR usa o microfone para você conversar com o AvisAI.',
+          microphonePermission:
+            'O RODAR usa o microfone para você conversar com o AvisAI. Sem internet, grava a sua fala e envia quando a rede voltar.',
           speechRecognitionPermission:
             'O RODAR escuta “Ei AvisAI” com o app aberto para começar a conversa sem tocar na tela.',
           androidSpeechServicePackages: ['com.google.android.googlequicksearchbox', 'com.google.android.as'],

@@ -49,7 +49,7 @@ O caminhão parado em torno da janela de descarga combinada com o recebedor. O a
 - Cada evento guarda horário do celular (`occurredAt`) e horário do servidor (`receivedAt`).
 - Chegada: GPS do celular + GPS do rastreador (simulado) + confirmação por voz. Posições divergentes → evento `nao_validado` e alerta ao CCO.
 - A resposta do recebedor na ligação fica registrada na Task (prova do outro lado).
-- Áudio: **decisão pendente** (só transcrição × guardar áudio). No mock, só transcrição.
+- Áudio: com rede, a voz vai direto ao agente e o app **não grava**. Sem rede, o app **grava cada fala** (WAV) e guarda até o envio (R8); o arquivo local é apagado quando o servidor confirma. O motorista vê isso em Ajustes e no pedido de permissão do microfone.
 
 ### R7. Documentos
 - Números (NF, peso, valor) vêm **só** dos campos extraídos, citando o documento.
