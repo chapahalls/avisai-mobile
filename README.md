@@ -178,7 +178,8 @@ Mensagens mostra o que foi enviado ao CCO e em que ponto do envio cada item est�
   </tr>
   <tr>
     <td><img src="docs/assets/readme/offline.jpg" alt="Sem conexão" /><br /><sub><b>Sem conexão</b> · faixa da fila offline</sub></td>
-    <td colspan="3" valign="top"><sub><b>Ajustes</b> · <code>SettingsSheet</code>: idioma, voz, escuta do "Ei AvisAI" e os controles da demo (rede, CCO, tempo, voz, mapa e backend), com borda tracejada.<br /><br />O visual segue os mockups do repositório web (<a href="https://github.com/rodarglobal/rodar-web/tree/main/docs/RODAR-telas/aplicativo"><code>rodar-web/docs/RODAR-telas/aplicativo/</code></a>) e a paleta de <a href="docs/DESIGN.md">DESIGN.md</a>. Ainda sem tela no app, porque dependem de funções que não existem: login por SMS, checklist de saída em 5 passos, modo viagem curva a curva e chamada de voz com o CCO.<br /><br />Capturas do app real no modo Mock, rodando no navegador em 390 × 844 só para a gravação. No celular, o mapa usa o Google Maps quando há chave.</sub></td>
+    <td><img src="docs/assets/readme/settings.jpg" alt="Ajustes" /><br /><sub><b>Ajustes</b> · <code>SettingsSheet</code>: idioma, voz, gravação sem sinal, "Ei AvisAI" e Demo</sub></td>
+    <td colspan="2" valign="top"><sub>Os controles da demo (rede, CCO, tempo, voz, mapa e backend) abrem em Ajustes e no Mapa, com borda tracejada.<br /><br />O visual segue os mockups do repositório web (<a href="https://github.com/rodarglobal/rodar-web/tree/main/docs/RODAR-telas/aplicativo"><code>rodar-web/docs/RODAR-telas/aplicativo/</code></a>) e a paleta de <a href="docs/DESIGN.md">DESIGN.md</a>. Ainda sem tela no app, porque dependem de funções que não existem: login por SMS, checklist de saída em 5 passos, modo viagem curva a curva e chamada de voz com o CCO.<br /><br />Capturas do app real no modo Mock, rodando no navegador em 390 × 844 só para a gravação. No celular, o mapa usa o Google Maps quando há chave. Para regerar as telas e o tour: <code>./scripts/readme-captures/capture.sh</code>.</sub></td>
   </tr>
 </table>
 
@@ -282,6 +283,17 @@ Alternativa em nuvem: o `eas.json` traz os perfis `development` (Dev Client APK)
 ```bash
 npx eas-cli build --profile development --platform android
 ```
+</details>
+
+<details>
+<summary><strong>Regerar as telas e o tour do README</strong></summary>
+<br />
+
+```bash
+./scripts/readme-captures/capture.sh
+```
+
+O script monta uma cópia temporária do projeto, instala ali o suporte web do Expo, troca os módulos nativos por stubs (como no Expo Go) e percorre o app no Chromium em 390 × 844, em pt-BR e no modo Mock. As telas e o tour (GIF e MP4) saem em `docs/assets/readme/`. O projeto em si não muda. Precisa de Playwright com Chromium e de ffmpeg; leva cerca de 4 min. O roteiro está em `scripts/readme-captures/tour.mjs`: se uma tela mudar de lugar, ajuste ali.
 </details>
 
 <details>

@@ -214,7 +214,7 @@
     "talk": "Talk",
     "listening": "Listening",
     "interrupt": "Interrupt",
-    "privacyBadge": "Direct voice · no audio recorded",
+    "privacyBadge": "Online, direct voice with no recording. Offline, your speech is recorded until it is sent.",
     "emptyTitle": "Voice copilot ready",
     "emptyHint": "Tap the microphone below to talk to AvisAI or report an incident.",
     "directVoiceTitle": "Direct voice is active",

@@ -214,7 +214,7 @@
     "talk": "Falar",
     "listening": "Ouvindo",
     "interrupt": "Interromper",
-    "privacyBadge": "Voz direta · sem gravação de áudio",
+    "privacyBadge": "Com sinal, voz direta sem gravação. Sem sinal, a fala fica gravada até ser enviada.",
     "emptyTitle": "Copiloto de voz pronto",
     "emptyHint": "Toque no microfone abaixo para falar com o AvisAI ou relatar ocorrências.",
     "directVoiceTitle": "Voz direta ativa",
