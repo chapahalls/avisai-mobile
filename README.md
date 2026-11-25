@@ -1,14 +1,16 @@
 # RODAR Mobile
 
-App do motorista do **RODAR**, com o **AvisAI**: o agente de voz que avisa o recebedor, conta a espera e prova cada hora parada. Hackathon UNMUTE by Agora (22/11/2026).
+App do motorista do **RODAR**, com o **AvisAI**: o agente de voz que avisa o recebedor, conta a espera e prova cada hora parada.
+
+> **Histórico:** o projeto começou como *AvisAI* no hackathon UNMUTE by Agora (21–22/11/2026) e continua como **RODAR** no Hack Brasil 2026, na trilha Logística & automação. Os repositórios foram criados em 22/11/2026 e todo o histórico de commits está neles; o AvisAI virou o nome do agente de voz do RODAR.
 
 O foco é a operação na cabine: o motorista consulta a viagem atribuída, acompanha a rota, fala com o agente, registra ocorrências e acessa documentos. O app mantém uma fila local para funcionar sem rede, mas **não** transforma o login MOCK, o GPS simulado, os documentos fiscais MOCK ou a voz de demonstração em recursos de produção.
 
 | Repositório | Responsabilidade |
 |---|---|
-| [`chapahalls/avisai`](https://github.com/chapahalls/avisai) | backend FastAPI, regras de operação, agente Agora, streams e persistência |
+| [`rodarglobal/rodar-backend`](https://github.com/rodarglobal/rodar-backend) | backend FastAPI, regras de operação, agente Agora, streams e persistência |
 | **este repositório** | aplicativo React Native/Expo do motorista |
-| [`chapahalls/avisai-web`](https://github.com/chapahalls/avisai-web) | painel web do CCO para monitorar, responder e publicar rotas |
+| [`rodarglobal/rodar-web`](https://github.com/rodarglobal/rodar-web) | painel web do CCO para monitorar, responder e publicar rotas |
 
 ## Arquitetura de arquivos
 
@@ -112,12 +114,12 @@ npm run start:go
 
 ---
 
-## Como plugar Google Maps e o Backend Oficial (`chapahalls/avisai` + Agora Conversational AI)
+## Como plugar Google Maps e o Backend Oficial (`rodarglobal/rodar-backend` + Agora Conversational AI)
 
 Configure as variáveis no arquivo `.env` (nunca versionado no git — **E7**) ou altere **em tempo real** pelo Bottom Sheet **Demo** no app (sem reiniciar o Metro):
 
 ```env
-# Modo da API: mock (padrão hackathon offline/demo) | http (backend oficial FastAPI chapahalls/avisai)
+# Modo da API: mock (padrão hackathon offline/demo) | http (backend oficial FastAPI rodarglobal/rodar-backend)
 EXPO_PUBLIC_API_MODE=http
 EXPO_PUBLIC_API_BASE_URL=http://localhost:8000
 EXPO_PUBLIC_ROTA_ID=1
@@ -130,7 +132,7 @@ GOOGLE_MAPS_API_KEY_ANDROID=sua_chave_aqui
 ```
 
 ### Conectando ao Backend Oficial pelo túnel `trycloudflare.com`
-1. No servidor backend (`https://github.com/chapahalls/avisai`), suba a API FastAPI na porta `8000` com o túnel Cloudflare (`https://xxxx.trycloudflare.com`) e rode o seed (`python -m app.seed`).
+1. No servidor backend (`https://github.com/rodarglobal/rodar-backend`), suba a API FastAPI na porta `8000` com o túnel Cloudflare (`https://xxxx.trycloudflare.com`) e rode o seed (`python -m app.seed`).
 2. No app mobile, toque no botão **Demo** (canto superior direito):
    - Alterne **API: Backend** e **Voz: Agora**.
    - Cole a URL pública do túnel (`https://xxxx.trycloudflare.com`) no campo **URL do Backend** e toque em **Testar** (`GET /health` → badge verde `Online` e `WS conectado`).
