@@ -92,6 +92,8 @@ export interface ApiClient {
   resetRoute(rotaId: number): Promise<void>;
   getSnapshot(rotaId: number): Promise<Snapshot>;
   postEvent(event: DomainEvent): Promise<{ status: 200 | 409; receivedAt: string }>;
+  /** Envia o áudio de uma fala gravada sem sinal (`DriverVoiceNote`). 409 = já recebido. */
+  uploadVoiceNote(event: DomainEvent): Promise<{ status: 200 | 409; receivedAt: string }>;
   getEvents(tripId: string): Promise<DomainEvent[]>;
   getDemoProfiles(role?: 'cco' | 'driver'): Promise<DemoProfile[]>;
   ssoLogin(email?: string): Promise<Session>;

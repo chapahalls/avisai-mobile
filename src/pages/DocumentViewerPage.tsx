@@ -34,7 +34,7 @@ export function DocumentViewerPage({
     const voice = useVoice.getState();
     voice.setContext('free');
     voice.pushTranscript('agent', t('documents.askPromptForDoc', { title: doc.title }));
-    if (voice.state === 'idle' && !voice.sessionConnected) {
+    if (voice.state === 'idle' && !voice.sessionConnected && !voice.offlineRecordingActive) {
       voice.listen();
     }
     openPanel();

@@ -158,7 +158,8 @@
       "centralAnswered": "Reply sent to CCO: “{{answer}}”",
       "documentQueried": "Voice query on document ({{doc}})",
       "occurrenceReported": "Incident logged: {{text}}",
-      "unloadCompleted": "Unloading completed · detention closed"
+      "unloadCompleted": "Unloading completed · detention closed",
+      "voiceNoteSaved": "Message recorded without signal; sends when the network is back"
     },
     "steps": {
       "pickup": "Pickup",
@@ -262,7 +263,18 @@
       "agoraLive": "GPT-Live",
       "agoraWaitingAgent": "Waiting for agent (9001)…",
       "agoraDisconnected": "Agora · Disconnected",
+      "offlineRecording": "No signal · recording",
       "mock": "Simulated Voice"
+    },
+    "offlineNotes": {
+      "title": "No signal",
+      "body": "Without internet, AvisAI records what you say and sends it when the network is back. Dispatch gets everything in order, with the time you said it.",
+      "pending": "{{count}} message waiting for the network",
+      "pending_other": "{{count}} messages waiting for the network"
+    },
+    "offlineAck": {
+      "first": "No signal. I saved what you said and will send it as soon as the network is back.",
+      "next": "Saved."
     },
     "quickPromptsLabel": "Quick phrases (simulation):",
     "state": {

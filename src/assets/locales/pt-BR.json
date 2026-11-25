@@ -158,7 +158,8 @@
       "centralAnswered": "Resposta enviada ao CCO: “{{answer}}”",
       "documentQueried": "Consulta por voz ao documento ({{doc}})",
       "occurrenceReported": "Ocorrência registrada: {{text}}",
-      "unloadCompleted": "Descarga concluída · estadia encerrada"
+      "unloadCompleted": "Descarga concluída · estadia encerrada",
+      "voiceNoteSaved": "Fala gravada sem sinal; sai quando a rede voltar"
     },
     "steps": {
       "pickup": "Retirada",
@@ -184,13 +185,13 @@
       "no_answer": "não atendeu"
     },
     "voice": {
-      "originPrompt": "Você está no CD de origem. Confirma a retirada e me diz como está o caminhão?",
-      "arrivedPrompt": "Chegou no destino. Me conta: como está a carga, teve avaria ou ocorrência?",
-      "receiverConfirmed": "O recebimento confirmou: doca {{dock}}, {{time}}.",
-      "receiverNotToday": "O recebimento disse que não recebe hoje. Avisei o CCO; siga a orientação da transportadora.",
-      "receiverNoAnswer": "O recebimento não atendeu. Registrei a tentativa como prova e avisei o CCO.",
-      "ccoAcknowledged": "O CCO assumiu o seu caso e está falando com o recebimento.",
-      "ccoNoResponseCallingReceiver": "O CCO não respondeu em {{max}} tentativas. Estou ligando para o recebimento."
+      "originPrompt": "Você tá no CD de origem. Pegou a carga? E o caminhão, tá tudo certo?",
+      "arrivedPrompt": "Chegou no destino. Como tá a carga? Teve avaria ou algum problema?",
+      "receiverConfirmed": "Boa, o pessoal do recebimento confirmou a doca {{dock}} pra {{time}}.",
+      "receiverNotToday": "O pessoal do recebimento não consegue receber hoje. Já avisei o CCO. Aguarda a orientação deles, beleza?",
+      "receiverNoAnswer": "O pessoal do recebimento não atendeu. Registrei a tentativa e avisei o CCO.",
+      "ccoAcknowledged": "O CCO assumiu seu caso e já tá falando com o recebimento.",
+      "ccoNoResponseCallingReceiver": "O CCO não respondeu depois de {{max}} tentativas. Vou ligar pro pessoal do recebimento."
     }
   },
   "stay": {
@@ -262,7 +263,18 @@
       "agoraLive": "GPT-Live",
       "agoraWaitingAgent": "Aguardando agente (9001)…",
       "agoraDisconnected": "Agora · Desconectado",
+      "offlineRecording": "Sem sinal · gravando",
       "mock": "Voz Simulada"
+    },
+    "offlineNotes": {
+      "title": "Sem sinal",
+      "body": "Sem internet, o AvisAI grava o que você fala e manda quando a rede voltar. A central recebe tudo na ordem, com o horário em que você falou.",
+      "pending": "{{count}} fala esperando a rede",
+      "pending_other": "{{count}} falas esperando a rede"
+    },
+    "offlineAck": {
+      "first": "Estou sem sinal. Guardei o que você falou e mando assim que a rede voltar.",
+      "next": "Guardado."
     },
     "quickPromptsLabel": "Falas rápidas (simulação):",
     "state": {
@@ -274,30 +286,30 @@
     },
     "agent": {
       "ask": {
-        "carga": "Você já pegou a carga?",
-        "caminhao": "E o caminhão, tudo certo?",
-        "status_carga": "Como está a carga?",
-        "avarias": "Teve alguma avaria?",
-        "ocorrencias": "E na viagem, alguma ocorrência?",
-        "descarga": "A descarga terminou?"
+        "carga": "Já pegou a carga?",
+        "caminhao": "E o caminhão, tá tudo certo?",
+        "status_carga": "Como tá a carga?",
+        "avarias": "Teve avaria?",
+        "ocorrencias": "Aconteceu alguma coisa na viagem?",
+        "descarga": "Já terminou de descarregar?"
       },
       "done": {
-        "pickup": "Retirada confirmada e relatório enviado ao CCO. Boa viagem.",
-        "checkin": "Check-in feito. Avisei o CCO e o contador de espera começou.",
-        "unload": "Descarga registrada. Estadia encerrada e enviada ao CCO.",
+        "pickup": "Fechou: retirada confirmada e CCO avisado. Boa viagem!",
+        "checkin": "Pronto, check-in feito. Já avisei o CCO e comecei a contar o tempo parado.",
+        "unload": "Fechou, descarga registrada. Encerrei a estadia e avisei o CCO.",
         "free": ""
       },
-      "occurrenceRecorded": "Entendi, registrei a ocorrência e avisei o CCO.",
-      "occurrenceStart": "Claro. Qual é o problema? Depois me diga o km e em qual BR você está.",
+      "occurrenceRecorded": "Beleza, registrei a ocorrência e avisei o CCO.",
+      "occurrenceStart": "Claro. O que aconteceu? Me fala o km e a BR também.",
       "occurrenceAsk": {
-        "problema": "Qual é o problema?",
-        "km": "Em qual km aconteceu?",
-        "br": "Em qual BR você está?"
+        "problema": "O que aconteceu?",
+        "km": "Lembra em que km foi?",
+        "br": "Qual BR?"
       },
-      "returningToTopic": " Voltando: {{question}}",
-      "freePrompt": "Estou aqui. Pode falar de uma ocorrência ou perguntar sobre a nota.",
-      "gotItPrefix": "Anotado. ",
-      "didNotCatchPrefix": "Não peguei essa. "
+      "returningToTopic": " Beleza, voltando: {{question}}",
+      "freePrompt": "Tô por aqui. Quer registrar alguma coisa ou consultar a nota?",
+      "gotItPrefix": "Beleza, anotei. ",
+      "didNotCatchPrefix": "Não entendi direito. "
     },
     "dock": {
       "open": "Abrir AvisAI, {{state}}",
@@ -339,11 +351,11 @@
     "verifiedSubtitle": "O agente de voz responde exclusivamente com base nestes dados extraídos.",
     "openDoc": "Abrir",
     "askAboutDocumentButton": "Perguntar ao AvisAI sobre este documento",
-    "askPromptForDoc": "Estou com a {{title}} aberta. O que você quer saber sobre este documento?",
-    "answerByField": "Pela {{title}}: {{field}} {{value}}.",
-    "answerByChunk": "Achei na {{title}}: {{excerpt}}",
-    "notFound": "Não encontrei isso nos documentos da viagem.",
-    "listAnswer": "Os documentos disponíveis são: {{documents}}.",
+    "askPromptForDoc": "Abri a {{title}} pra você. O que quer saber dela?",
+    "answerByField": "Na {{title}}, achei {{field}}: {{value}}.",
+    "answerByChunk": "Achei isto na {{title}}: {{excerpt}}",
+    "notFound": "Não achei essa informação nos documentos da viagem.",
+    "listAnswer": "Tem estes documentos na viagem: {{documents}}.",
     "fieldLabels": {
       "peso": "peso",
       "peso_kg": "peso",
