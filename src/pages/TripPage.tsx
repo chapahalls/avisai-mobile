@@ -16,8 +16,10 @@ import { useSession } from '../features/auth';
 import { JourneyTimeline, StayCounter, useTrip, type TripPhase } from '../features/trip';
 import { useAvisaiDock, useVoice } from '../features/voice';
 import { colors } from '../lib/theme';
+import { useWakeWord } from '../services/wakeWord';
 import { distanceKm } from '../utils/geo';
 import { hapticTap } from '../utils/haptics';
+import { useCompactLayout } from '../utils/layout';
 import { SettingsSheet } from './SettingsSheet';
 import { receiverLabel, receiverTone } from './tripUi';
 
@@ -78,6 +80,8 @@ export function TripPage() {
     clearRouteAssignedBanner,
   } = useTrip();
   const voiceState = useVoice((s) => s.state);
+  const wakeListening = useWakeWord((s) => s.status === 'listening');
+  const compact = useCompactLayout();
   const session = useSession((s) => s.session);
   const openPanel = useAvisaiDock((s) => s.openPanel);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -100,33 +104,43 @@ export function TripPage() {
     ]);
   };
 
+  const avisaiPill = (
+    <Pressable
+      onPress={() => {
+        hapticTap();
+        openPanel();
+      }}
+      accessibilityRole="button"
+      accessibilityHint={t('voice.dock.openHint')}
+      className="flex-row items-center gap-2 bg-ink-900 border border-ink-800 rounded-full px-3.5 py-2 active:opacity-80"
+    >
+      <View
+        className={`w-2.5 h-2.5 rounded-full ${
+          voiceState !== 'idle' ? 'bg-ok-500' : wakeListening ? 'bg-brand-400' : 'bg-ink-300'
+        }`}
+      />
+      <Text className="text-ink-50 text-sm font-semibold">
+        {voiceState === 'idle' && wakeListening
+          ? t('voice.wake.listening')
+          : t('home.avisaiState', { state: t(`voice.state.${voiceState}`) })}
+      </Text>
+    </Pressable>
+  );
+
   return (
     <Screen>
       {/* Cabeçalho: símbolo, saudação e estado do AvisAI */}
       <View className="flex-row items-center gap-3">
         <RodarMark size={52} />
         <View className="flex-1">
-          <Text className="text-ink-300 text-base">{t(greetingKey(new Date()))}</Text>
+          <Text numberOfLines={1} className="text-ink-300 text-base">
+            {t(greetingKey(new Date()))}
+          </Text>
           <Text numberOfLines={1} className="text-ink-50 text-3xl font-display">
             {firstName}
           </Text>
         </View>
-        <Pressable
-          onPress={() => {
-            hapticTap();
-            openPanel();
-          }}
-          accessibilityRole="button"
-          accessibilityHint={t('voice.dock.openHint')}
-          className="flex-row items-center gap-2 bg-ink-900 border border-ink-800 rounded-full px-3.5 py-2 active:opacity-80"
-        >
-          <View
-            className={`w-2.5 h-2.5 rounded-full ${voiceState === 'idle' ? 'bg-ink-300' : 'bg-ok-500'}`}
-          />
-          <Text className="text-ink-50 text-sm font-semibold">
-            {t('home.avisaiState', { state: t(`voice.state.${voiceState}`) })}
-          </Text>
-        </Pressable>
+        {compact ? null : avisaiPill}
         <Pressable
           onPress={() => {
             hapticTap();
@@ -139,6 +153,9 @@ export function TripPage() {
           <Icon name="sliders" size={20} color={colors.ink[300]} />
         </Pressable>
       </View>
+
+      {/* Tela apertada: o estado do AvisAI desce para a linha de baixo. */}
+      {compact ? <View className="flex-row">{avisaiPill}</View> : null}
 
       {/* Avisos que pedem atenção */}
       {routeAssignedBanner ? (
@@ -162,10 +179,10 @@ export function TripPage() {
 
       {/* Próxima viagem / viagem em andamento */}
       <Card className="p-5">
-        <View className="flex-row items-center justify-between gap-2">
+        <View className="flex-row flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <Text
-            numberOfLines={1}
-            className="flex-1 text-info-300 text-sm font-bold uppercase tracking-widest"
+            numberOfLines={compact ? 2 : 1}
+            className="shrink text-info-300 text-sm font-bold uppercase tracking-widest"
           >
             {idle ? t('home.nextTrip') : t('home.currentTrip')} · {activeRoute.tripId}
           </Text>
@@ -245,9 +262,10 @@ export function TripPage() {
         )}
       </Card>
 
-      {/* Atalhos */}
-      <View className="flex-row gap-3">
+      {/* Atalhos: três colunas; em tela apertada, uma lista (senão as palavras quebram no meio). */}
+      <View className={compact ? 'gap-3' : 'flex-row gap-3'}>
         <Shortcut
+          compact={compact}
           icon="message"
           tone="info"
           title={t('home.shortcuts.cco.title')}
@@ -255,6 +273,7 @@ export function TripPage() {
           onPress={() => nav.navigate('Messages')}
         />
         <Shortcut
+          compact={compact}
           icon="list"
           tone="wait"
           title={t('home.shortcuts.queue.title')}
@@ -262,6 +281,7 @@ export function TripPage() {
           onPress={() => nav.navigate('Queue')}
         />
         <Shortcut
+          compact={compact}
           icon="map"
           tone="neutral"
           title={t('home.shortcuts.map.title')}
@@ -399,12 +419,14 @@ const shortcutTone = {
 } as const;
 
 function Shortcut({
+  compact,
   icon,
   tone,
   title,
   subtitle,
   onPress,
 }: {
+  compact: boolean;
   icon: IconName;
   tone: keyof typeof shortcutTone;
   title: string;
@@ -419,13 +441,17 @@ function Shortcut({
       }}
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${subtitle}`}
-      className="flex-1 bg-ink-900 border border-ink-800 rounded-3xl p-3.5 active:opacity-80"
+      className={`bg-ink-900 border border-ink-800 rounded-3xl p-3.5 active:opacity-80 ${
+        compact ? 'flex-row items-center gap-3' : 'flex-1'
+      }`}
     >
       <View className={`w-11 h-11 rounded-xl items-center justify-center ${shortcutTone[tone].box}`}>
         <Icon name={icon} size={22} color={shortcutTone[tone].color} />
       </View>
-      <Text className="text-ink-50 text-base font-bold mt-3 leading-5">{title}</Text>
-      <Text className="text-ink-300 text-xs mt-1 leading-4">{subtitle}</Text>
+      <View className={compact ? 'flex-1' : undefined}>
+        <Text className={`text-ink-50 text-base font-bold leading-5 ${compact ? '' : 'mt-3'}`}>{title}</Text>
+        <Text className="text-ink-300 text-xs mt-1 leading-4">{subtitle}</Text>
+      </View>
     </Pressable>
   );
 }

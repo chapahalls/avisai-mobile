@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Alert, Linking, Modal, Pressable, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { DemoControls, RouteMap, useTrip } from '../features/trip';
 import { colors } from '../lib/theme';
+import { openDirectionsTo } from '../services/directions';
 import { distanceKm } from '../utils/geo';
 import { hapticTap } from '../utils/haptics';
 import { receiverLabel, receiverTone } from './tripUi';
@@ -31,10 +32,7 @@ export function MapPage() {
   const openNavigation = async () => {
     hapticTap();
     const { lat, lng } = activeRoute.destination.position;
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-    try {
-      await Linking.openURL(url);
-    } catch {
+    if (!(await openDirectionsTo(lat, lng))) {
       Alert.alert(t('map.navigateErrorTitle'), t('map.navigateError'));
     }
   };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import {
   DarkTheme,
   NavigationContainer,
@@ -7,14 +7,15 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Icon, type IconName } from '../components/Icon';
 import { useSession } from '../features/auth';
 import { useOutboxStore } from '../features/outbox';
 import { useStaySummary, useTrip } from '../features/trip';
 import { AvisaiDock } from '../features/voice';
+import { LAYOUT } from '../lib/config';
 import { colors } from '../lib/theme';
+import { useBottomInset } from '../utils/layout';
 import { LoginPage } from '../pages/LoginPage';
 import { TripPage } from '../pages/TripPage';
 import { MapPage } from '../pages/MapPage';
@@ -70,10 +71,6 @@ function TabIcon({ name, color, focused }: { name: IconName; color: string; focu
   );
 }
 
-function useBottomInset() {
-  const insets = useSafeAreaInsets();
-  return Math.max(insets.bottom, 10);
-}
 
 function MainTabs() {
   const { t } = useTranslation();
@@ -96,7 +93,17 @@ function MainTabs() {
           borderTopColor: colors.ink[800],
           borderTopWidth: 1,
         },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600', marginTop: 4 },
+        // Rótulo próprio: com fonte grande, "Documentos" era cortado ("Document…").
+        tabBarLabel: ({ color, children }) => (
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            maxFontSizeMultiplier={LAYOUT.tabLabelMaxScale}
+            style={{ color, fontSize: 12, fontWeight: '600', marginTop: 4 }}
+          >
+            {children}
+          </Text>
+        ),
       }}
     >
       <Tabs.Screen
@@ -147,7 +154,7 @@ function MainTabs() {
 }
 
 /** AvisAI flutuante sobre o app logado: esfera nas abas, painel e tela cheia em qualquer tela. */
-function DockLayer({ onTabs }: { onTabs: boolean }) {
+function DockLayer({ onTabs, tab }: { onTabs: boolean; tab: string | null }) {
   const { t } = useTranslation();
   const bottomInset = useBottomInset();
   const stay = useStaySummary();
@@ -163,7 +170,8 @@ function DockLayer({ onTabs }: { onTabs: boolean }) {
   return (
     <AvisaiDock
       showOrb={onTabs}
-      bottomOffset={TAB_BAR_HEIGHT + bottomInset + 12}
+      // Em Mensagens a esfera sobe acima da linha de escrever, senão espreme o campo de texto.
+      bottomOffset={TAB_BAR_HEIGHT + bottomInset + 12 + (tab === 'Messages' ? LAYOUT.messagesComposerDp : 0)}
       stayTimer={stay.timer}
       stayValue={stay.value}
       stayOver={stay.over}
@@ -176,12 +184,15 @@ export function AppNavigation() {
   const session = useSession((s) => s.session);
   const { t } = useTranslation();
   const [onTabs, setOnTabs] = useState(true);
+  const [tab, setTab] = useState<string | null>(null);
 
   const syncRoute = () => {
     // A esfera só aparece nas abas; telas empilhadas (documento, fila) têm os próprios botões.
     const root = navigationRef.getRootState();
     const top = root?.routes[root.index];
     setOnTabs(!top || top.name === 'Main');
+    const tabs = top?.state;
+    setTab(tabs && typeof tabs.index === 'number' ? (tabs.routes[tabs.index]?.name ?? null) : null);
   };
 
   return (
@@ -210,7 +221,7 @@ export function AppNavigation() {
           )}
         </Stack.Navigator>
       </NavigationContainer>
-      {session ? <DockLayer onTabs={onTabs} /> : null}
+      {session ? <DockLayer onTabs={onTabs} tab={tab} /> : null}
     </View>
   );
 }

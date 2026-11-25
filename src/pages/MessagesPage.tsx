@@ -81,7 +81,8 @@ export function MessagesPage() {
         <FlatList
           data={rows}
           keyExtractor={(r) => r.id}
-          contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}
+          // A esfera do AvisAI fica acima da linha de escrever: espaço para o último cartão.
+          contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: DOCK_CLEARANCE }}
           ListHeaderComponent={
             <View className="gap-3 mb-1">
               <ScreenTitle eyebrow={t('messages.eyebrow')} title={t('messages.title')} />
@@ -138,10 +139,10 @@ export function MessagesPage() {
           renderItem={({ item }) => <MessageCard row={item} t={t} />}
         />
 
-        {/* Escrever: voz sempre; teclado só parado. Espaço à direita para a esfera do AvisAI. */}
+        {/* Escrever: voz sempre; teclado só parado. A esfera do AvisAI fica acima desta linha. */}
         <View
           className="flex-row items-center gap-2 px-4 pt-3 border-t border-ink-800"
-          style={{ paddingBottom: 12, paddingRight: DOCK_CLEARANCE - 16 }}
+          style={{ paddingBottom: 12 }}
         >
           <Pressable
             onPress={() => {

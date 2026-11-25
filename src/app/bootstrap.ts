@@ -4,12 +4,13 @@ import { loadPersistedApiConfig, useApiConfig } from '../services/api';
 import { startBackendStreamWatcher } from '../services/backendStream';
 import '../services/deviceGps';
 import { startNetworkWatcher } from '../services/network';
+import { startWakeWordWatcher } from '../services/wakeWord';
 import { resetStuckSending, startSyncEngine, useOutboxStore } from '../features/outbox';
 import { startTripSimulator, useTrip, wireTripToVoice, ROUTE } from '../features/trip';
 import { loadPersistedVoiceMode, wireVoiceToBus } from '../features/voice';
 import { indexDocuments } from '../features/documents';
 
-/** Liga tudo uma vez: banco, idioma/config persistida, rede, fila, stream WS, simulador, voz e índice vetorial. Retorna o "desligar". */
+/** Liga tudo uma vez: banco, idioma/config persistida, rede, fila, stream WS, simulador, voz, wake word e índice vetorial. Retorna o "desligar". */
 export function bootstrap() {
   migrate();
   loadPersistedLanguage();
@@ -28,6 +29,7 @@ export function bootstrap() {
     wireVoiceToBus(),
     wireTripToVoice(),
     startTripSimulator(),
+    startWakeWordWatcher(),
   ];
   return () => stops.forEach((s) => s());
 }

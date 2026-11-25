@@ -31,11 +31,63 @@ export type BusinessConfig = {
 /** Relógio simulado: 1 s real = TIME_SCALE s simulados (60 = 1 s vira 1 min). */
 export const TIME_SCALE = 60;
 
-/** Voz RTC direta: sem gravação nem legendas/transcrição consumidas pelo cliente. */
+/**
+ * Voz RTC direta: sem gravação nem legendas/transcrição consumidas pelo cliente.
+ * Os comandos do app chegam do backend como intenção (`acao_cliente`), nunca da transcrição.
+ * A wake word usa o reconhecedor do aparelho só para achar "Ei AvisAI": o texto é descartado
+ * na hora (não aparece, não é salvo nem enviado).
+ */
 export const VOICE_PRIVACY = {
   recordAudio: false,
   showTranscript: false,
   clientTranscriptCommands: false,
+} as const;
+
+/** Tempos dos comandos que encerram a conversa ou a conta: o agente se despede antes. */
+export const VOICE_COMMANDS = {
+  /** Espera o agente começar a se despedir (a ação chega antes do áudio). */
+  farewellStartWaitMs: 4000,
+  /** Limite para a despedida terminar antes de desligar mesmo assim. */
+  farewellMaxMs: 10000,
+  /** Mesma ação repetida dentro deste intervalo é ignorada. */
+  dedupeMs: 2500,
+} as const;
+
+/** Layout responsivo (celular pequeno e fonte grande de acessibilidade). */
+export const LAYOUT = {
+  /** Abaixo desta largura útil (dp ÷ escala da fonte), colunas viram lista. */
+  compactWidthDp: 340,
+  /** Altura da linha de escrever da tela Mensagens: a esfera do AvisAI sobe acima dela. */
+  messagesComposerDp: 80,
+  /** Limite de aumento da fonte em rótulos curtos (abas), para não cortar a palavra. */
+  tabLabelMaxScale: 1.15,
+} as const;
+
+/** Avisos do agente que chegam sem conversa aberta (`aviso_motorista`). */
+export const DRIVER_NOTICES = {
+  /** Aviso que é pergunta abre a conversa para o motorista responder. */
+  openConversationOnQuestion: true,
+  /** Pausa depois da fala local antes de liberar o microfone para a wake word. */
+  tailMs: 500,
+} as const;
+
+/** Escuta da wake word ("Ei AvisAI") com o reconhecedor de fala do aparelho. */
+export const WAKE_WORD = {
+  /** Ligada por padrão; o motorista desliga nas configurações. */
+  enabledByDefault: true,
+  /**
+   * Reconhecer sem internet quando o aparelho diz ter o idioma instalado. Desligado: no Galaxy A17
+   * o modelo "instalado" devolve texto vazio. O reconhecedor padrão do Google é o que funciona.
+   */
+  preferOnDevice: false,
+  /** Pausa antes de reabrir a escuta quando o reconhecedor encerra sozinho. */
+  restartDelayMs: 400,
+  /** Pausa maior depois de erro, para não ficar em laço. */
+  errorBackoffMs: 3000,
+  /** Tempo para o microfone ser liberado antes de a Agora assumir. */
+  handoffMs: 350,
+  /** Trechos de fala seguidos com texto vazio antes de trocar o reconhecimento no aparelho pelo padrão. */
+  emptyResultsBeforeFallback: 2,
 } as const;
 
 export type ApiMode = 'mock' | 'http';

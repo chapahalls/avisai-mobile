@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
@@ -8,6 +8,7 @@ import { useSession } from '../features/auth';
 import { DemoControls, useTrip } from '../features/trip';
 import { useVoice } from '../features/voice';
 import { colors } from '../lib/theme';
+import { useWakeWord } from '../services/wakeWord';
 import { hapticTap } from '../utils/haptics';
 
 function initialsOf(name: string): string {
@@ -29,6 +30,9 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
   const preferredMode = useVoice((s) => s.preferredMode);
   const agoraStage = useVoice((s) => s.agoraStage);
   const audioRoute = useVoice((s) => s.audioRoute);
+  const wakeEnabled = useWakeWord((s) => s.enabled);
+  const wakeStatus = useWakeWord((s) => s.status);
+  const setWakeEnabled = useWakeWord((s) => s.setEnabled);
   const [demoOpen, setDemoOpen] = useState(false);
 
   const driverName = session?.name || t('auth.demoDriverName');
@@ -117,6 +121,34 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
                   <Icon name="check" size={14} color={colors.ok[500]} />
                   <Text className="text-ink-300 text-sm">{t('voice.privacyBadge')}</Text>
                 </View>
+              </View>
+
+              <View className="bg-ink-900 border border-ink-800 rounded-3xl p-4 gap-2">
+                <View className="flex-row items-center gap-3">
+                  <Icon name="mic" size={20} color={colors.brand[300]} />
+                  <Text className="flex-1 text-ink-50 text-base font-semibold">{t('voice.wake.title')}</Text>
+                  <Switch
+                    value={wakeEnabled}
+                    onValueChange={(on) => {
+                      hapticTap();
+                      setWakeEnabled(on);
+                    }}
+                    disabled={wakeStatus === 'unavailable'}
+                    accessibilityLabel={t('voice.wake.title')}
+                    accessibilityHint={t('voice.wake.hint')}
+                    trackColor={{ false: colors.ink[700], true: colors.brand[500] }}
+                    thumbColor={wakeEnabled ? colors.brand[300] : colors.ink[300]}
+                  />
+                </View>
+                <Text className="text-ink-300 text-sm leading-5">{t('voice.wake.hint')}</Text>
+                {wakeStatus === 'unavailable' || wakeStatus === 'denied' ? (
+                  <View className="flex-row items-center gap-1.5">
+                    <Icon name="alert" size={14} color={colors.wait[500]} />
+                    <Text className="flex-1 text-wait-500 text-sm">
+                      {t(wakeStatus === 'denied' ? 'voice.wake.permissionDenied' : 'voice.wake.unavailable')}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
 
               <Pressable
