@@ -14,3 +14,7 @@ google-services.json
 !.env.example
 ios/
 android/
+
+# IDE
+.idea/
+.vscode/
