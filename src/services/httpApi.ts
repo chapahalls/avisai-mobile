@@ -52,6 +52,17 @@ function getRotaId(): number {
   }
 }
 
+/** JWT do /auth/sso (só em memória; some ao sair ou fechar o app). Vai como Bearer em toda chamada. */
+let accessToken: string | null = null;
+
+export function setAccessToken(token: string | null | undefined): void {
+  accessToken = typeof token === 'string' && token.trim() ? token.trim() : null;
+}
+
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
 async function fetchWithTimeout(
   path: string,
   init: RequestInit = {},
@@ -68,6 +79,7 @@ async function fetchWithTimeout(
       ...init,
       headers: {
         'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...(init.headers ?? {}),
       },
       signal: controller.signal,
@@ -371,6 +383,7 @@ export const httpApiClient: ApiClient = {
       });
       if (!res.ok) throw new NetworkError(`HTTP ${res.status}`);
       const data = (await res.json()) as SsoBackendResponse;
+      setAccessToken(data.token);
       if (data.user?.driverId !== undefined) {
         useApiConfig.getState().setDriverId(data.user.driverId);
       }
@@ -392,6 +405,7 @@ export const httpApiClient: ApiClient = {
         role: data.user?.role,
       };
     } catch {
+      setAccessToken(null);
       return mockSsoLogin(email);
     }
   },

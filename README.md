@@ -1,5 +1,7 @@
 # RODAR Mobile
 
+[![CI](https://github.com/rodarglobal/rodar-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/rodarglobal/rodar-mobile/actions/workflows/ci.yml)
+
 App do motorista do **RODAR**, com o **AvisAI**: o agente de voz que avisa o recebedor, conta a espera e prova cada hora parada.
 
 > **Histórico:** o projeto começou como *AvisAI* no hackathon UNMUTE by Agora (21–22/11/2026) e continua como **RODAR** no Hack Brasil 2026, na trilha Logística & automação. Os repositórios foram criados em 22/11/2026 e todo o histórico de commits está neles; o AvisAI virou o nome do agente de voz do RODAR.
@@ -11,6 +13,19 @@ O foco é a operação na cabine: o motorista consulta a viagem atribuída, acom
 | [`rodarglobal/rodar-backend`](https://github.com/rodarglobal/rodar-backend) | backend FastAPI, regras de operação, agente Agora, streams e persistência |
 | **este repositório** | aplicativo React Native/Expo do motorista |
 | [`rodarglobal/rodar-web`](https://github.com/rodarglobal/rodar-web) | painel web do CCO para monitorar, responder e publicar rotas |
+
+## Para o júri
+
+| | |
+|---|---|
+| **Trilha** | Logística & automação |
+| **Em uma frase** | Um agente de voz que avisa o recebedor antes da chegada, conta a estadia do caminhão parado (Lei 11.442) e só chama a central quando alguém precisa decidir. |
+| **Ver sem instalar nada** | [tour em vídeo de 1 min](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) do site e do painel · [validação ponta a ponta com a api real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](https://github.com/rodarglobal/rodar-mobile#telas-do-aplicativo) |
+| **Repositórios** | [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-web](https://github.com/rodarglobal/rodar-web) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) (este) |
+| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 512 testes automatizados: 299 no backend, 127 no web, 86 no mobile |
+| **Segurança** | JWT assinado no login, papel `cco` nas ações da central, CORS restrito, segredo do LLM e limite de ligações ([detalhes](https://github.com/rodarglobal/rodar-backend#segurança)) |
+| **O que é simulado** | login sem senha, GPS da rota, documentos fiscais e o modo Demo do painel: [lista completa](#o-que-é-simulado-vs-real--plugável-e8) |
+<!-- Demo publicada e vídeo de 3 min do Hack Brasil: incluir as duas linhas aqui antes de 30/11. -->
 
 ## Arquitetura de arquivos
 
@@ -74,6 +89,10 @@ Toda a infraestrutura de desenvolvimento e build Android roda isolada em contain
 # Subir servidor Metro Dev Client na porta 8081
 ./scripts/android-dev.sh metro
 ```
+
+Fora do Docker, com Node 20: `npm run lint` (ESLint com a config do Expo), `npm run typecheck` e `npm test`. O CI do GitHub roda os três a cada push e PR.
+
+**Acesso:** no modo `http`, o login guarda em memória o JWT devolvido pelo `/auth/sso` do backend e o manda como `Authorization: Bearer` em toda chamada; ao sair, o token é apagado.
 
 ### 2. Build e Instalação do Android Dev Build (APK) via Docker + USB
 

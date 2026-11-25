@@ -5,6 +5,8 @@ import type { ApiClient } from './apiClient';
 import { httpApiClient } from './httpApi';
 import { mockApiClient } from './mockApi';
 
+export { setAccessToken } from './httpApi';
+
 const DEFAULT_PRESET_URL = (
   process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || 'http://localhost:8000'
 ).replace(/\/+$/, '');
