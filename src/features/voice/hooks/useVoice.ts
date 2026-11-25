@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import i18n from '../../../lib/i18n';
 import { ENV, type VoiceMode } from '../../../lib/config';
 import { getSetting, setSetting } from '../../../lib/db';
 import { newId } from '../../../lib/id';
@@ -10,8 +11,7 @@ import { hapticBargeIn } from '../../../utils/haptics';
 import type { FieldKey, ReportContext } from '../../report';
 import { agentRespond } from '../api/agentMock';
 import { MockVoiceSession } from '../api/mockVoiceSession';
-import { checkOfflineWhisperModel, downloadOfflineWhisperModel } from '../api/offlineWhisperModel';
-import { OfflineWhisperSession } from '../api/offlineWhisperSession';
+import { OfflineVoiceRecorder } from '../api/offlineVoiceRecorder';
 import { createAndStartVoiceSession, getAgoraFallbackReason } from '../api/voiceFactory';
 import type {
   AgoraStage,
@@ -37,8 +37,11 @@ interface VoiceStore {
   lastError: string | null;
   /** Em modo `agora`, indica se a sessão RTC (/sessions) está conectada. */
   sessionConnected: boolean;
-  /** Whisper local assume o microfone somente enquanto o aparelho está offline. */
-  offlineWhisperActive: boolean;
+  /**
+   * Sem rede (offline-first): o app grava cada fala em áudio e põe na fila; o servidor transcreve e
+   * o agente processa quando a rede volta. Nenhum modelo de voz roda no aparelho.
+   */
+  offlineRecordingActive: boolean;
   /** Em modo `agora`, indica se o microfone local está em mudo. */
   muted: boolean;
   /** Nível de volume normalizado (0..1) do microfone ou agente. */
@@ -55,7 +58,7 @@ interface VoiceStore {
   backendLlmMode: string | null;
   clearError: () => void;
   connectAgoraNow: () => Promise<void>;
-  startOfflineWhisper: () => Promise<void>;
+  startOfflineRecording: () => Promise<void>;
   listen: () => void;
   utter: (text: string) => void;
   say: (text: string) => void;
@@ -105,20 +108,22 @@ function clearBargeInTimer() {
 const initialMockSession = new MockVoiceSession();
 let activeSession: VoiceSession = initialMockSession;
 let startingAgora = false;
-let offlineWhisperSession: OfflineWhisperSession | null = null;
-let startingOfflineWhisper = false;
+let offlineRecorder: OfflineVoiceRecorder | null = null;
+/** A primeira fala guardada explica o que acontece; as seguintes só confirmam. */
+let offlineAckedOnce = false;
+let startingOfflineRecording = false;
 let resumeOfflineAfterReply = false;
 let voiceSessionGeneration = 0;
 
 export const useVoice = create<VoiceStore>((set, get) => {
   const usesDirectVoice = () => {
-    const { activeMode, preferredMode, offlineWhisperActive } = get();
-    return !offlineWhisperActive && (activeMode === 'agora' || preferredMode === 'agora');
+    const { activeMode, preferredMode, offlineRecordingActive } = get();
+    return !offlineRecordingActive && (activeMode === 'agora' || preferredMode === 'agora');
   };
 
   const resumeOfflineListening = () => {
-    if (!get().offlineWhisperActive || !offlineWhisperSession) return;
-    void offlineWhisperSession
+    if (!get().offlineRecordingActive || !offlineRecorder) return;
+    void offlineRecorder
       .startListening()
       .then(() => set({ state: 'listening', muted: false, lastError: null }))
       .catch((error) =>
@@ -226,7 +231,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
     agoraChannel: null,
     lastError: null,
     sessionConnected: false,
-    offlineWhisperActive: false,
+    offlineRecordingActive: false,
     muted: false,
     audioLevel: 0,
     audioSpeaker: 'none',
@@ -248,12 +253,12 @@ export const useVoice = create<VoiceStore>((set, get) => {
     connectAgoraNow: async () => {
       if (startingAgora) return;
       voiceSessionGeneration += 1;
-      if (offlineWhisperSession) {
-        const localSession = offlineWhisperSession;
-        offlineWhisperSession = null;
+      if (offlineRecorder) {
+        const localSession = offlineRecorder;
+        offlineRecorder = null;
         resumeOfflineAfterReply = false;
         await localSession.stop().catch(() => undefined);
-        set({ offlineWhisperActive: false, muted: false });
+        set({ offlineRecordingActive: false, muted: false });
       }
       setSetting('voice_mode', 'agora');
       const apiState = useApiConfig.getState();
@@ -326,19 +331,19 @@ export const useVoice = create<VoiceStore>((set, get) => {
         startingAgora = false;
       }
       if (useNetwork.getState().quality() === 'offline' && !get().sessionConnected) {
-        void get().startOfflineWhisper();
+        void get().startOfflineRecording();
       }
     },
 
-    startOfflineWhisper: async () => {
+    startOfflineRecording: async () => {
       if (
-        startingOfflineWhisper ||
-        get().offlineWhisperActive ||
+        startingOfflineRecording ||
+        get().offlineRecordingActive ||
         useNetwork.getState().quality() !== 'offline'
       ) {
         return;
       }
-      startingOfflineWhisper = true;
+      startingOfflineRecording = true;
       const generation = voiceSessionGeneration;
       try {
         const previousSession = activeSession;
@@ -349,27 +354,32 @@ export const useVoice = create<VoiceStore>((set, get) => {
         }
         if (generation !== voiceSessionGeneration) return;
 
-        if (!(await checkOfflineWhisperModel())) {
-          throw new Error(
-            'O modelo offline ainda não foi baixado. Conecte-se à internet para baixar cerca de 466 MB.',
-          );
-        }
-
-        const session = new OfflineWhisperSession({
-          onTranscript: (text) => {
-            if (get().offlineWhisperActive) get().utter(text);
+        const session = new OfflineVoiceRecorder({
+          onNote: (note) => {
+            if (!get().offlineRecordingActive) return;
+            agentBus.emit('voice:offline_note', note);
+            // Confirma em voz local, sem ouvir a própria confirmação.
+            const ack = i18n.t(offlineAckedOnce ? 'voice.offlineAck.next' : 'voice.offlineAck.first');
+            offlineAckedOnce = true;
+            // Parou a escuta no meio da fala: guarda o trecho, mas não volta a ouvir.
+            if (offlineRecorder?.isListening) {
+              resumeOfflineAfterReply = true;
+              void offlineRecorder.stopListening();
+            }
+            set((s) => ({ transcript: push(s.transcript, 'driver', i18n.t('trip.timeline.voiceNoteSaved')) }));
+            get().say(ack);
           },
           onError: (message) => set({ lastError: message }),
         });
-        offlineWhisperSession = session;
+        offlineRecorder = session;
         await session.startListening();
         if (generation !== voiceSessionGeneration) {
-          offlineWhisperSession = null;
+          offlineRecorder = null;
           await session.stop();
           return;
         }
         set({
-          offlineWhisperActive: true,
+          offlineRecordingActive: true,
           activeMode: 'mock',
           sessionConnected: false,
           muted: false,
@@ -381,24 +391,24 @@ export const useVoice = create<VoiceStore>((set, get) => {
         });
       } catch (error) {
         if (generation !== voiceSessionGeneration) return;
-        await offlineWhisperSession?.stop().catch(() => undefined);
-        offlineWhisperSession = null;
+        await offlineRecorder?.stop().catch(() => undefined);
+        offlineRecorder = null;
         set({
-          offlineWhisperActive: false,
+          offlineRecordingActive: false,
           activeMode: 'agora',
           sessionConnected: false,
           state: 'idle',
           lastError: error instanceof Error ? error.message : String(error),
         });
       } finally {
-        startingOfflineWhisper = false;
+        startingOfflineRecording = false;
       }
     },
 
     listen: () => {
-      const { state: current, preferredMode, sessionConnected, activeMode, offlineWhisperActive } = get();
+      const { state: current, preferredMode, sessionConnected, activeMode, offlineRecordingActive } = get();
 
-      if (offlineWhisperActive) {
+      if (offlineRecordingActive) {
         if (current === 'speaking') {
           resumeOfflineAfterReply = true;
           get().interrupt();
@@ -406,7 +416,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
         }
         if (current === 'listening') {
           resumeOfflineAfterReply = false;
-          void offlineWhisperSession?.stopListening();
+          void offlineRecorder?.stopListening();
           set({ state: 'idle', muted: false });
           return;
         }
@@ -419,7 +429,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
       // Modo Agora: primeiro toque na esfera do AvisAI inicia a sessão real (POST /sessions + joinChannel)
       if (preferredMode === 'agora' && !sessionConnected) {
         if (useNetwork.getState().quality() === 'offline') {
-          void get().startOfflineWhisper();
+          void get().startOfflineRecording();
           return;
         }
         void get().connectAgoraNow();
@@ -456,10 +466,10 @@ export const useVoice = create<VoiceStore>((set, get) => {
 
     toggleMute: () => {
       const nextMuted = !get().muted;
-      if (get().offlineWhisperActive) {
+      if (get().offlineRecordingActive) {
         if (nextMuted) {
           resumeOfflineAfterReply = false;
-          void offlineWhisperSession?.stopListening();
+          void offlineRecorder?.stopListening();
           set({ muted: true, state: 'idle' });
         } else {
           resumeOfflineListening();
@@ -481,9 +491,9 @@ export const useVoice = create<VoiceStore>((set, get) => {
         transcript: push(s.transcript, 'driver', text),
         liveTranscript: s.liveTranscript?.who === 'driver' ? null : s.liveTranscript,
       }));
-      if (get().offlineWhisperActive) {
+      if (get().offlineRecordingActive) {
         resumeOfflineAfterReply = true;
-        void offlineWhisperSession?.stopListening();
+        void offlineRecorder?.stopListening();
       }
       tryExecuteVoiceCommand(text);
 
@@ -539,7 +549,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
       }
       if (
         get().preferredMode === 'agora' &&
-        !get().offlineWhisperActive &&
+        !get().offlineRecordingActive &&
         activeSession === initialMockSession
       ) {
         get().pushTranscript('agent', text);
@@ -561,13 +571,13 @@ export const useVoice = create<VoiceStore>((set, get) => {
       const currentSession = activeSession;
       activeSession = initialMockSession;
       initialMockSession.setCallbacks(callbacks);
-      const localSession = offlineWhisperSession;
-      offlineWhisperSession = null;
+      const localSession = offlineRecorder;
+      offlineRecorder = null;
       resumeOfflineAfterReply = false;
       void localSession?.stop();
       set({
         sessionConnected: false,
-        offlineWhisperActive: false,
+        offlineRecordingActive: false,
         muted: false,
         state: 'idle',
         agoraStage: 'disconnected',
@@ -588,9 +598,11 @@ export const useVoice = create<VoiceStore>((set, get) => {
       const currentSession = activeSession;
       activeSession = initialMockSession;
       initialMockSession.setCallbacks(callbacks);
-      const localSession = offlineWhisperSession;
-      offlineWhisperSession = null;
+      const localSession = offlineRecorder;
+      offlineRecorder = null;
       resumeOfflineAfterReply = false;
+      offlineAckedOnce = false;
+      void localSession?.stop();
       lastPushedText = '';
       lastPushedWho = null;
       lastPushedAt = 0;
@@ -601,7 +613,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
         transcript: [],
         lastLatencyMs: null,
         sessionConnected: false,
-        offlineWhisperActive: false,
+        offlineRecordingActive: false,
         muted: false,
         agoraStage: 'disconnected',
         agoraChannel: null,
@@ -626,8 +638,8 @@ export const useVoice = create<VoiceStore>((set, get) => {
       activeSession = initialMockSession;
       initialMockSession.setCallbacks(callbacks);
       await prevSession.stop();
-      const localSession = offlineWhisperSession;
-      offlineWhisperSession = null;
+      const localSession = offlineRecorder;
+      offlineRecorder = null;
       resumeOfflineAfterReply = false;
       await localSession?.stop();
 
@@ -641,7 +653,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
           agoraChannel: null,
           lastError: null,
           sessionConnected: false,
-          offlineWhisperActive: false,
+          offlineRecordingActive: false,
           muted: false,
           audioLevel: 0,
           audioSpeaker: 'none',
@@ -662,7 +674,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
         agoraChannel: null,
         lastError: null,
         sessionConnected: false,
-        offlineWhisperActive: false,
+        offlineRecordingActive: false,
         muted: false,
         audioLevel: 0,
         audioSpeaker: 'none',
@@ -699,44 +711,28 @@ export function wireVoiceToBus() {
       }
     }
   });
-  const ensureOfflineModel = () => {
-    if (
-      useVoice.getState().preferredMode !== 'agora' ||
-      useNetwork.getState().quality() === 'offline'
-    ) {
-      return;
-    }
-    void checkOfflineWhisperModel().then((ready) => {
-      if (!ready) void downloadOfflineWhisperModel().catch(() => undefined);
-    });
-  };
   const syncOfflineMode = () => {
     const voice = useVoice.getState();
     if (voice.preferredMode !== 'agora') return;
     if (useNetwork.getState().quality() === 'offline') {
       if (voice.sessionConnected) {
-        void voice.startOfflineWhisper();
+        void voice.startOfflineRecording();
       }
-    } else if (voice.offlineWhisperActive) {
+    } else if (voice.offlineRecordingActive) {
       void voice.connectAgoraNow();
     }
   };
-  const offVoiceMode = useVoice.subscribe((state, previous) => {
-    if (state.preferredMode !== previous.preferredMode) ensureOfflineModel();
-  });
   const offNetwork = useNetwork.subscribe((state, previous) => {
     if (state.device !== previous.device || state.override !== previous.override) {
-      ensureOfflineModel();
       syncOfflineMode();
     }
   });
-  ensureOfflineModel();
   syncOfflineMode();
   const offSay = agentBus.on('agent:say', ({ text }) => {
     const v = useVoice.getState();
     // Em modo Agora (tempo real), nunca reproduz TTS local (expo-speech).
     // O áudio vem exclusivamente do agente no RTC; o app não armazena legendas.
-    if (!v.offlineWhisperActive && (v.preferredMode === 'agora' || v.activeMode === 'agora')) {
+    if (!v.offlineRecordingActive && (v.preferredMode === 'agora' || v.activeMode === 'agora')) {
       return;
     }
     v.say(text);
@@ -745,7 +741,6 @@ export function wireVoiceToBus() {
   const offReset = agentBus.on('voice:reset', () => useVoice.getState().reset());
   return () => {
     unsubApi();
-    offVoiceMode();
     offNetwork();
     offSay();
     offCtx();

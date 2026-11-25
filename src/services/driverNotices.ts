@@ -78,7 +78,7 @@ export function announceDriverNotice(notice: DriverNotice): boolean {
   seen.add(notice.id);
   // Conversa aberta: o agente fala pela Agora; aqui seria repetido.
   const voice = useVoice.getState();
-  if (voice.sessionConnected || voice.offlineWhisperActive) return false;
+  if (voice.sessionConnected || voice.offlineRecordingActive) return false;
   queue.push(notice);
   playNext();
   return true;

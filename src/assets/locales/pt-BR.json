@@ -158,7 +158,8 @@
       "centralAnswered": "Resposta enviada ao CCO: “{{answer}}”",
       "documentQueried": "Consulta por voz ao documento ({{doc}})",
       "occurrenceReported": "Ocorrência registrada: {{text}}",
-      "unloadCompleted": "Descarga concluída · estadia encerrada"
+      "unloadCompleted": "Descarga concluída · estadia encerrada",
+      "voiceNoteSaved": "Fala gravada sem sinal; sai quando a rede voltar"
     },
     "steps": {
       "pickup": "Retirada",
@@ -262,17 +263,18 @@
       "agoraLive": "GPT-Live",
       "agoraWaitingAgent": "Aguardando agente (9001)…",
       "agoraDisconnected": "Agora · Desconectado",
-      "offlineWhisper": "Whisper local · Offline",
+      "offlineRecording": "Sem sinal · gravando",
       "mock": "Voz Simulada"
     },
-    "offlineModel": {
-      "title": "Voz offline em português",
-      "checking": "Conferindo o modelo local…",
-      "missing": "O download automático começa quando houver conexão. O Whisper small ocupa cerca de 466 MB.",
-      "downloading": "Baixando o Whisper small · {{progress}}% de cerca de 466 MB",
-      "ready": "Modelo pronto. Se ficar sem internet, a conversa usa o Whisper no aparelho.",
-      "error": "Não consegui baixar o modelo. Confira a conexão e tente de novo.",
-      "retry": "Tentar de novo"
+    "offlineNotes": {
+      "title": "Sem sinal",
+      "body": "Sem internet, o AvisAI grava o que você fala e manda quando a rede voltar. A central recebe tudo na ordem, com o horário em que você falou.",
+      "pending": "{{count}} fala esperando a rede",
+      "pending_other": "{{count}} falas esperando a rede"
+    },
+    "offlineAck": {
+      "first": "Estou sem sinal. Guardei o que você falou e mando assim que a rede voltar.",
+      "next": "Guardado."
     },
     "quickPromptsLabel": "Falas rápidas (simulação):",
     "state": {

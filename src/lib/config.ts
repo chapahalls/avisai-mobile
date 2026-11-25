@@ -72,6 +72,35 @@ export const DRIVER_NOTICES = {
 } as const;
 
 /** Escuta da wake word ("Ei AvisAI") com o reconhecedor de fala do aparelho. */
+/**
+ * Sem rede (offline-first): o app não roda modelo de voz. Grava cada fala do motorista em WAV,
+ * põe na fila e o backend transcreve e processa quando a rede volta. A fala é separada só pelo
+ * volume do microfone (sem modelo): começa quando passa do limiar e termina depois de um silêncio.
+ */
+export const OFFLINE_VOICE = {
+  sampleRate: 16000,
+  /** Tamanho de cada análise de volume. */
+  frameMs: 20,
+  /** Quadros seguidos acima do limiar para contar como início de fala. */
+  startFrames: 4,
+  /** Volume mínimo (RMS em PCM 16 bits) para ser fala, mesmo em cabine silenciosa. */
+  minThreshold: 700,
+  /** O limiar acompanha o ruído da cabine: fala = ruído médio × este fator. */
+  noiseFactor: 2.5,
+  /** Silêncio que encerra a fala. */
+  silenceMs: 1300,
+  /** Abaixo disso (fala útil) a gravação é descartada: tosse, batida, buzina. */
+  minSpeechMs: 400,
+  /** Uma fala longa vira mais de um áudio. */
+  maxClipMs: 30000,
+  /** Áudio guardado antes do início detectado, para não cortar a primeira sílaba. */
+  preRollMs: 300,
+  /** Início de cada escuta: mede o ruído da cabine antes de procurar fala. */
+  calibrationMs: 300,
+  /** Pasta (dentro dos documentos do app) onde os áudios esperam a rede. */
+  folder: 'falas_offline',
+} as const;
+
 export const WAKE_WORD = {
   /** Ligada por padrão; o motorista desliga nas configurações. */
   enabledByDefault: true,

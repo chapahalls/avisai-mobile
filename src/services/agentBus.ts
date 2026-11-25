@@ -9,6 +9,7 @@ import type { FieldKey, ReportContext } from '../features/report';
  * - 'voice:occurrence'       → o motorista relatou uma ocorrência em rota.
  * - 'voice:document_answered'→ o agente respondeu uma dúvida sobre documentos da viagem.
  * - 'voice:reset'            → reinicia o estado de voz ao resetar a viagem.
+ * - 'voice:offline_note'     → sem rede, uma fala virou áudio para enviar depois.
  */
 type Events = {
   'agent:say': { text: string };
@@ -34,6 +35,7 @@ type Events = {
     found: boolean;
   };
   'voice:reset': Record<string, never>;
+  'voice:offline_note': { id: string; filePath: string; durationMs: number; spokenAt: string };
 };
 
 type Handler<T> = (p: T) => void;

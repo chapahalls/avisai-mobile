@@ -38,7 +38,7 @@ export function CabinModeModal({
   const preferredMode = useVoice((s) => s.preferredMode);
   const agoraStage = useVoice((s) => s.agoraStage);
   const sessionConnected = useVoice((s) => s.sessionConnected);
-  const offlineWhisperActive = useVoice((s) => s.offlineWhisperActive);
+  const offlineRecordingActive = useVoice((s) => s.offlineRecordingActive);
   const muted = useVoice((s) => s.muted);
   const audioLevel = useVoice((s) => s.audioLevel);
   const audioSpeaker = useVoice((s) => s.audioSpeaker);
@@ -57,8 +57,8 @@ export function CabinModeModal({
     liveTranscript?.who === 'driver' ? liveTranscript.text : lastDriverLine?.text;
 
   const modeLabel =
-    offlineWhisperActive
-      ? t('voice.modePill.offlineWhisper')
+    offlineRecordingActive
+      ? t('voice.modePill.offlineRecording')
       : preferredMode === 'agora'
         ? agoraStage === 'live'
           ? t('voice.modePill.agoraLive')
@@ -87,7 +87,7 @@ export function CabinModeModal({
 
             <View className="flex-1 flex-row items-center justify-center gap-2 bg-ink-800 rounded-full px-4 py-2.5">
               <View
-                className={`w-2.5 h-2.5 rounded-full ${contextPill ? 'bg-wait-500' : sessionConnected || offlineWhisperActive ? 'bg-ok-500' : 'bg-ink-300'}`}
+                className={`w-2.5 h-2.5 rounded-full ${contextPill ? 'bg-wait-500' : sessionConnected || offlineRecordingActive ? 'bg-ok-500' : 'bg-ink-300'}`}
               />
               <Text
                 numberOfLines={1}
@@ -187,7 +187,7 @@ export function CabinModeModal({
 
         {/* Base: estado do microfone + falar, e encerrar a sessão real */}
         <View className="gap-3">
-          {sessionConnected || offlineWhisperActive ? (
+          {sessionConnected || offlineRecordingActive ? (
             <Pressable
               onPress={() => {
                 hapticTap();

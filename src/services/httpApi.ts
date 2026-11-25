@@ -28,6 +28,8 @@ import {
 import { mockApiClient, ssoLogin as mockSsoLogin } from './mockApi';
 import { useNetwork } from './network';
 
+/** Áudio de até ~30 s em rede que acabou de voltar. */
+const VOICE_NOTE_TIMEOUT_MS = 30000;
 const TIMEOUT_MS = 8000;
 
 function getBaseUrl(): string {
@@ -78,7 +80,8 @@ async function fetchWithTimeout(
     const res = await fetch(url, {
       ...init,
       headers: {
-        'Content-Type': 'application/json',
+        // Multipart: o fetch põe o Content-Type com o boundary sozinho.
+        ...(init.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...(init.headers ?? {}),
       },
@@ -352,6 +355,25 @@ export const httpApiClient: ApiClient = {
       status: 200,
       receivedAt: data.receivedAt ?? new Date().toISOString(),
     };
+  },
+
+  async uploadVoiceNote(event: DomainEvent): Promise<{ status: 200 | 409; receivedAt: string }> {
+    const p = event.payload as { filePath?: string; durationMs?: number; spokenAt?: string };
+    if (!p.filePath) throw new NetworkError('voice_note_without_file');
+    const form = new FormData();
+    // React Native lê o arquivo pelo `uri`; o tipo do campo no DOM não conhece esse formato.
+    form.append('audio', { uri: `file://${p.filePath}`, name: 'fala.wav', type: 'audio/wav' } as unknown as Blob);
+    form.append('idempotencyKey', event.idempotencyKey);
+    form.append('faladoEm', p.spokenAt ?? event.occurredAt);
+    if (typeof p.durationMs === 'number') form.append('duracaoMs', String(Math.round(p.durationMs)));
+    const res = await fetchWithTimeout(
+      `/rotas/${getRotaId()}/falas-offline`,
+      { method: 'POST', body: form },
+      VOICE_NOTE_TIMEOUT_MS,
+    );
+    if (!res.ok && res.status !== 409) throw new NetworkError(`HTTP ${res.status}`);
+    const data = (await res.json().catch(() => ({}))) as { receivedAt?: string };
+    return { status: res.status === 409 ? 409 : 200, receivedAt: data.receivedAt ?? new Date().toISOString() };
   },
 
   async getEvents(tripId: string): Promise<DomainEvent[]> {
