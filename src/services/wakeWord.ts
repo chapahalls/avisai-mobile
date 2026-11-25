@@ -65,6 +65,7 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
     const v = useVoice.getState();
     return (
       !v.sessionConnected &&
+      !v.offlineWhisperActive &&
       v.state === 'idle' &&
       v.agoraStage !== 'connecting' &&
       v.agoraStage !== 'waiting_agent'

@@ -150,6 +150,8 @@ export class AgoraVoiceSession implements VoiceSession {
         channelProfile: agora.ChannelProfileType.ChannelProfileLiveBroadcasting,
         audioScenario: agora.AudioScenarioType.AudioScenarioAiClient,
       });
+      // AINS reduz ruídos estáticos e variáveis da cabine antes de publicar o microfone.
+      engine.setAINSMode(true, agora.AudioAinsMode.AinsModeUltralowlatency);
       engine.enableAudio();
       aplicarAudioIA(engine, agora.AudioRoute.RouteDefault, agora);
       engine.setEnableSpeakerphone(true);

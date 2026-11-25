@@ -7,7 +7,9 @@ import { LanguageSwitch } from '../components/LanguageSwitch';
 import { useSession } from '../features/auth';
 import { DemoControls, useTrip } from '../features/trip';
 import { useVoice } from '../features/voice';
+import { downloadOfflineWhisperModel, useOfflineWhisperModel } from '../features/voice/api/offlineWhisperModel';
 import { colors } from '../lib/theme';
+import { useNetwork } from '../services/network';
 import { useWakeWord } from '../services/wakeWord';
 import { hapticTap } from '../utils/haptics';
 
@@ -28,6 +30,9 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
   const logout = useSession((s) => s.logout);
   const plate = useTrip((s) => s.activeRoute.plate);
   const preferredMode = useVoice((s) => s.preferredMode);
+  const modelStatus = useOfflineWhisperModel((s) => s.status);
+  const modelProgress = useOfflineWhisperModel((s) => s.progress);
+  const networkAvailable = useNetwork((s) => s.quality() !== 'offline');
   const agoraStage = useVoice((s) => s.agoraStage);
   const audioRoute = useVoice((s) => s.audioRoute);
   const wakeEnabled = useWakeWord((s) => s.enabled);
@@ -122,6 +127,37 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
                   <Text className="text-ink-300 text-sm">{t('voice.privacyBadge')}</Text>
                 </View>
               </View>
+
+              {preferredMode === 'agora' ? (
+                <View className="bg-ink-900 border border-ink-800 rounded-3xl p-4 gap-2">
+                  <Text className="text-ink-50 text-base font-semibold">
+                    {t('voice.offlineModel.title')}
+                  </Text>
+                  <Text className="text-ink-300 text-sm leading-5">
+                    {t(`voice.offlineModel.${modelStatus}`, { progress: modelProgress })}
+                  </Text>
+                  {modelStatus === 'downloading' ? (
+                    <View className="h-1.5 bg-ink-700 rounded-full overflow-hidden">
+                      <View
+                        className="h-full bg-brand-400"
+                        style={{ width: `${modelProgress}%` }}
+                      />
+                    </View>
+                  ) : null}
+                  {modelStatus === 'error' ? (
+                    <Pressable
+                      onPress={() => void downloadOfflineWhisperModel().catch(() => undefined)}
+                      disabled={!networkAvailable}
+                      accessibilityRole="button"
+                      className="self-start rounded-full bg-ink-800 px-4 py-2 active:opacity-80 disabled:opacity-50"
+                    >
+                      <Text className="text-brand-300 text-sm font-bold">
+                        {t('voice.offlineModel.retry')}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
 
               <View className="bg-ink-900 border border-ink-800 rounded-3xl p-4 gap-2">
                 <View className="flex-row items-center gap-3">

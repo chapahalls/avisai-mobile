@@ -262,7 +262,17 @@
       "agoraLive": "GPT-Live",
       "agoraWaitingAgent": "Waiting for agent (9001)…",
       "agoraDisconnected": "Agora · Disconnected",
+      "offlineWhisper": "Local Whisper · Offline",
       "mock": "Simulated Voice"
+    },
+    "offlineModel": {
+      "title": "Offline voice in Portuguese",
+      "checking": "Checking the local model…",
+      "missing": "The automatic download starts when a connection is available. Whisper small uses about 466 MB.",
+      "downloading": "Downloading Whisper small · {{progress}}% of about 466 MB",
+      "ready": "Model ready. If the internet drops, the conversation uses Whisper on this device.",
+      "error": "Could not download the model. Check your connection and try again.",
+      "retry": "Try again"
     },
     "quickPromptsLabel": "Quick phrases (simulation):",
     "state": {

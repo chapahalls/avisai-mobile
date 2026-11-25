@@ -12,6 +12,7 @@ export function useMicStatus() {
   const activeMode = useVoice((s) => s.activeMode);
   const agoraStage = useVoice((s) => s.agoraStage);
   const sessionConnected = useVoice((s) => s.sessionConnected);
+  const offlineWhisperActive = useVoice((s) => s.offlineWhisperActive);
   const muted = useVoice((s) => s.muted);
 
   const isListening = state === 'listening' && !muted;
@@ -20,9 +21,13 @@ export function useMicStatus() {
   const isAgoraConnecting = preferredMode === 'agora' && agoraStage === 'connecting';
   const isAgoraWaitingAgent = preferredMode === 'agora' && agoraStage === 'waiting_agent';
   const isAgoraNeedsConnect =
-    preferredMode === 'agora' && !sessionConnected && !isAgoraConnecting && !isAgoraWaitingAgent;
+    preferredMode === 'agora' &&
+    !sessionConnected &&
+    !offlineWhisperActive &&
+    !isAgoraConnecting &&
+    !isAgoraWaitingAgent;
   /** Modo de voz direta: o motorista fala de verdade, sem falas simuladas. */
-  const directVoice = preferredMode === 'agora' || activeMode === 'agora';
+  const directVoice = !offlineWhisperActive && (preferredMode === 'agora' || activeMode === 'agora');
 
   const label = isSpeaking
     ? t('voice.interrupt')
