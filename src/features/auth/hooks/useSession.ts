@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getSetting, setSetting } from '../../../lib/db';
-import { getApiClient, useApiConfig } from '../../../services/api';
+import { getApiClient, setAccessToken, useApiConfig } from '../../../services/api';
 import { useDocuments } from '../../documents';
 import { useTrip } from '../../trip';
 import { useVoice } from '../../voice';
@@ -102,6 +102,7 @@ export const useSession = create<SessionState>((set, get) => ({
     useVoice.getState().stop();
     useTrip.getState().reset();
     useDocuments.getState().reset();
+    setAccessToken(null);
     set({ session: null });
   },
 }));

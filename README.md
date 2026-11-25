@@ -1,5 +1,7 @@
 # RODAR Mobile
 
+[![CI](https://github.com/rodarglobal/rodar-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/rodarglobal/rodar-mobile/actions/workflows/ci.yml)
+
 App do motorista do **RODAR**, com o **AvisAI**: o agente de voz que avisa o recebedor, conta a espera e prova cada hora parada.
 
 > **Histórico:** o projeto começou como *AvisAI* no hackathon UNMUTE by Agora (21–22/11/2026) e continua como **RODAR** no Hack Brasil 2026, na trilha Logística & automação. Os repositórios foram criados em 22/11/2026 e todo o histórico de commits está neles; o AvisAI virou o nome do agente de voz do RODAR.
@@ -74,6 +76,10 @@ Toda a infraestrutura de desenvolvimento e build Android roda isolada em contain
 # Subir servidor Metro Dev Client na porta 8081
 ./scripts/android-dev.sh metro
 ```
+
+Fora do Docker, com Node 20: `npm run lint` (ESLint com a config do Expo), `npm run typecheck` e `npm test`. O CI do GitHub roda os três a cada push e PR.
+
+**Acesso:** no modo `http`, o login guarda em memória o JWT devolvido pelo `/auth/sso` do backend e o manda como `Authorization: Bearer` em toda chamada; ao sair, o token é apagado.
 
 ### 2. Build e Instalação do Android Dev Build (APK) via Docker + USB
 
