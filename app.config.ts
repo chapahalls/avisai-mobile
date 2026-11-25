@@ -11,14 +11,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: 'AvisAI',
+    name: 'RODAR',
     slug: 'avisai-mobile',
     icon: './assets/app-icon.png',
     scheme: 'avisai',
     version: '0.1.0',
     orientation: 'portrait',
     userInterfaceStyle: 'dark',
-    backgroundColor: '#0B1220',
+    backgroundColor: '#090B09', // ink-950 (src/lib/theme.ts)
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'com.chapahalls.avisai',
@@ -55,12 +55,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-sqlite',
       'expo-localization',
       [
+        'expo-speech-recognition',
+        {
+          microphonePermission: 'O RODAR usa o microfone para você conversar com o AvisAI.',
+          speechRecognitionPermission:
+            'O RODAR escuta “Ei AvisAI” com o app aberto para começar a conversa sem tocar na tela.',
+          androidSpeechServicePackages: ['com.google.android.googlequicksearchbox', 'com.google.android.as'],
+        },
+      ],
+      [
         'expo-location',
         {
           locationWhenInUsePermission:
-            'O AvisAI usa sua localização para acompanhar a rota ativa e avisar sobre chegada.',
+            'O RODAR usa sua localização para acompanhar a rota ativa e avisar sobre chegada.',
           locationAlwaysAndWhenInUsePermission:
-            'O AvisAI usa sua localização em segundo plano durante a viagem ativa para atualizar a rota.',
+            'O RODAR usa sua localização em segundo plano durante a viagem ativa para atualizar a rota.',
           isAndroidBackgroundLocationEnabled: true,
           isAndroidForegroundServiceEnabled: true,
         },

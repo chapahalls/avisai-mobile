@@ -5,6 +5,7 @@ import { distanceKm } from '../../../utils/geo';
 import { useTrip } from '../hooks/useTrip';
 import type { LatLng } from '../../../types/geo';
 import type { TripPhase } from '../types';
+import { colors } from '../../../lib/theme';
 
 const W = 360;
 const H = 240;
@@ -75,27 +76,27 @@ export function RouteMapSvg({
           viewBox={`0 0 ${W} ${svgH}`}
           preserveAspectRatio={fullScreen ? 'xMidYMid meet' : undefined}
         >
-          <Rect x={-W} y={-svgH} width={W * 3} height={svgH * 3} fill="#0E1729" />
+          <Rect x={-W} y={-svgH} width={W * 3} height={svgH * 3} fill={colors.ink[900]} />
           {/* Grade tática de telemetria */}
-          <Line x1={-W} y1={60} x2={W * 2} y2={60} stroke="#1A2438" strokeWidth={1} />
-          <Line x1={-W} y1={120} x2={W * 2} y2={120} stroke="#1A2438" strokeWidth={1} />
-          <Line x1={-W} y1={180} x2={W * 2} y2={180} stroke="#1A2438" strokeWidth={1} />
+          <Line x1={-W} y1={60} x2={W * 2} y2={60} stroke={colors.ink[800]} strokeWidth={1} />
+          <Line x1={-W} y1={120} x2={W * 2} y2={120} stroke={colors.ink[800]} strokeWidth={1} />
+          <Line x1={-W} y1={180} x2={W * 2} y2={180} stroke={colors.ink[800]} strokeWidth={1} />
           {fullScreen ? (
             <>
-              <Line x1={-W} y1={240} x2={W * 2} y2={240} stroke="#1A2438" strokeWidth={1} />
-              <Line x1={-W} y1={300} x2={W * 2} y2={300} stroke="#1A2438" strokeWidth={1} />
-              <Line x1={-W} y1={360} x2={W * 2} y2={360} stroke="#1A2438" strokeWidth={1} />
+              <Line x1={-W} y1={240} x2={W * 2} y2={240} stroke={colors.ink[800]} strokeWidth={1} />
+              <Line x1={-W} y1={300} x2={W * 2} y2={300} stroke={colors.ink[800]} strokeWidth={1} />
+              <Line x1={-W} y1={360} x2={W * 2} y2={360} stroke={colors.ink[800]} strokeWidth={1} />
             </>
           ) : null}
-          <Line x1={90} y1={-svgH} x2={90} y2={svgH * 2} stroke="#1A2438" strokeWidth={1} />
-          <Line x1={180} y1={-svgH} x2={180} y2={svgH * 2} stroke="#1A2438" strokeWidth={1} />
-          <Line x1={270} y1={-svgH} x2={270} y2={svgH * 2} stroke="#1A2438" strokeWidth={1} />
+          <Line x1={90} y1={-svgH} x2={90} y2={svgH * 2} stroke={colors.ink[800]} strokeWidth={1} />
+          <Line x1={180} y1={-svgH} x2={180} y2={svgH * 2} stroke={colors.ink[800]} strokeWidth={1} />
+          <Line x1={270} y1={-svgH} x2={270} y2={svgH * 2} stroke={colors.ink[800]} strokeWidth={1} />
 
           {/* Traçado da rodovia */}
           <Polyline
             points={pts}
             fill="none"
-            stroke="#1E2D4A"
+            stroke={colors.ink[700]}
             strokeWidth={9}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -103,7 +104,7 @@ export function RouteMapSvg({
           <Polyline
             points={pts}
             fill="none"
-            stroke="#099DFD"
+            stroke={colors.brand[400]}
             strokeWidth={3.5}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -111,33 +112,33 @@ export function RouteMapSvg({
           <Polyline
             points={pts}
             fill="none"
-            stroke="#E6F5FF"
+            stroke={colors.brand[50]}
             strokeOpacity={0.5}
             strokeWidth={1.2}
             strokeDasharray="6 6"
           />
 
           {/* Geocerca de Origem */}
-          <Circle cx={o.x} cy={o.y} r={16} fill="#099DFD" opacity={0.16} />
-          <Circle cx={o.x} cy={o.y} r={6} fill="#099DFD" stroke="#0B1220" strokeWidth={2} />
+          <Circle cx={o.x} cy={o.y} r={16} fill={colors.brand[300]} opacity={0.16} />
+          <Circle cx={o.x} cy={o.y} r={6} fill={colors.brand[300]} stroke={colors.ink[950]} strokeWidth={2} />
 
           {/* Geocerca de Destino */}
-          <Circle cx={d.x} cy={d.y} r={22} fill="#F5A524" opacity={0.16} />
+          <Circle cx={d.x} cy={d.y} r={22} fill={colors.wait[500]} opacity={0.16} />
           <Circle
             cx={d.x}
             cy={d.y}
             r={14}
             fill="none"
-            stroke="#F5A524"
+            stroke={colors.wait[500]}
             strokeOpacity={0.45}
             strokeWidth={1.2}
             strokeDasharray="3 3"
           />
-          <Circle cx={d.x} cy={d.y} r={6.5} fill="#F5A524" stroke="#0B1220" strokeWidth={2} />
+          <Circle cx={d.x} cy={d.y} r={6.5} fill={colors.wait[500]} stroke={colors.ink[950]} strokeWidth={2} />
 
           {/* Posição atual do caminhão */}
-          <Circle cx={truck.x} cy={truck.y} r={15} fill="#099DFD" opacity={0.25} />
-          <Circle cx={truck.x} cy={truck.y} r={8.5} fill="#F4F6FA" stroke="#099DFD" strokeWidth={3.5} />
+          <Circle cx={truck.x} cy={truck.y} r={15} fill={colors.brand[300]} opacity={0.25} />
+          <Circle cx={truck.x} cy={truck.y} r={8.5} fill={colors.ink[50]} stroke={colors.brand[300]} strokeWidth={3.5} />
         </Svg>
 
         {/* Overlay superior flutuante: Fase à esquerda, Distância à direita */}
@@ -148,7 +149,7 @@ export function RouteMapSvg({
           </View>
           <View className="bg-ink-950/85 border border-ink-700/80 rounded-full px-3 py-1.5 flex-row items-center gap-1.5">
             <Text
-              className="text-brand-500 text-xs font-bold"
+              className="text-brand-300 text-xs font-bold"
               style={{ fontVariant: ['tabular-nums'] }}
             >
               {t('trip.left', { km: leftKm.toFixed(1) })}

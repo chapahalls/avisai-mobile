@@ -292,6 +292,9 @@ export interface SsoBackendResponse {
   };
 }
 
+/** Telas que o agente pode abrir por voz (contrato `acao_cliente` do backend). */
+export type AppScreen = 'inicio' | 'mapa' | 'documentos' | 'mensagens' | 'fila';
+
 /** Mensagens do SSE (/cco/stream, `event:`) e do WS (/ws, campo `canal`). */
 export interface MensagensStream {
   snapshot: Snapshot;
@@ -312,7 +315,30 @@ export interface MensagensStream {
    */
   acao_cliente: {
     rota_id: number;
-    acao: 'open_documents' | 'open_map' | 'start_gps' | 'start_trip';
+    acao:
+      | 'open_documents'
+      | 'open_map'
+      | 'start_gps'
+      | 'start_trip'
+      | 'open_screen'
+      | 'open_document'
+      | 'go_back'
+      | 'end_voice'
+      | 'logout'
+      | 'open_navigation';
+    /** Para `open_screen`. */
+    tela?: AppScreen;
+    /** Para `open_document`: "NF-e", "CT-e", "MDF-e" ou o nome do anexo. */
+    documento?: string;
+  };
+  /** Aviso do agente que não foi falado porque não havia conversa aberta. */
+  aviso_motorista: {
+    id: number;
+    rota_id: number;
+    texto: string;
+    prioridade: string;
+    /** O aviso é uma pergunta: o app abre a conversa para o motorista responder. */
+    pede_resposta: boolean;
   };
   contador: { estadias: Estadia[] };
   reset: { rota_id: number };
@@ -327,6 +353,7 @@ export const CANAIS: CanalStream[] = [
   'posicao',
   'fala',
   'acao_cliente',
+  'aviso_motorista',
   'contador',
   'reset',
   'chamado',

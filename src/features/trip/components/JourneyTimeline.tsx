@@ -7,6 +7,7 @@ import { Card } from '../../../components/Card';
 import { hapticTap } from '../../../utils/haptics';
 import { useTrip } from '../hooks/useTrip';
 import type { TimelineTone } from '../types';
+import { colors } from '../../../lib/theme';
 
 const dotBg: Record<TimelineTone, string> = {
   brand: 'bg-brand-500 border-brand-50',
@@ -46,10 +47,10 @@ export function JourneyTimeline() {
         <View className="flex-row items-center gap-2.5 flex-1 pr-2">
           <View className="w-7 h-7 rounded-lg bg-brand-500/15 border border-brand-500/40 items-center justify-center">
             <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
-              <Circle cx={12} cy={12} r={9} stroke="#099DFD" strokeWidth={2} />
+              <Circle cx={12} cy={12} r={9} stroke={colors.brand[300]} strokeWidth={2} />
               <Path
                 d="M12 7v5l3 2"
-                stroke="#099DFD"
+                stroke={colors.brand[300]}
                 strokeWidth={2}
                 strokeLinecap="round"
               />
@@ -68,7 +69,7 @@ export function JourneyTimeline() {
           <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
             <Path
               d={expanded ? 'M18 15l-6-6-6 6' : 'M6 9l6 6 6-6'}
-              stroke="#A7B1C6"
+              stroke={colors.ink[300]}
               strokeWidth={2.2}
               strokeLinecap="round"
               strokeLinejoin="round"

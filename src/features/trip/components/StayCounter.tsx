@@ -8,6 +8,7 @@ import { useApiConfig } from '../../../services/api';
 import { brl, hhmm } from '../../../utils/format';
 import { useTrip } from '../hooks/useTrip';
 import { computeStay } from '../rules/stay';
+import { colors } from '../../../lib/theme';
 
 const CHANNEL_LABEL_KEYS = [
   'stay.channels.push',
@@ -75,12 +76,12 @@ export function StayCounter() {
                 cx={12}
                 cy={13}
                 r={8}
-                stroke={over ? '#F5A524' : '#099DFD'}
+                stroke={over ? colors.wait[500] : colors.brand[300]}
                 strokeWidth={2}
               />
               <Path
                 d="M12 9v4l2.5 2.5M9 2h6"
-                stroke={over ? '#F5A524' : '#099DFD'}
+                stroke={over ? colors.wait[500] : colors.brand[300]}
                 strokeWidth={2}
                 strokeLinecap="round"
               />

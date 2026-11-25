@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Svg, { Path } from 'react-native-svg';
 import { useNetwork } from '../services/network';
 import { useOutboxStore } from '../features/outbox';
+import { colors } from '../lib/theme';
 
 /** Banner fixo: sem rede / rede fraca, com quantos eventos estão na fila. */
 export function NetworkBanner() {
@@ -20,7 +21,7 @@ export function NetworkBanner() {
       ? 'bg-wait-500/95 border-b border-wait-500'
       : 'bg-brand-600/95 border-b border-brand-500';
 
-  const textColor = isOffline || !isWeak ? '#F4F6FA' : '#0B1220';
+  const textColor = isOffline || !isWeak ? colors.ink[50] : colors.ink[950];
   const textClass = isWeak ? 'text-ink-950' : 'text-ink-50';
 
   return (

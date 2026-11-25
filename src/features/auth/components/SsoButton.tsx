@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import Svg, { Path } from 'react-native-svg';
 import { Button } from '../../../components/Button';
 import { useSession } from '../hooks/useSession';
+import { colors } from '../../../lib/theme';
 
 export function SsoButton() {
   const { t } = useTranslation();
@@ -26,7 +27,7 @@ export function SsoButton() {
         <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
           <Path
             d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"
-            stroke="#F4F6FA"
+            stroke={colors.ink[50]}
             strokeWidth={2.2}
             strokeLinecap="round"
             strokeLinejoin="round"

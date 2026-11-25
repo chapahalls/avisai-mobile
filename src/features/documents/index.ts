@@ -6,6 +6,7 @@ export {
   apiRouteFileToTripDocument,
 } from './hooks/useDocuments';
 export { answerDocumentQuestion, answerDocumentQuestionWithMeta } from './rules/answer';
+export { findDocumentByName } from './rules/find';
 export { embed, cosine } from './rules/embedding';
 export { MockPdfViewer } from './components/MockPdfViewer';
 export { DocumentList } from './components/DocumentList';

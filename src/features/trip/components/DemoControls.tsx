@@ -13,6 +13,7 @@ import { useDocuments } from '../../documents';
 import { useVoice } from '../../voice';
 import { useTrip } from '../hooks/useTrip';
 import { useMapMode, type MapMode } from './RouteMap';
+import { colors } from '../../../lib/theme';
 
 /**
  * Controles da demo (borda tracejada — E8):
@@ -209,7 +210,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
             value={urlInput}
             onChangeText={handleUrlChange}
             placeholder={t('demo.backendUrlPlaceholder')}
-            placeholderTextColor="#667085"
+            placeholderTextColor={colors.ink[300]}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="url"
@@ -251,7 +252,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
                   <Text
                     numberOfLines={1}
                     className={`text-[10px] font-mono max-w-[180px] ${
-                      isSelected ? 'text-brand-500 font-bold' : 'text-ink-300'
+                      isSelected ? 'text-brand-300 font-bold' : 'text-ink-300'
                     }`}
                   >
                     {preset.replace(/^https?:\/\//, '')}
@@ -285,7 +286,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
               })}
             </Text>
             {healthResult.receiverMode ? (
-              <Text className="text-brand-500 text-[10px] font-bold uppercase">
+              <Text className="text-brand-300 text-[10px] font-bold uppercase">
                 {healthResult.receiverMode}
               </Text>
             ) : null}
@@ -421,8 +422,8 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
         <Switch
           value={ccoWillRespond}
           onValueChange={setCcoWillRespond}
-          trackColor={{ false: '#2A3550', true: '#099DFD' }}
-          thumbColor="#F4F6FA"
+          trackColor={{ false: colors.ink[700], true: colors.brand[500] }}
+          thumbColor={colors.ink[50]}
         />
       </View>
 
@@ -435,8 +436,8 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
         <Switch
           value={deviceGpsEnabled}
           onValueChange={setDeviceGpsEnabled}
-          trackColor={{ false: '#2A3550', true: '#17B26A' }}
-          thumbColor="#F4F6FA"
+          trackColor={{ false: colors.ink[700], true: colors.ok[500] }}
+          thumbColor={colors.ink[50]}
         />
       </View>
 

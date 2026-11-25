@@ -7,6 +7,7 @@ import { hapticTap } from '../../../utils/haptics';
 import { useTrip } from '../hooks/useTrip';
 import type { LatLng } from '../../../types/geo';
 import type { TripPhase } from '../types';
+import { colors, withAlpha } from '../../../lib/theme';
 
 type RNMapsModule = typeof import('react-native-maps');
 
@@ -27,12 +28,12 @@ export function isGoogleMapsNativeAvailable(): boolean {
 }
 
 const DARK_MAP_STYLE = [
-  { elementType: 'geometry', stylers: [{ color: '#0B1220' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#A7B1C6' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#0B1220' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1A2438' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2A3550' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#121A2B' }] },
+  { elementType: 'geometry', stylers: [{ color: colors.ink[950] }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: colors.ink[300] }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: colors.ink[950] }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: colors.ink[800] }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: colors.ink[700] }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: colors.ink[900] }] },
 ];
 
 const phaseDotColor: Record<TripPhase, string> = {
@@ -128,23 +129,23 @@ export function RouteMapGoogle({
           }}
         >
           {validRouteCoords.length >= 2 && (
-            <Polyline coordinates={validRouteCoords} strokeColor="#099DFD" strokeWidth={4} />
+            <Polyline coordinates={validRouteCoords} strokeColor={colors.brand[400]} strokeWidth={4} />
           )}
           <Circle
             center={originCoord}
             radius={BUSINESS.geofenceMeters}
-            strokeColor="#099DFD"
-            fillColor="rgba(9, 157, 253, 0.18)"
+            strokeColor={colors.brand[300]}
+            fillColor={withAlpha(colors.brand[400], 0.18)}
           />
           <Circle
             center={destCoord}
             radius={BUSINESS.geofenceMeters}
-            strokeColor="#F5A524"
-            fillColor="rgba(245, 165, 36, 0.20)"
+            strokeColor={colors.wait[500]}
+            fillColor={withAlpha(colors.wait[500], 0.2)}
           />
-          <Marker coordinate={originCoord} title={activeRoute.origin.name} pinColor="#099DFD" />
-          <Marker coordinate={destCoord} title={activeRoute.destination.name} pinColor="#F5A524" />
-          <Marker coordinate={truckCoord} title={activeRoute.plate} pinColor="#17B26A" />
+          <Marker coordinate={originCoord} title={activeRoute.origin.name} pinColor={colors.brand[400]} />
+          <Marker coordinate={destCoord} title={activeRoute.destination.name} pinColor={colors.wait[500]} />
+          <Marker coordinate={truckCoord} title={activeRoute.plate} pinColor={colors.ok[500]} />
         </MapView>
 
         {/* Overlays superiores flutuantes */}
@@ -155,7 +156,7 @@ export function RouteMapGoogle({
           </View>
           <View className="bg-ink-950/85 border border-ink-700/80 rounded-full px-3 py-1.5 flex-row items-center gap-1.5">
             <Text
-              className="text-brand-500 text-xs font-bold"
+              className="text-brand-300 text-xs font-bold"
               style={{ fontVariant: ['tabular-nums'] }}
             >
               {t('trip.left', { km: leftKm.toFixed(1) })}
@@ -189,7 +190,7 @@ export function RouteMapGoogle({
             accessibilityRole="button"
             className="bg-ink-950/90 border border-brand-500/60 rounded-full px-3 py-1.5 active:opacity-80"
           >
-            <Text className="text-brand-500 text-xs font-bold">{t('map.focusTruck')}</Text>
+            <Text className="text-brand-300 text-xs font-bold">{t('map.focusTruck')}</Text>
           </Pressable>
 
           <Pressable
@@ -218,7 +219,7 @@ export function RouteMapGoogle({
           </Text>
         </View>
         <View className="bg-brand-500/15 border border-brand-500/50 rounded-full px-2 py-0.5">
-          <Text numberOfLines={1} className="text-brand-500 text-[10px] font-semibold">
+          <Text numberOfLines={1} className="text-brand-300 text-[10px] font-semibold">
             {t('trip.mapGoogle')}
           </Text>
         </View>

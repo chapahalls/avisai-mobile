@@ -68,7 +68,7 @@ export function ProfileSwitcher() {
               >
                 <Text
                   className={`text-xs font-bold ${
-                    selected ? 'text-brand-500' : 'text-ink-300'
+                    selected ? 'text-brand-300' : 'text-ink-300'
                   }`}
                 >
                   {initials}
@@ -114,7 +114,7 @@ export function ProfileSwitcher() {
                     {profile.email}
                   </Text>
                   {selected ? (
-                    <Text className="text-brand-500 text-[10px] font-semibold">
+                    <Text className="text-brand-300 text-[10px] font-semibold">
                       {tripLabel}
                     </Text>
                   ) : null}

@@ -297,7 +297,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
     listen: () => {
       const { state: current, preferredMode, sessionConnected, activeMode } = get();
 
-      // Modo Agora: primeiro toque no MicButton inicia a sessão real (POST /sessions + joinChannel)
+      // Modo Agora: primeiro toque na esfera do AvisAI inicia a sessão real (POST /sessions + joinChannel)
       if (preferredMode === 'agora' && !sessionConnected) {
         void get().connectAgoraNow();
         return;

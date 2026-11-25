@@ -1,204 +1,176 @@
 import { useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { Alert, Modal, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import Svg, { Path } from 'react-native-svg';
-import type { MainTabParams } from '../app/navigation';
-import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
-import { Card } from '../components/Card';
+import { Icon } from '../components/Icon';
 import { Screen } from '../components/Screen';
 import { DemoControls, RouteMap, useTrip } from '../features/trip';
-import { BUSINESS } from '../lib/config';
+import { colors } from '../lib/theme';
+import { openDirectionsTo } from '../services/directions';
 import { distanceKm } from '../utils/geo';
+import { hapticTap } from '../utils/haptics';
+import { receiverLabel, receiverTone } from './tripUi';
 
+function clockIn(minutes: number): string {
+  const d = new Date(Date.now() + minutes * 60_000);
+  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+}
+
+/** Mapa (mockup `08-mapa`): destino no topo, mapa ao centro e folha com chegada e paradas. */
 export function MapPage() {
   const { t } = useTranslation();
-  const nav = useNavigation<BottomTabNavigationProp<MainTabParams>>();
   const { phase, position, receiver, activeRoute, etaMin, speedKmh, start } = useTrip();
   const [demoOpen, setDemoOpen] = useState(false);
 
   const leftKm = distanceKm(position, activeRoute.destination.position);
-  const computedEta =
-    etaMin !== null
-      ? etaMin
-      : leftKm > 0.3
-        ? Math.max(1, Math.round((leftKm / 80) * 60))
-        : 0;
-  const activeSpeed =
-    speedKmh !== null
-      ? speedKmh
-      : phase === 'driving' || phase === 'approaching'
-        ? 80
-        : 0;
+  const eta =
+    etaMin !== null ? etaMin : leftKm > 0.3 ? Math.max(1, Math.round((leftKm / 80) * 60)) : 0;
+  const moving = phase === 'driving' || phase === 'approaching';
+  const speed = speedKmh !== null ? Math.round(speedKmh) : moving ? 80 : 0;
+  const tone = receiverTone(receiver);
 
-  const receiverTone =
-    receiver.kind === 'confirmed'
-      ? 'ok'
-      : receiver.kind === 'no_answer' || receiver.kind === 'not_today'
-        ? 'alert'
-        : receiver.kind === 'calling'
-          ? 'brand'
-          : 'wait';
+  const openNavigation = async () => {
+    hapticTap();
+    const { lat, lng } = activeRoute.destination.position;
+    if (!(await openDirectionsTo(lat, lng))) {
+      Alert.alert(t('map.navigateErrorTitle'), t('map.navigateError'));
+    }
+  };
 
   return (
     <Screen scroll={false}>
-      <View className="flex-1 px-4 pt-3 pb-3 gap-2.5">
-        {/* Header compacto no topo */}
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2.5">
-            <Text className="text-ink-50 text-lg font-bold tracking-tight">{t('map.title')}</Text>
-            <View className="bg-ink-900 border border-ink-700 rounded-lg px-2.5 py-1">
-              <Text className="text-ink-300 text-xs font-mono font-bold tracking-wider">
-                {activeRoute.plate}
-              </Text>
-            </View>
+      <View className="flex-1">
+        {/* Para onde vou */}
+        <View className="mx-4 mt-3 mb-3 bg-ink-900 border border-ink-800 rounded-3xl px-4 py-3 flex-row items-center gap-3">
+          <View className="flex-1">
+            <Text className="text-ink-300 text-sm">{t('map.headingTo')}</Text>
+            <Text numberOfLines={1} className="text-ink-50 text-xl font-bold">
+              {activeRoute.destination.name}
+            </Text>
           </View>
-
           <Pressable
             onPress={() => setDemoOpen(true)}
             accessibilityRole="button"
             accessibilityLabel={t('trip.demoButton')}
-            className="flex-row items-center gap-1.5 bg-ink-900 border border-dashed border-ink-700 active:opacity-80 rounded-full px-3.5 py-2"
+            className="flex-row items-center gap-1.5 border border-dashed border-ink-700 rounded-full px-3 py-2 active:opacity-80"
           >
-            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"
-                stroke="#F5A524"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
+            <Icon name="sliders" size={14} color={colors.wait[500]} />
             <Text className="text-ink-50 text-xs font-semibold">{t('trip.demoButton')}</Text>
           </Pressable>
         </View>
 
-        {/* Mapa ocupando toda a área central (flex-1) */}
-        <RouteMap fullScreen />
+        <View className="flex-1 px-4">
+          <RouteMap fullScreen />
+        </View>
 
-        {/* Card inferior compacto estilo Waze / Uber Driver */}
-        <Card className="p-3.5">
-          {/* Origem -> Destino + Distância restante */}
-          <View className="flex-row items-center justify-between gap-2 mb-2.5">
+        {/* Folha inferior: chegada, navegar e paradas */}
+        <View className="mt-3 bg-ink-900 border-t border-ink-800 rounded-t-[32px] px-5 pt-3 pb-4">
+          <View className="w-10 h-1 rounded-full bg-ink-700 self-center mb-3" />
+          <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
-              <View className="flex-row items-center gap-1.5">
-                <View className="w-2 h-2 rounded-full bg-brand-500" />
-                <Text numberOfLines={1} className="text-ink-300 text-xs font-medium">
-                  {activeRoute.origin.name}
-                </Text>
-                <Text className="text-ink-700 text-xs">→</Text>
-                <View className="w-2 h-2 rounded-full bg-wait-500" />
-                <Text numberOfLines={1} className="flex-1 text-ink-50 text-xs font-bold">
-                  {activeRoute.destination.name}
-                </Text>
-              </View>
-              <Text className="text-ink-300 text-[11px] mt-0.5">
-                {t(`trip.phase.${phase}`)} ·{' '}
-                {t('map.geofenceBadge', {
-                  meters: BUSINESS.geofenceMeters,
-                  km: BUSINESS.approachKm,
-                })}
-                {activeSpeed > 0 ? ` · ${t('map.speedLabel', { kmh: activeSpeed })}` : ''}
-              </Text>
-            </View>
-
-            <View className="bg-brand-500/15 border border-brand-500/40 rounded-xl px-2.5 py-1.5 items-end">
               <Text
                 style={{ fontVariant: ['tabular-nums'] }}
-                className="text-brand-500 text-xs font-bold"
+                className="text-ink-50 text-4xl font-display"
+                accessibilityLabel={eta > 0 ? t('map.arrivalA11y', { time: clockIn(eta) }) : undefined}
               >
-                {t('trip.left', { km: leftKm.toFixed(1) })}
+                {eta > 0 ? clockIn(eta) : '—'}
               </Text>
-              {computedEta > 0 && (
-                <Text
-                  style={{ fontVariant: ['tabular-nums'] }}
-                  className="text-ink-300 text-[10px] font-semibold mt-0.5"
-                >
-                  {t('map.etaShort', { min: computedEta })}
-                </Text>
-              )}
-            </View>
-          </View>
-
-          {/* Status do recebedor + Ação rápida (Iniciar viagem ou Falar com AvisAI) */}
-          <View className="flex-row items-center justify-between gap-2 pt-2.5 border-t border-ink-700/70">
-            <View className="flex-1">
-              <Text className="text-ink-300 text-[11px] mb-1">
-                {t('trip.receiver')} {activeRoute.destination.receiverName ?? activeRoute.destination.name}
+              <Text style={{ fontVariant: ['tabular-nums'] }} className="text-ink-300 text-base">
+                {t('map.kmAndMin', { km: leftKm.toFixed(0), min: eta })}
+                {speed > 0 ? ` · ${t('map.speedLabel', { kmh: speed })}` : ''}
               </Text>
-              <View className="self-start">
-                <Badge
-                  tone={receiverTone}
-                  label={
-                    receiver.kind === 'confirmed'
-                      ? t('trip.receiverStatus.confirmed', {
-                          dock: receiver.dock,
-                          time: receiver.time,
-                        })
-                      : t(`trip.receiverStatus.${receiver.kind}`)
-                  }
-                />
-              </View>
             </View>
-
             {phase === 'idle' ? (
-              <Button
-                label={t('trip.start')}
-                onPress={start}
-                icon={
-                  <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                    <Path
-                      d="M5 3l14 9-14 9V3Z"
-                      fill="#F4F6FA"
-                      stroke="#F4F6FA"
-                      strokeWidth={1.8}
-                      strokeLinejoin="round"
-                    />
-                  </Svg>
-                }
-              />
+              <Button size="sm" label={t('trip.start')} onPress={start} icon={<Icon name="play" size={16} />} />
             ) : (
-              <Pressable
-                onPress={() => nav.navigate('Trip')}
-                accessibilityRole="button"
-                className="flex-row items-center gap-1.5 bg-brand-500 active:opacity-85 rounded-xl px-3.5 py-2.5"
-              >
-                <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM19 10v2a7 7 0 0 1-14 0v-2"
-                    stroke="#F4F6FA"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                  />
-                </Svg>
-                <Text className="text-ink-50 text-xs font-bold">{t('map.talkToAvisai')}</Text>
-              </Pressable>
+              <Button
+                size="sm"
+                label={t('map.navigate')}
+                onPress={() => void openNavigation()}
+                icon={<Icon name="navigation" size={16} />}
+              />
             )}
           </View>
-        </Card>
+
+          <View className="mt-4 pr-20">
+            <StopRow
+              index={1}
+              done={phase !== 'idle'}
+              title={activeRoute.origin.name}
+              subtitle={t('trip.originLabel')}
+            />
+            <View className="h-px bg-ink-800 my-3" />
+            <StopRow
+              index={2}
+              done={phase === 'unloaded'}
+              highlight
+              title={activeRoute.destination.name}
+              subtitle={`${t('trip.receiver')} ${receiverLabel(receiver, t)}`}
+              subtitleTone={tone}
+            />
+          </View>
+        </View>
       </View>
 
-      {/* Modal Bottom Sheet de Simulação (Regra E8) */}
-      <Modal
-        visible={demoOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setDemoOpen(false)}
-      >
-        <View className="flex-1 justify-end bg-ink-950/75">
-          <Pressable
-            className="flex-1"
-            onPress={() => setDemoOpen(false)}
-            accessibilityLabel={t('demo.close')}
-          />
-          <View className="bg-ink-950 border-t border-ink-700 rounded-t-3xl px-4 pt-3 pb-8">
+      {/* Painel de simulação (regra E8) */}
+      <Modal visible={demoOpen} transparent animationType="slide" onRequestClose={() => setDemoOpen(false)}>
+        <View className="flex-1 justify-end bg-ink-950/80">
+          <Pressable className="flex-1" onPress={() => setDemoOpen(false)} accessibilityLabel={t('demo.close')} />
+          <View className="bg-ink-950 border-t border-ink-800 rounded-t-[32px] px-4 pt-3 pb-8">
             <View className="w-10 h-1 rounded-full bg-ink-700 self-center mb-3" />
             <DemoControls onClose={() => setDemoOpen(false)} />
           </View>
         </View>
       </Modal>
     </Screen>
+  );
+}
+
+const subtitleColor = {
+  ok: 'text-ok-500',
+  alert: 'text-alert-500',
+  brand: 'text-brand-300',
+  wait: 'text-wait-500',
+  info: 'text-info-300',
+  neutral: 'text-ink-300',
+} as const;
+
+function StopRow({
+  index,
+  done,
+  highlight = false,
+  title,
+  subtitle,
+  subtitleTone = 'neutral',
+}: {
+  index: number;
+  done: boolean;
+  highlight?: boolean;
+  title: string;
+  subtitle: string;
+  subtitleTone?: keyof typeof subtitleColor;
+}) {
+  return (
+    <View className="flex-row items-center gap-3">
+      <View
+        className={`w-9 h-9 rounded-full items-center justify-center ${
+          highlight ? 'bg-wait-500' : done ? 'bg-brand-500' : 'bg-ink-800'
+        }`}
+      >
+        {done && !highlight ? (
+          <Icon name="check" size={18} />
+        ) : (
+          <Text className={`text-base font-bold ${highlight ? 'text-ink-950' : 'text-ink-50'}`}>{index}</Text>
+        )}
+      </View>
+      <View className="flex-1">
+        <Text numberOfLines={1} className="text-ink-50 text-lg font-bold">
+          {title}
+        </Text>
+        <Text numberOfLines={1} className={`text-sm ${subtitleColor[subtitleTone]}`}>
+          {subtitle}
+        </Text>
+      </View>
+    </View>
   );
 }

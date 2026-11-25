@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useVoiceCommandToast } from '../services/voiceCommands';
+import { colors } from '../lib/theme';
 
 /** Banner discreto no topo indicando quando um comando de voz automatizou uma navegação ou ação. */
 export function VoiceCommandToast() {
@@ -20,7 +21,7 @@ export function VoiceCommandToast() {
           <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
             <Path
               d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM19 10v2a7 7 0 0 1-14 0v-2M12 19v3"
-              stroke="#099DFD"
+              stroke={colors.brand[300]}
               strokeWidth={2.2}
               strokeLinecap="round"
               strokeLinejoin="round"

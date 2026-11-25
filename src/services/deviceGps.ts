@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { LatLng } from '../types/geo';
 import { getApiClient, useApiConfig } from './api';
+import { colors } from '../lib/theme';
 
 interface GeolocationCoords {
   latitude: number;
@@ -241,7 +242,7 @@ async function startBackgroundTracking(ExpoLocation: ExpoLocationModule) {
         foregroundService: {
           notificationTitle: 'AvisAI rastreando viagem',
           notificationBody: 'Sua localização está sendo enviada para a rota ativa.',
-          notificationColor: '#17B26A',
+          notificationColor: colors.ok[500],
           killServiceOnDestroy: false,
         },
       });

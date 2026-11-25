@@ -12,6 +12,7 @@ vi.mock('react-native-reanimated', () => ({
     sin: 'sin',
   },
   useAnimatedStyle: () => ({}),
+  useReducedMotion: () => false,
   useSharedValue: (value: number) => ({ value }),
   withRepeat: (animation: unknown) => animation,
   withSequence: (...animations: unknown[]) => animations[0],
@@ -29,6 +30,7 @@ vi.mock('react-native-svg', () => ({
 }));
 
 import { getAuroraVoicePresentation } from '../features/voice/components/AuroraVoiceOrb';
+import { colors, voiceOrb } from '../lib/theme';
 
 describe('AuroraVoiceOrb presentation', () => {
   it('mantém o affordance de interromper quando o agente está falando', () => {
@@ -37,7 +39,7 @@ describe('AuroraVoiceOrb presentation', () => {
     expect(presentation.active).toBe(true);
     expect(presentation.speaking).toBe(true);
     expect(presentation.pausedGlyph).toBe(true);
-    expect(presentation.hue.glow).toBe('#2DD4BF');
+    expect(presentation.hue.glow).toBe(colors.brand[400]);
   });
 
   it('não aparenta ouvir quando o microfone local está em mudo', () => {
@@ -46,7 +48,7 @@ describe('AuroraVoiceOrb presentation', () => {
     expect(presentation.active).toBe(false);
     expect(presentation.listening).toBe(false);
     expect(presentation.pausedGlyph).toBe(false);
-    expect(presentation.hue.rim).toBe('#667085');
+    expect(presentation.hue.rim).toBe(colors.ink[300]);
   });
 
   it('distingue conexão e fala do motorista sem alterar a ação do botão', () => {
@@ -55,10 +57,10 @@ describe('AuroraVoiceOrb presentation', () => {
 
     expect(connecting.active).toBe(true);
     expect(connecting.connecting).toBe(true);
-    expect(connecting.hue.glow).toBe('#8B5CF6');
+    expect(connecting.hue.glow).toBe(colors.rodar[400]);
     expect(driver.active).toBe(true);
     expect(driver.listening).toBe(true);
     expect(driver.pausedGlyph).toBe(false);
-    expect(driver.hue.glow).toBe('#22D3EE');
+    expect(driver.hue.glow).toBe(voiceOrb.mint);
   });
 });

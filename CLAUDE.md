@@ -1,4 +1,4 @@
-# AvisAI Mobile
+# RODAR Mobile
 
 - **What:** app do motorista do AvisAI (agente de voz que avisa o recebedor, conta a espera e prova cada hora parada).
 - **Stack:** Expo + React Native + TypeScript + NativeWind + zustand + i18next + expo-sqlite. Roda no Expo Go.

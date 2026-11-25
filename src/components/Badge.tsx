@@ -1,24 +1,26 @@
 import { Text, View } from 'react-native';
 
+/**
+ * Etiqueta de status (mockups RODAR-telas): fundo tingido e texto na cor do tom.
+ * O texto sempre diz o estado; a cor só reforça.
+ */
 const tones = {
-  brand: 'bg-brand-500/15 border-brand-500/60',
-  ok: 'bg-ok-500/15 border-ok-500/60',
-  wait: 'bg-wait-500/15 border-wait-500/60',
-  alert: 'bg-alert-500/15 border-alert-500/60',
+  brand: { box: 'bg-brand-500/20', text: 'text-brand-300' },
+  ok: { box: 'bg-ok-500/15', text: 'text-ok-500' },
+  wait: { box: 'bg-wait-500/15', text: 'text-wait-500' },
+  alert: { box: 'bg-alert-500/15', text: 'text-alert-500' },
+  info: { box: 'bg-info-900', text: 'text-info-300' },
+  neutral: { box: 'bg-ink-800', text: 'text-ink-300' },
 } as const;
 
-const dots = {
-  brand: 'bg-brand-500',
-  ok: 'bg-ok-500',
-  wait: 'bg-wait-500',
-  alert: 'bg-alert-500',
-} as const;
+export type BadgeTone = keyof typeof tones;
 
-export function Badge({ label, tone }: { label: string; tone: keyof typeof tones }) {
+export function Badge({ label, tone }: { label: string; tone: BadgeTone }) {
   return (
-    <View className={`flex-row items-center gap-1.5 border rounded-full px-2.5 py-1 ${tones[tone]}`}>
-      <View className={`w-1.5 h-1.5 rounded-full ${dots[tone]}`} />
-      <Text className="text-ink-50 text-xs font-semibold">{label}</Text>
+    <View className={`rounded-lg px-2.5 py-1 self-start ${tones[tone].box}`}>
+      <Text numberOfLines={1} className={`text-xs font-bold ${tones[tone].text}`}>
+        {label}
+      </Text>
     </View>
   );
 }
