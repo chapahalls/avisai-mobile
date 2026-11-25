@@ -567,6 +567,11 @@ export async function ssoLogin(email?: string): Promise<Session> {
   };
 }
 
+/** Simulado: aceita o áudio como se o servidor tivesse recebido (sem transcrição). */
+async function uploadVoiceNote(event: DomainEvent): Promise<{ status: 200 | 409; receivedAt: string }> {
+  return postEvent(event);
+}
+
 export const mockApiClient: ApiClient = {
   checkHealth,
   createSession,
@@ -585,6 +590,7 @@ export const mockApiClient: ApiClient = {
   resetRoute,
   getSnapshot,
   postEvent,
+  uploadVoiceNote,
   getEvents,
   getDemoProfiles,
   ssoLogin,
