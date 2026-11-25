@@ -8,24 +8,27 @@ type OfflineWhisperCallbacks = {
 type WhisperContext = Awaited<ReturnType<typeof import('whisper.rn').initWhisper>>;
 type WhisperVadContext = Awaited<ReturnType<typeof import('whisper.rn').initWhisperVad>>;
 type RealtimeTranscriber = InstanceType<
-  typeof import('whisper.rn/realtime-transcription').RealtimeTranscriber
+  typeof import('whisper.rn/lib/typescript/realtime-transcription').RealtimeTranscriber
 >;
 type PcmAdapter = InstanceType<
-  typeof import('whisper.rn/realtime-transcription/adapters/AudioPcmStreamAdapter').AudioPcmStreamAdapter
+  typeof import('whisper.rn/lib/typescript/realtime-transcription/adapters/AudioPcmStreamAdapter').AudioPcmStreamAdapter
 >;
 
+// Subcaminhos com o arquivo real: o TypeScript (moduleResolution "node") e o Metro do SDK 52
+// ignoram o campo `exports` do whisper.rn. Tipos vêm de lib/typescript; o código, de src/
+// (o mesmo que o pacote indica para React Native).
 interface WhisperApi {
   initWhisper: typeof import('whisper.rn').initWhisper;
   initWhisperVad: typeof import('whisper.rn').initWhisperVad;
 }
 
 interface RealtimeApi {
-  RealtimeTranscriber: typeof import('whisper.rn/realtime-transcription').RealtimeTranscriber;
-  RingBufferVad: typeof import('whisper.rn/realtime-transcription').RingBufferVad;
+  RealtimeTranscriber: typeof import('whisper.rn/lib/typescript/realtime-transcription').RealtimeTranscriber;
+  RingBufferVad: typeof import('whisper.rn/lib/typescript/realtime-transcription').RingBufferVad;
 }
 
 interface PcmApi {
-  AudioPcmStreamAdapter: typeof import('whisper.rn/realtime-transcription/adapters/AudioPcmStreamAdapter').AudioPcmStreamAdapter;
+  AudioPcmStreamAdapter: typeof import('whisper.rn/lib/typescript/realtime-transcription/adapters/AudioPcmStreamAdapter').AudioPcmStreamAdapter;
 }
 
 function requestMicPermission(): Promise<boolean> {
@@ -80,9 +83,9 @@ export class OfflineWhisperSession {
     if (!this.whisperContext || !this.vadContext) throw new Error('Não consegui carregar o Whisper local.');
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const realtime = require('whisper.rn/realtime-transcription') as RealtimeApi;
+    const realtime = require('whisper.rn/src/realtime-transcription') as RealtimeApi;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pcm = require('whisper.rn/realtime-transcription/adapters/AudioPcmStreamAdapter') as PcmApi;
+    const pcm = require('whisper.rn/src/realtime-transcription/adapters/AudioPcmStreamAdapter') as PcmApi;
     this.stream = new pcm.AudioPcmStreamAdapter();
     const vad = new realtime.RingBufferVad(this.vadContext, {
       vadPreset: 'default',
