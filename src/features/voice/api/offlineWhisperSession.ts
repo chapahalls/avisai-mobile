@@ -31,15 +31,24 @@ interface PcmApi {
   AudioPcmStreamAdapter: typeof import('whisper.rn/lib/typescript/realtime-transcription/adapters/AudioPcmStreamAdapter').AudioPcmStreamAdapter;
 }
 
-function requestMicPermission(): Promise<boolean> {
+/**
+ * Só o microfone: o Whisper roda no aparelho e não usa o reconhecedor do Google.
+ * Os métodos ficam em `ExpoSpeechRecognitionModule` (não no topo do pacote, que na 1.x
+ * não exporta `requestPermissionsAsync` e fazia toda chamada cair em "negada").
+ */
+async function requestMicPermission(): Promise<boolean> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const speech = require('expo-speech-recognition') as {
-      requestPermissionsAsync: () => Promise<{ granted: boolean }>;
+    const { ExpoSpeechRecognitionModule } = require('expo-speech-recognition') as {
+      ExpoSpeechRecognitionModule: {
+        requestMicrophonePermissionsAsync: () => Promise<{ granted: boolean }>;
+      };
     };
-    return speech.requestPermissionsAsync().then((permission) => permission.granted);
-  } catch {
-    return Promise.resolve(false);
+    const permission = await ExpoSpeechRecognitionModule.requestMicrophonePermissionsAsync();
+    return permission.granted;
+  } catch (error) {
+    console.warn('[whisper-offline] falha ao pedir o microfone:', error instanceof Error ? error.message : error);
+    return false;
   }
 }
 

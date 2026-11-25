@@ -5,6 +5,8 @@ const MODEL_URL =
 const VAD_URL =
   'https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v6.2.0.bin';
 const MODEL_SHA1 = '55356645c2b361a969dfd0ef2c5a50d530afd8d5';
+// O Silero VAD tem ~885 KB: tamanho não serve para saber se veio inteiro, o hash sim.
+const VAD_SHA1 = '470e5d9d094ddba2f0a512cecc3732a252188abd';
 const MODEL_NAME = 'ggml-small.bin';
 const VAD_NAME = 'ggml-silero-v6.2.0.bin';
 
@@ -72,6 +74,7 @@ async function downloadFile(
   fs: NativeFileSystem,
   url: string,
   destination: string,
+  expectedSha1: string,
   onProgress?: (value: number) => void,
 ) {
   const tempPath = `${destination}.download`;
@@ -93,10 +96,11 @@ async function downloadFile(
     throw new Error(`Download failed (${result.statusCode})`);
   }
   const stat = await fs.stat(tempPath);
-  if (stat.size < 1024 * 1024) throw new Error('Downloaded model is incomplete');
-  if (destination.endsWith(MODEL_NAME)) {
-    const sha1 = await fs.hash(tempPath, 'sha1');
-    if (sha1.toLowerCase() !== MODEL_SHA1) throw new Error('Whisper model checksum mismatch');
+  if (stat.size <= 0) throw new Error('Downloaded model is empty');
+  const sha1 = await fs.hash(tempPath, 'sha1');
+  if (sha1.toLowerCase() !== expectedSha1) {
+    await fs.unlink(tempPath).catch(() => undefined);
+    throw new Error(`Checksum mismatch for ${destination.split('/').pop()}`);
   }
   if (await fs.exists(destination)) await fs.unlink(destination);
   await fs.moveFile(tempPath, destination);
@@ -110,14 +114,15 @@ export function downloadOfflineWhisperModel(): Promise<void> {
     try {
       const fs = getFileSystem();
       const { modelPath, vadPath } = getOfflineWhisperModelPaths();
-      if (!(await fs.exists(vadPath))) await downloadFile(fs, VAD_URL, vadPath);
+      if (!(await fs.exists(vadPath))) await downloadFile(fs, VAD_URL, vadPath, VAD_SHA1);
       if (!(await fs.exists(modelPath))) {
-        await downloadFile(fs, MODEL_URL, modelPath, (progress) =>
+        await downloadFile(fs, MODEL_URL, modelPath, MODEL_SHA1, (progress) =>
           useOfflineWhisperModel.setState({ progress }),
         );
       }
       useOfflineWhisperModel.setState({ status: 'ready', progress: 100, error: null });
     } catch (error) {
+      console.warn('[whisper-offline] falha no download:', error instanceof Error ? error.message : error);
       useOfflineWhisperModel.setState({
         status: 'error',
         error: error instanceof Error ? error.message : String(error),
