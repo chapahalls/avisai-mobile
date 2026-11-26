@@ -1,4 +1,4 @@
-// Usado só pelo build web de captura (scripts/readme-captures). Não é a config do app.
+// Usado só pelo build web (scripts/web-demo): demo pública e capturas do README. Não é a config do app.
 const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
@@ -20,10 +20,10 @@ const original = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, name, platform) => {
   if (platform === 'web') {
     if (name === 'expo-sqlite') {
-      return { type: 'sourceFile', filePath: path.join(__dirname, 'capture-stubs/sqlite.js') };
+      return { type: 'sourceFile', filePath: path.join(__dirname, 'web-stubs/sqlite.js') };
     }
     if (NATIVE_ONLY.some((m) => name === m || name.startsWith(`${m}/`))) {
-      return { type: 'sourceFile', filePath: path.join(__dirname, 'capture-stubs/empty.js') };
+      return { type: 'sourceFile', filePath: path.join(__dirname, 'web-stubs/empty.js') };
     }
   }
   return original ? original(context, name, platform) : context.resolveRequest(context, name, platform);
