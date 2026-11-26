@@ -14,6 +14,7 @@ import { useAvisaiDock } from '../features/voice';
 import { colors } from '../lib/theme';
 import { hapticTap } from '../utils/haptics';
 import { receiverLabel, receiverTone } from './tripUi';
+import { useShallow } from 'zustand/react/shallow';
 
 const RING = 132;
 const STROKE = 10;
@@ -25,7 +26,16 @@ const STROKE = 10;
  */
 export function QueuePage({ navigation }: NativeStackScreenProps<RootStackParams, 'Queue'>) {
   const { t } = useTranslation();
-  const { phase, receiver, activeRoute, quickArrive, quickUnload } = useTrip();
+  const { phase, receiver, activeRoute, quickArrive, quickUnload } = useTrip(
+    // Só os campos usados: o simulador grava o relógio a cada 500 ms e a tela não precisa redesenhar.
+    useShallow((s) => ({
+      phase: s.phase,
+      receiver: s.receiver,
+      activeRoute: s.activeRoute,
+      quickArrive: s.quickArrive,
+      quickUnload: s.quickUnload,
+    })),
+  );
   const stay = useStaySummary();
   const openPanel = useAvisaiDock((s) => s.openPanel);
 

@@ -7,18 +7,18 @@ Expo SDK 52 + React Native 0.76 + TypeScript + NativeWind 4 (Tailwind 3.4) + i18
 ```
 src/
 ├── __tests__/      # Testes unitários Vitest: stay, escalation, requiredFields, documents, geo
-├── app/            # App.tsx (providers, fontes, abertura), navigation.tsx (abas Início/Mapa/Documentos/Mensagens + AvisAI flutuante), bootstrap.ts
+├── app/            # App.tsx (providers, fontes, abertura), navigation.tsx (abas Início/Mapa/Documentos/Mensagens + AvisAI flutuante), DrivingLock.tsx (tela do modo direção), bootstrap.ts
 ├── assets/locales/ # pt-BR.json, en.json (100% espelhados, zero texto hardcoded)
 ├── components/     # UI genérica: Button, Card, Badge, Icon, ScreenTitle, Screen, RodarLogo, SplashScreen, NetworkBanner, LanguageSwitch
 ├── features/
 │   ├── auth/       # SSO via ApiClient (useSession, SsoButton)
-│   ├── trip/       # rota mock, simulador de GPS e relógio, geocerca, aproximação, escalonamento, estadia
+│   ├── trip/       # rota mock, simulador de GPS e relógio, geocerca, aproximação, escalonamento, estadia, modo direção (useDrivingMode)
 │   │   ├── components/ # RouteMap (ErrorBoundary), RouteMapGoogle, RouteMapSvg, StayCounter, JourneyTimeline, DemoControls
-│   │   └── rules/  # stay.ts (estadia Lei 11.442/2007), escalation.ts (canais e tentativas)
-│   ├── voice/      # VoiceSession, MockVoiceSession (expo-speech), AgoraVoiceSession (react-native-agora), voiceFactory; AvisaiDock (esfera + painel) e CabinModeModal (tela cheia)
+│   │   └── rules/  # stay.ts (estadia Lei 11.442/2007), escalation.ts (canais e tentativas), drivingMode.ts (velocidade → modo direção, R10)
+│   ├── voice/      # VoiceSession, MockVoiceSession (expo-speech), AgoraVoiceSession (react-native-agora), voiceFactory; AvisaiDock (esfera arrastável `FloatingOrb` + painel) e CabinModeModal (tela cheia)
 │   ├── report/     # campos obrigatórios por momento e extração bilíngue pt-BR/en (rules/requiredFields.ts)
 │   ├── outbox/     # fila offline FIFO em SQLite + motor de sincronização (syncEngine.ts)
-│   └── documents/  # PDFs mock, viewer mock, busca vetorial local em SQLite por trip_id, respostas só por campo (R7)
+│   └── documents/  # PDFs mock, viewer mock, busca vetorial local em SQLite por trip_id, respostas só por campo e leitura em voz alta (R7)
 ├── hooks/
 ├── lib/            # config.ts (BUSINESS, TIME_SCALE, VOICE_PRIVACY, ENV), db.ts (SQLite + migração + settings), i18n.ts, id.ts, theme.ts (tokens de cor em JS)
 ├── pages/          # LoginPage, TripPage (Início), MapPage, DocumentsPage, DocumentViewerPage, MessagesPage, QueuePage, SettingsSheet

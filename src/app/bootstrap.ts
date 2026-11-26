@@ -6,7 +6,13 @@ import '../services/deviceGps';
 import { startNetworkWatcher } from '../services/network';
 import { startWakeWordWatcher } from '../services/wakeWord';
 import { resetStuckSending, startSyncEngine, useOutboxStore } from '../features/outbox';
-import { startTripSimulator, useTrip, wireTripToVoice, ROUTE } from '../features/trip';
+import {
+  startDrivingModeWatcher,
+  startTripSimulator,
+  useTrip,
+  wireTripToVoice,
+  ROUTE,
+} from '../features/trip';
 import { loadPersistedVoiceMode, wireVoiceToBus } from '../features/voice';
 import { indexDocuments } from '../features/documents';
 
@@ -29,6 +35,7 @@ export function bootstrap() {
     wireVoiceToBus(),
     wireTripToVoice(),
     startTripSimulator(),
+    startDrivingModeWatcher(),
     startWakeWordWatcher(),
   ];
   return () => stops.forEach((s) => s());

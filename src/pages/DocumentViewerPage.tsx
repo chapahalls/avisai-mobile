@@ -1,12 +1,14 @@
+import { useEffect } from 'react';
 import { Alert, Linking, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import type { RootStackParams } from '../app/navigation';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
-import { DOCUMENTS, MockPdfViewer, useDocuments } from '../features/documents';
+import { DOCUMENTS, MockPdfViewer, buildDocumentReading, useDocuments } from '../features/documents';
 import { useAvisaiDock, useVoice } from '../features/voice';
 import { colors } from '../lib/theme';
+import { readAloudLocal, stopReadingLocal, useDriverNotices } from '../services/driverNotices';
 import { hapticTap } from '../utils/haptics';
 import { useBottomInset } from '../utils/layout';
 
@@ -28,6 +30,26 @@ export function DocumentViewerPage({
     ) ??
     documents[0] ??
     DOCUMENTS[0];
+
+  const reading = useDriverNotices((s) => s.readingId === doc.id);
+  // Saiu do documento: para a leitura.
+  useEffect(() => () => stopReadingLocal(), []);
+
+  const handleReadAloud = () => {
+    hapticTap();
+    if (reading) {
+      stopReadingLocal();
+      return;
+    }
+    const voice = useVoice.getState();
+    // Conversa ao vivo: o próprio agente lê (pedido por voz), sem duas vozes ao mesmo tempo.
+    if (voice.sessionConnected) {
+      voice.utter(t('documents.readAloudRequest', { title: doc.title }));
+      openPanel();
+      return;
+    }
+    readAloudLocal(doc.id, buildDocumentReading(doc));
+  };
 
   const handleAskAvisai = () => {
     hapticTap();
@@ -83,12 +105,26 @@ export function DocumentViewerPage({
             icon={<Icon name="mic" size={20} />}
           />
         )}
-        <Button
-          variant="outline"
-          label={t('documents.allDocuments')}
-          onPress={() => navigation.goBack()}
-          icon={<Icon name="chevronLeft" size={18} color={colors.ink[300]} />}
-        />
+        {/* Ouvir e voltar lado a lado: o rodapé não come metade da folha. */}
+        <View className="flex-row gap-3">
+          <Button
+            size="sm"
+            className="flex-1 min-h-12"
+            variant={reading ? 'primary' : 'outline'}
+            label={reading ? t('documents.stopReadingButton') : t('documents.readAloudButton')}
+            accessibilityHint={t('documents.readAloudHint')}
+            onPress={handleReadAloud}
+            icon={<Icon name={reading ? 'x' : 'speaker'} size={18} color={reading ? undefined : colors.ink[300]} />}
+          />
+          <Button
+            size="sm"
+            className="flex-1 min-h-12"
+            variant="outline"
+            label={t('documents.allDocumentsShort')}
+            onPress={() => navigation.goBack()}
+            icon={<Icon name="chevronLeft" size={18} color={colors.ink[300]} />}
+          />
+        </View>
       </View>
     </View>
   );

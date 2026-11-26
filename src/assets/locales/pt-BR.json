@@ -320,7 +320,9 @@
       "simulateLabel": "Toque para simular o que você diria:",
       "openChat": "Abrir conversa em tela cheia",
       "dismissErrorHint": "Toque para dispensar o erro",
-      "commandsHint": "Diga, por exemplo: “abre o mapa”, “me leva até o recebedor”, “avisa o CCO que…”, “repete” ou “tchau, AvisAI”."
+      "commandsHint": "Diga, por exemplo: “abre o mapa”, “me leva até o recebedor”, “avisa o CCO que…”, “repete” ou “tchau, AvisAI”.",
+      "dragHint": "Toque para abrir. Arraste para levar a esfera para outro lugar.",
+      "moved": "Esfera do AvisAI movida"
     },
     "wake": {
       "title": "Escutar “Ei AvisAI”",
@@ -392,7 +394,20 @@
     "badge": {
       "verified": "Verificado",
       "file": "Anexo"
-    }
+    },
+    "reading": {
+      "intro": "{{title}}.",
+      "item": "{{label}}: {{value}}",
+      "noFields": "Esse documento não tem campos lidos pelo sistema. Dá pra ver o arquivo quando você parar.",
+      "fileOnlyInPdf": "O restante está no arquivo; abro pra você quando parar.",
+      "pdfWhenStopped": "Quando parar, diga “abrir a {{title}}” que eu mostro o PDF.",
+      "pdfOffer": "Quer ver o PDF? Diga “abrir a {{title}}”."
+    },
+    "readAloudButton": "Ouvir em voz alta",
+    "stopReadingButton": "Parar a leitura",
+    "readAloudHint": "O AvisAI lê os campos deste documento.",
+    "readAloudRequest": "Lê o documento {{title}} pra mim",
+    "allDocumentsShort": "Documentos"
   },
   "outbox": {
     "title": "Fila de envio",
@@ -561,5 +576,20 @@
     "stoppedTime": "Tempo parado",
     "stayStartsOnArrival": "A contagem começa quando você chega ao recebedor (cerca + voz).",
     "noPositionNote": "A posição na fila ainda não é informada pelo recebedor."
+  },
+  "driving": {
+    "title": "Modo direção",
+    "speed": "{{kmh}} km/h",
+    "speedUnknown": "Em movimento",
+    "sourceGps": "GPS do celular",
+    "sourceSimulator": "GPS simulado",
+    "body": "A tela fica travada enquanto o caminhão anda. Fale com o AvisAI: ele lê documentos, avisa o CCO e registra ocorrências.",
+    "talkHint": "Diga “Ei AvisAI” ou toque na esfera.",
+    "orbLabel": "Falar com o AvisAI. Estado: {{state}}",
+    "unlockHint": "Libera sozinho quando o caminhão parar.",
+    "demoTitle": "Demo (simulado)",
+    "demoSimulateLabel": "Simular uma fala",
+    "demoControls": "Controles da demo",
+    "demoClose": "Fechar controles"
   }
 }

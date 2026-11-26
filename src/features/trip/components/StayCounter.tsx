@@ -9,6 +9,7 @@ import { brl, hhmm } from '../../../utils/format';
 import { useTrip } from '../hooks/useTrip';
 import { computeStay } from '../rules/stay';
 import { colors } from '../../../lib/theme';
+import { useShallow } from 'zustand/react/shallow';
 
 const CHANNEL_LABEL_KEYS = [
   'stay.channels.push',
@@ -32,7 +33,18 @@ export function StayCounter() {
     ccoAttempts,
     ccoAcknowledged,
     backendStay,
-  } = useTrip();
+  } = useTrip(
+    // Só os campos usados: o relógio do simulador muda a cada 500 ms e é ele que conta a espera.
+    useShallow((s) => ({
+      phase: s.phase,
+      simMinutes: s.simMinutes,
+      arrivedAtMin: s.arrivedAtMin,
+      unloadedAtMin: s.unloadedAtMin,
+      ccoAttempts: s.ccoAttempts,
+      ccoAcknowledged: s.ccoAcknowledged,
+      backendStay: s.backendStay,
+    })),
+  );
 
   const useBackend = apiMode === 'http' && backendStay !== null;
 

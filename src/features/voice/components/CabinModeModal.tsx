@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../../components/Icon';
@@ -23,7 +24,8 @@ export interface CabinModeModalProps {
  * esfera grande (toque = falar / interromper), última fala em fonte grande,
  * mudo, rota de áudio e contador de espera quando houver.
  */
-export function CabinModeModal({
+// memo: o AvisaiDock redesenha a cada nível de áudio; fechada, a conversa não precisa redesenhar junto.
+export const CabinModeModal = memo(function CabinModeModal({
   visible,
   onClose,
   stayTimer,
@@ -228,4 +230,4 @@ export function CabinModeModal({
       </View>
     </Modal>
   );
-}
+});

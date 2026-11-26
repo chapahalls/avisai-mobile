@@ -22,6 +22,7 @@ import { hapticTap } from '../utils/haptics';
 import { useCompactLayout } from '../utils/layout';
 import { SettingsSheet } from './SettingsSheet';
 import { receiverLabel, receiverTone } from './tripUi';
+import { useShallow } from 'zustand/react/shallow';
 
 type HomeNav = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParams, 'Trip'>,
@@ -78,7 +79,27 @@ export function TripPage() {
     setCentralRequest,
     setGpsDivergence,
     clearRouteAssignedBanner,
-  } = useTrip();
+  } = useTrip(
+    // Só os campos usados: o simulador grava o relógio a cada 500 ms e a tela não precisa redesenhar.
+    useShallow((s) => ({
+      phase: s.phase,
+      position: s.position,
+      activeRoute: s.activeRoute,
+      receiver: s.receiver,
+      etaMin: s.etaMin,
+      centralRequest: s.centralRequest,
+      gpsDivergence: s.gpsDivergence,
+      routeAssignedBanner: s.routeAssignedBanner,
+      start: s.start,
+      reset: s.reset,
+      quickArrive: s.quickArrive,
+      quickReportQueue: s.quickReportQueue,
+      quickUnload: s.quickUnload,
+      setCentralRequest: s.setCentralRequest,
+      setGpsDivergence: s.setGpsDivergence,
+      clearRouteAssignedBanner: s.clearRouteAssignedBanner,
+    })),
+  );
   const voiceState = useVoice((s) => s.state);
   const wakeListening = useWakeWord((s) => s.status === 'listening');
   const compact = useCompactLayout();

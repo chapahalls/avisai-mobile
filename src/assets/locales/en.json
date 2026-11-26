@@ -320,7 +320,9 @@
       "simulateLabel": "Tap to simulate what you'd say:",
       "openChat": "Open full-screen conversation",
       "dismissErrorHint": "Tap to dismiss the error",
-      "commandsHint": "Try: “open the map”, “take me to the receiver”, “tell the CCO that…”, “repeat” or “bye, AvisAI”."
+      "commandsHint": "Try: “open the map”, “take me to the receiver”, “tell the CCO that…”, “repeat” or “bye, AvisAI”.",
+      "dragHint": "Tap to open. Drag to move the orb somewhere else.",
+      "moved": "AvisAI orb moved"
     },
     "wake": {
       "title": "Listen for “Hey AvisAI”",
@@ -392,7 +394,20 @@
     "badge": {
       "verified": "Verified",
       "file": "Attachment"
-    }
+    },
+    "reading": {
+      "intro": "{{title}}.",
+      "item": "{{label}}: {{value}}",
+      "noFields": "This document has no fields read by the system. You can see the file once you stop.",
+      "fileOnlyInPdf": "The rest is in the file; I will open it for you when you stop.",
+      "pdfWhenStopped": "When you stop, say “open {{title}}” and I will show the PDF.",
+      "pdfOffer": "Want to see the PDF? Say “open {{title}}”."
+    },
+    "readAloudButton": "Read aloud",
+    "stopReadingButton": "Stop reading",
+    "readAloudHint": "AvisAI reads the fields of this document.",
+    "readAloudRequest": "Read me the document {{title}}",
+    "allDocumentsShort": "Documents"
   },
   "outbox": {
     "title": "Send queue",
@@ -561,5 +576,20 @@
     "stoppedTime": "Time stopped",
     "stayStartsOnArrival": "The count starts when you arrive at the receiver (geofence + voice).",
     "noPositionNote": "The receiver does not report your queue position yet."
+  },
+  "driving": {
+    "title": "Driving mode",
+    "speed": "{{kmh}} km/h",
+    "speedUnknown": "Moving",
+    "sourceGps": "Phone GPS",
+    "sourceSimulator": "Simulated GPS",
+    "body": "The screen stays locked while the truck is moving. Talk to AvisAI: it reads documents, notifies the CCO and logs incidents.",
+    "talkHint": "Say “Hey AvisAI” or tap the orb.",
+    "orbLabel": "Talk to AvisAI. State: {{state}}",
+    "unlockHint": "Unlocks by itself when the truck stops.",
+    "demoTitle": "Demo (simulated)",
+    "demoSimulateLabel": "Simulate an utterance",
+    "demoControls": "Demo controls",
+    "demoClose": "Close controls"
   }
 }

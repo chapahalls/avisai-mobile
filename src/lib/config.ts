@@ -64,6 +64,36 @@ export const LAYOUT = {
   tabLabelMaxScale: 1.15,
 } as const;
 
+/**
+ * Modo direção (como o Waze): a velocidade do GPS diz se o caminhão está andando. Andando, a tela
+ * trava e só a voz funciona (CTB art. 252); parado, tudo volta. Os dois limiares e as esperas
+ * evitam que a tela pisque no anda-e-para do trânsito.
+ */
+export const DRIVING_MODE = {
+  enabled: true,
+  /** Acima desta velocidade, por `enterHoldMs` seguidos, entra no modo direção. */
+  enterKmh: 10,
+  enterHoldMs: 4000,
+  /** Abaixo desta velocidade, por `exitHoldMs` seguidos, considera parado e libera a tela. */
+  exitKmh: 3,
+  exitHoldMs: 5000,
+  /** O GPS só manda posição nova depois de andar (filtro de distância): sem posição há este tempo = parado. */
+  staleFixMs: 15000,
+  /** Frequência da checagem. */
+  tickMs: 1000,
+} as const;
+
+/** Esfera flutuante do AvisAI: o motorista arrasta para onde quiser e a posição fica salva. */
+export const AVISAI_ORB = {
+  sizeDp: 76,
+  /** Distância mínima da esfera até a borda da tela. */
+  edgeMarginDp: 8,
+  /** Abaixo deste deslocamento o gesto é toque (abre o painel), acima é arrastar. */
+  dragSlopDp: 8,
+  /** Chave em `settings` (SQLite) com a posição salva. */
+  settingKey: 'avisai_orb_position',
+} as const;
+
 /** Avisos do agente que chegam sem conversa aberta (`aviso_motorista`). */
 export const DRIVER_NOTICES = {
   /** Aviso que é pergunta abre a conversa para o motorista responder. */
