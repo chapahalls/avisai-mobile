@@ -18,6 +18,12 @@
     "ssoAs": "Sign in as {{name}}",
     "loading": "Signing in…",
     "mockNotice": "Simulated SSO for the demo.",
+    "keycloakNotice": "Sign-in via Keycloak (test environment).",
+    "keycloakError": {
+      "cancelled": "Sign-in cancelled. Tap sign in to try again.",
+      "unreachable": "Sign-in server unreachable or no network. Try again.",
+      "failed": "Could not sign in. Try again."
+    },
     "logout": "Sign out",
     "profileSwitcher": {
       "title": "Choose driver profile (3 options)",

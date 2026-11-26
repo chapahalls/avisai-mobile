@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { ENV } from '../../../lib/config';
 import { getSetting, setSetting } from '../../../lib/db';
 import { getApiClient, setAccessToken, useApiConfig } from '../../../services/api';
 import { useDocuments } from '../../documents';
@@ -10,9 +11,30 @@ import type { LoginProfileOption, Session } from '../types';
 const DEFAULT_EMAIL = 'carlos@rotasul.test';
 const PROFILE_SETTING_KEY = 'demo_profile_email';
 
+export type AuthError = 'cancelled' | 'unreachable' | 'failed';
+
+type KeycloakModule = typeof import('../api/keycloak');
+
+/** Keycloak é carregado sob demanda para o modo mock (e os testes) não puxarem expo-auth-session. */
+function loadKeycloak(): KeycloakModule {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('../api/keycloak') as KeycloakModule;
+}
+
+/** Login conforme ENV.authMode. No Keycloak, o access token vira o Bearer das chamadas HTTP. */
+async function authenticate(email: string): Promise<Session> {
+  if (ENV.authMode === 'keycloak') {
+    const s = await loadKeycloak().keycloakLogin(email);
+    setAccessToken(s.token);
+    return s;
+  }
+  return getApiClient().ssoLogin(email);
+}
+
 interface SessionState {
   session: Session | null;
   loading: boolean;
+  authError: AuthError | null;
   profiles: LoginProfileOption[];
   selectedEmail: string;
   loadingProfiles: boolean;
@@ -22,10 +44,11 @@ interface SessionState {
   logout: () => void;
 }
 
-/** SSO e seletor de perfis de motorista via ApiClient (mock por padrão ou HTTP real quando configurado). */
+/** SSO (ApiClient ou Keycloak conforme ENV.authMode) e seletor de perfis de motorista via ApiClient (mock por padrão ou HTTP real quando configurado). */
 export const useSession = create<SessionState>((set, get) => ({
   session: null,
   loading: false,
+  authError: null,
   profiles: DEFAULT_LOGIN_PROFILES,
   selectedEmail: getSetting(PROFILE_SETTING_KEY) || DEFAULT_EMAIL,
   loadingProfiles: false,
@@ -63,12 +86,12 @@ export const useSession = create<SessionState>((set, get) => ({
   },
 
   login: async (email?: string) => {
-    set({ loading: true });
+    set({ loading: true, authError: null });
     try {
       const explicitEmail =
         typeof email === 'string' && email.trim().length > 0 ? email.trim() : undefined;
       const targetEmail = explicitEmail ?? get().selectedEmail ?? DEFAULT_EMAIL;
-      const s = await getApiClient().ssoLogin(targetEmail);
+      const s = await authenticate(targetEmail);
 
       if (s.driverId !== undefined && s.driverId !== null) {
         useApiConfig.getState().setDriverId(s.driverId);
@@ -93,8 +116,11 @@ export const useSession = create<SessionState>((set, get) => ({
         selectedEmail: resolvedEmail,
         loading: false,
       });
-    } catch {
-      set({ loading: false });
+    } catch (err) {
+      const code = (err as { code?: unknown })?.code;
+      const authError: AuthError =
+        code === 'cancelled' || code === 'unreachable' ? code : 'failed';
+      set({ loading: false, authError: ENV.authMode === 'keycloak' ? authError : null });
     }
   },
 
@@ -103,6 +129,9 @@ export const useSession = create<SessionState>((set, get) => ({
     useTrip.getState().reset();
     useDocuments.getState().reset();
     setAccessToken(null);
-    set({ session: null });
+    if (ENV.authMode === 'keycloak') {
+      void loadKeycloak().keycloakLogout();
+    }
+    set({ session: null, authError: null });
   },
 }));

@@ -18,6 +18,12 @@
     "ssoAs": "Entrar como {{name}}",
     "loading": "Entrando…",
     "mockNotice": "SSO simulado para a demo.",
+    "keycloakNotice": "Login pelo Keycloak (ambiente de teste).",
+    "keycloakError": {
+      "cancelled": "Login cancelado. Toque em entrar para tentar de novo.",
+      "unreachable": "Servidor de login fora do ar ou sem rede. Tente de novo.",
+      "failed": "Não foi possível entrar. Tente de novo."
+    },
     "logout": "Sair",
     "profileSwitcher": {
       "title": "Escolha o perfil de motorista (3 opções)",

@@ -122,6 +122,7 @@ export const WAKE_WORD = {
 
 export type ApiMode = 'mock' | 'http';
 export type VoiceMode = 'mock' | 'agora';
+export type AuthMode = 'mock' | 'keycloak';
 
 function readHasGoogleMapsKey(): boolean {
   if (process.env.GOOGLE_MAPS_API_KEY_ANDROID?.trim()) return true;
@@ -142,6 +143,7 @@ function readHasGoogleMapsKey(): boolean {
 const rawApiMode = process.env.EXPO_PUBLIC_API_MODE?.trim().toLowerCase();
 const rawApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 const rawVoiceMode = process.env.EXPO_PUBLIC_VOICE_MODE?.trim().toLowerCase();
+const rawAuthMode = process.env.EXPO_PUBLIC_AUTH_MODE?.trim().toLowerCase();
 const parsedRotaId = Number(process.env.EXPO_PUBLIC_ROTA_ID || 1);
 
 export const ENV = {
@@ -152,4 +154,14 @@ export const ENV = {
   rotaId: Number.isFinite(parsedRotaId) && parsedRotaId > 0 ? parsedRotaId : 1,
   voiceMode: (rawVoiceMode === 'agora' ? 'agora' : 'mock') as VoiceMode,
   hasGoogleMapsKey: readHasGoogleMapsKey(),
+  /** mock = SSO do ApiClient (padrão); keycloak = OIDC Authorization Code + PKCE (rodarglobal/rodar-keycloak). */
+  authMode: (rawAuthMode === 'keycloak' ? 'keycloak' : 'mock') as AuthMode,
+  /** Issuer do realm. No celular, use o IP da máquina na rede local (ou adb reverse), não localhost. */
+  keycloakIssuer: (
+    process.env.EXPO_PUBLIC_KEYCLOAK_ISSUER?.trim() || 'http://localhost:8180/realms/avisai'
+  ).replace(/\/+$/, ''),
+  keycloakClientId: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID?.trim() || 'avisai-mobile',
 } as const;
+
+/** Escopos pedidos ao Keycloak. offline_access mantém o motorista logado sem rede. */
+export const KEYCLOAK_SCOPES = ['openid', 'profile', 'email', 'offline_access'] as const;
