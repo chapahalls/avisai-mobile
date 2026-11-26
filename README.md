@@ -239,6 +239,7 @@ O CI do GitHub roda os três a cada push e PR.
 |---|---|---|
 | `EXPO_PUBLIC_API_MODE` | `mock` (padrão) · `http` | `mock` roda a operação no aparelho, com dados fictícios. `http` usa o [rodar-backend](https://github.com/rodarglobal/rodar-backend): rota, eventos, ligação ao recebedor e stream `/ws`. |
 | `EXPO_PUBLIC_VOICE_MODE` | `mock` (padrão) · `agora` | `mock` usa frases prontas e `expo-speech`. `agora` conecta o RTC ao agente Conversational AI configurado no backend (só no Dev Build). |
+| `EXPO_PUBLIC_AUTH_MODE` | `mock` (padrão) · `keycloak` | `mock` entra pelo SSO do `ApiClient`. `keycloak` faz login OIDC (Authorization Code + PKCE) no Keycloak do [rodar-keycloak](https://github.com/rodarglobal/rodar-keycloak); configure `EXPO_PUBLIC_KEYCLOAK_ISSUER` (IP da máquina, ou `localhost` com `adb reverse tcp:8180 tcp:8180`). Exige Dev Build novo (`expo-web-browser`). |
 | `GOOGLE_MAPS_API_KEY_ANDROID` | vazia (padrão) · chave | Sem chave, mapa SVG simulado. Com chave, Google Maps no Dev Build. |
 
 Tudo isso também muda **em tempo real** pelo painel **Demo** (Ajustes ou botão Demo do Mapa), sem reiniciar o Metro.
@@ -341,7 +342,7 @@ O mobile **não** publica rota, atribui motorista, confirma Task do CCO, chama o
 
 Todos os controles de simulação ficam isolados no componente `DemoControls` (identificado com **borda tracejada** na interface), aberto em **Ajustes** e no botão **Demo** do Mapa (**E8**):
 
-- **SSO:** login sem senha, com perfis fictícios. No modo `http`, o backend devolve um JWT assinado.
+- **SSO:** login sem senha, com perfis fictícios. No modo `http`, o backend devolve um JWT assinado. Com `EXPO_PUBLIC_AUTH_MODE=keycloak`, o login é real (OIDC + PKCE) num Keycloak local com usuários de teste fictícios, sem HTTPS nem hostname fixo; o access token vai como Bearer, mas o backend ainda não o valida.
 - **Mapa:** `RouteMap` usa `RouteMapGoogle` (`react-native-maps` com `PROVIDER_GOOGLE` e estilo escuro) quando `GOOGLE_MAPS_API_KEY_ANDROID` está configurada no Dev Build, e cai para `RouteMapSvg` (mapa simulado em SVG) sem chave ou em modo SVG.
 - **GPS e relógio:** o simulador percorre a polilinha da rota em tempo acelerado (`1 s real = 1 min simulado`), com atalhos na demo (`+1 h`, `Ir p/ Aproximação (8 km)`, `Ir p/ Chegada`). O GPS real do celular pode ser ligado na demo e envia a posição para `POST /rotas/{id}/posicao`.
 - **Voz:** `VoiceSession` tem dois adapters:

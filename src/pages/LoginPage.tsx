@@ -3,10 +3,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { RodarLogo } from '../components/RodarLogo';
 import { LanguageSwitch } from '../components/LanguageSwitch';
-import { ProfileSwitcher, SsoButton } from '../features/auth';
+import { ProfileSwitcher, SsoButton, useSession } from '../features/auth';
+import { ENV } from '../lib/config';
 
 export function LoginPage() {
   const { t } = useTranslation();
+  const authError = useSession((s) => s.authError);
 
   return (
     <SafeAreaView className="flex-1 bg-ink-950">
@@ -36,9 +38,16 @@ export function LoginPage() {
         <View className="bg-ink-900 border border-ink-700/80 rounded-2xl p-3.5 mt-1">
           <ProfileSwitcher />
           <SsoButton />
+          {authError ? (
+            <Text accessibilityRole="alert" className="text-alert-500 text-xs text-center mt-2.5">
+              {t(`auth.keycloakError.${authError}`)}
+            </Text>
+          ) : null}
           <View className="flex-row items-center justify-center gap-1.5 mt-2.5">
             <View className="w-1.5 h-1.5 rounded-full bg-brand-500" />
-            <Text className="text-ink-300 text-xs text-center">{t('auth.mockNotice')}</Text>
+            <Text className="text-ink-300 text-xs text-center">
+              {ENV.authMode === 'keycloak' ? t('auth.keycloakNotice') : t('auth.mockNotice')}
+            </Text>
           </View>
         </View>
 
