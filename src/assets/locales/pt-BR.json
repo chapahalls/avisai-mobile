@@ -191,6 +191,11 @@
       "receiverNoAnswer": "O recebimento não atendeu. Registrei a tentativa como prova e avisei o CCO.",
       "ccoAcknowledged": "O CCO assumiu o seu caso e está falando com o recebimento.",
       "ccoNoResponseCallingReceiver": "O CCO não respondeu em {{max}} tentativas. Estou ligando para o recebimento."
+    },
+    "routeCancelledBanner": {
+      "title": "Viagem cancelada pela central",
+      "message": "Motivo: {{reason}}",
+      "defaultMessage": "A central cancelou esta viagem. Aguarde uma nova rota."
     }
   },
   "stay": {
@@ -480,7 +485,8 @@
     "TaskEscalated": "Aviso ao CCO",
     "TaskAcknowledged": "CCO assumiu",
     "UnloadConfirmed": "Descarga",
-    "DocumentQuestionAnswered": "Pergunta sobre documento"
+    "DocumentQuestionAnswered": "Pergunta sobre documento",
+    "TripCancelled": "Viagem cancelada"
   },
   "common": {
     "back": "Voltar"

@@ -11,7 +11,8 @@ export type StatusRota =
   | 'em_transito'
   | 'aproximando'
   | 'no_destino'
-  | 'descarregada';
+  | 'descarregada'
+  | 'cancelada';
 export type StatusLigacao = 'chamando' | 'em_andamento' | 'respondida' | 'nao_atendida' | 'falhou';
 export type StatusChamadoCCO = 'coletando' | 'aguardando_cco' | 'respondido' | 'timeout';
 
@@ -45,6 +46,7 @@ export type TipoEvento =
   | 'divergencia_gps'
   | 'rota_publicada'
   | 'rota_atribuida'
+  | 'rota_cancelada'
   | 'pergunta_documento'
   | 'chamado_cco_aberto'
   | 'chamado_cco_lembrete'
@@ -142,6 +144,9 @@ export interface Ligacao {
 export interface Rota {
   id: number;
   status: StatusRota;
+  /** Presentes quando a central cancelou a viagem. */
+  cancelada_em?: string | null;
+  cancelamento_motivo?: string | null;
   placa: string;
   nota_fiscal: string;
   carga_descricao: string;
