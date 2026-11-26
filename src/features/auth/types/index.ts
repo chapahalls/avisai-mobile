@@ -6,6 +6,8 @@ export interface Session {
   driverId?: number;
   tripId?: string;
   role?: string;
+  /** Aliases das transportadoras (Organizations do Keycloak) da pessoa. */
+  organizations?: string[];
 }
 
 export interface LoginProfileOption {

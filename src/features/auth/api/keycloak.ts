@@ -2,7 +2,7 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { ENV, KEYCLOAK_SCOPES } from '../../../lib/config';
 import type { Session } from '../types';
-import { decodeJwtPayload, sessionFromClaims, type AvisaiClaims } from './claims';
+import { decodeJwtPayload, sessionFromClaims, type RodarClaims } from './claims';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -66,7 +66,7 @@ export async function keycloakLogin(loginHint?: string): Promise<Session> {
     );
     if (!tokens.idToken) throw new Error('missing_id_token');
     refreshToken = tokens.refreshToken ?? null;
-    return sessionFromClaims(decodeJwtPayload<AvisaiClaims>(tokens.idToken), tokens.accessToken);
+    return sessionFromClaims(decodeJwtPayload<RodarClaims>(tokens.idToken), tokens.accessToken);
   } catch (err) {
     throw new KeycloakLoginError('failed', err instanceof Error ? err.message : undefined);
   }

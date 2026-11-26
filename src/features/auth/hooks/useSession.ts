@@ -5,6 +5,7 @@ import { getApiClient, setAccessToken, useApiConfig } from '../../../services/ap
 import { useDocuments } from '../../documents';
 import { useTrip } from '../../trip';
 import { useVoice } from '../../voice';
+import { withDriverProfile } from '../api/claims';
 import { DEFAULT_LOGIN_PROFILES, mergeWithBackendProfiles } from '../api/profiles';
 import type { LoginProfileOption, Session } from '../types';
 
@@ -21,12 +22,15 @@ function loadKeycloak(): KeycloakModule {
   return require('../api/keycloak') as KeycloakModule;
 }
 
-/** Login conforme ENV.authMode. No Keycloak, o access token vira o Bearer das chamadas HTTP. */
-async function authenticate(email: string): Promise<Session> {
+/**
+ * Login conforme ENV.authMode. No Keycloak, o access token vira o Bearer das chamadas HTTP e
+ * motorista/viagem vêm do backend pelo e-mail (o token só traz identidade, papéis e empresas).
+ */
+async function authenticate(email: string, profiles: LoginProfileOption[]): Promise<Session> {
   if (ENV.authMode === 'keycloak') {
     const s = await loadKeycloak().keycloakLogin(email);
     setAccessToken(s.token);
-    return s;
+    return withDriverProfile(s, profiles);
   }
   return getApiClient().ssoLogin(email);
 }
@@ -91,7 +95,7 @@ export const useSession = create<SessionState>((set, get) => ({
       const explicitEmail =
         typeof email === 'string' && email.trim().length > 0 ? email.trim() : undefined;
       const targetEmail = explicitEmail ?? get().selectedEmail ?? DEFAULT_EMAIL;
-      const s = await authenticate(targetEmail);
+      const s = await authenticate(targetEmail, get().profiles);
 
       if (s.driverId !== undefined && s.driverId !== null) {
         useApiConfig.getState().setDriverId(s.driverId);
