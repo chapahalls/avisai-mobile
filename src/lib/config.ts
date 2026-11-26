@@ -154,14 +154,17 @@ export const ENV = {
   rotaId: Number.isFinite(parsedRotaId) && parsedRotaId > 0 ? parsedRotaId : 1,
   voiceMode: (rawVoiceMode === 'agora' ? 'agora' : 'mock') as VoiceMode,
   hasGoogleMapsKey: readHasGoogleMapsKey(),
-  /** mock = SSO do ApiClient (padrão); keycloak = OIDC Authorization Code + PKCE (rodarglobal/rodar-keycloak). */
+  /** mock = SSO do ApiClient (padrão); keycloak = OIDC Authorization Code + PKCE no realm `rodar` (rodarglobal/rodar-keycloak). */
   authMode: (rawAuthMode === 'keycloak' ? 'keycloak' : 'mock') as AuthMode,
   /** Issuer do realm. No celular, use o IP da máquina na rede local (ou adb reverse), não localhost. */
   keycloakIssuer: (
-    process.env.EXPO_PUBLIC_KEYCLOAK_ISSUER?.trim() || 'http://localhost:8180/realms/avisai'
+    process.env.EXPO_PUBLIC_KEYCLOAK_ISSUER?.trim() || 'http://localhost:8180/realms/rodar'
   ).replace(/\/+$/, ''),
-  keycloakClientId: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID?.trim() || 'avisai-mobile',
+  keycloakClientId: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID?.trim() || 'rodar-mobile',
 } as const;
 
-/** Escopos pedidos ao Keycloak. offline_access mantém o motorista logado sem rede. */
-export const KEYCLOAK_SCOPES = ['openid', 'profile', 'email', 'offline_access'] as const;
+/**
+ * Escopos pedidos ao Keycloak. offline_access mantém o motorista logado sem rede; organization:* traz todas as
+ * transportadoras da pessoa sem tela de escolha (o agregado não escolhe: o backend sabe de quem é a viagem).
+ */
+export const KEYCLOAK_SCOPES = ['openid', 'profile', 'email', 'offline_access', 'organization:*'] as const;

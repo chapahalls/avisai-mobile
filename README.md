@@ -239,7 +239,7 @@ O CI do GitHub roda os três a cada push e PR.
 |---|---|---|
 | `EXPO_PUBLIC_API_MODE` | `mock` (padrão) · `http` | `mock` roda a operação no aparelho, com dados fictícios. `http` usa o [rodar-backend](https://github.com/rodarglobal/rodar-backend): rota, eventos, ligação ao recebedor e stream `/ws`. |
 | `EXPO_PUBLIC_VOICE_MODE` | `mock` (padrão) · `agora` | `mock` usa frases prontas e `expo-speech`. `agora` conecta o RTC ao agente Conversational AI configurado no backend (só no Dev Build). |
-| `EXPO_PUBLIC_AUTH_MODE` | `mock` (padrão) · `keycloak` | `mock` entra pelo SSO do `ApiClient`. `keycloak` faz login OIDC (Authorization Code + PKCE) no Keycloak do [rodar-keycloak](https://github.com/rodarglobal/rodar-keycloak); configure `EXPO_PUBLIC_KEYCLOAK_ISSUER` (IP da máquina, ou `localhost` com `adb reverse tcp:8180 tcp:8180`). Exige Dev Build novo (`expo-web-browser`). |
+| `EXPO_PUBLIC_AUTH_MODE` | `mock` (padrão) · `keycloak` | `mock` entra pelo SSO do `ApiClient`. `keycloak` faz login OIDC (Authorization Code + PKCE) no realm `rodar` do Keycloak do [rodar-keycloak](https://github.com/rodarglobal/rodar-keycloak); configure `EXPO_PUBLIC_KEYCLOAK_ISSUER` (IP da máquina, ou `localhost` com `adb reverse tcp:8180 tcp:8180`). Exige Dev Build novo (`expo-web-browser`). |
 | `GOOGLE_MAPS_API_KEY_ANDROID` | vazia (padrão) · chave | Sem chave, mapa SVG simulado. Com chave, Google Maps no Dev Build. |
 
 Tudo isso também muda **em tempo real** pelo painel **Demo** (Ajustes ou botão Demo do Mapa), sem reiniciar o Metro.
