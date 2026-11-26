@@ -338,7 +338,7 @@ export const httpApiClient: ApiClient = {
     }
 
     if (!res.ok) {
-      throw new NetworkError(`HTTP ${res.status}`);
+      throw new NetworkError(`HTTP ${res.status}`, res.status);
     }
 
     const data = (await res.json().catch(() => ({}))) as { receivedAt?: string };
@@ -371,7 +371,7 @@ export const httpApiClient: ApiClient = {
       { method: 'POST', body: form },
       VOICE_NOTE_TIMEOUT_MS,
     );
-    if (!res.ok && res.status !== 409) throw new NetworkError(`HTTP ${res.status}`);
+    if (!res.ok && res.status !== 409) throw new NetworkError(`HTTP ${res.status}`, res.status);
     const data = (await res.json().catch(() => ({}))) as { receivedAt?: string };
     return { status: res.status === 409 ? 409 : 200, receivedAt: data.receivedAt ?? new Date().toISOString() };
   },

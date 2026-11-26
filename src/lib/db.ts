@@ -17,8 +17,17 @@ function loadSQLite(): typeof SQLiteTypes {
   return require('expo-sqlite') as typeof SQLiteTypes;
 }
 
+/**
+ * Só para testes: usa outro banco com a mesma API síncrona (ex.: SQLite em memória via sql.js)
+ * e roda a migração do app nele. Sem isso, os testes usam um banco vazio de faz de conta.
+ */
+export function setTestDatabase(database: SQLiteTypes.SQLiteDatabase): void {
+  rawDb = database;
+  migrated = false;
+}
+
 export function getDb(): SQLiteTypes.SQLiteDatabase {
-  if (process.env.VITEST) {
+  if (process.env.VITEST && !rawDb) {
     return memoryFallbackDb;
   }
   if (!rawDb) {

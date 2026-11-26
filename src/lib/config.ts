@@ -28,6 +28,20 @@ export type BusinessConfig = {
   geofenceMeters: number;
 };
 
+/**
+ * Fila offline (outbox): reenvio com backoff exponencial, um item por vez e em ordem FIFO.
+ * Erros 4xx definitivos (pedido inválido, rota de outro motorista, recurso inexistente) não
+ * se resolvem tentando de novo: o item vira `failed` na hora e a fila segue.
+ */
+export const OUTBOX = {
+  /** Tentativas antes de o item virar `failed`. */
+  maxAttempts: 8,
+  /** Espera antes da tentativa n: 2^n s, até este teto. */
+  maxBackoffMs: 60_000,
+  /** Erros 4xx que valem nova tentativa: token vencido, tempo esgotado e excesso de pedidos. */
+  retryableClientStatus: [401, 408, 425, 429] as readonly number[],
+} as const;
+
 /** Relógio simulado: 1 s real = TIME_SCALE s simulados (60 = 1 s vira 1 min). */
 export const TIME_SCALE = 60;
 
