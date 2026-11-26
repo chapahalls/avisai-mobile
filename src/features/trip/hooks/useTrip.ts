@@ -83,6 +83,9 @@ export function statusRotaToPhase(status: StatusRota, _currentPhase?: TripPhase)
       return 'waiting';
     case 'descarregada':
       return 'unloaded';
+    case 'cancelada':
+      // Viagem encerrada pela central: o app volta a não ter viagem ativa.
+      return 'idle';
   }
 }
 
@@ -983,6 +986,24 @@ export const useTrip = create<TripState>((set, get) => ({
     }
 
     if (evento.rota_id !== null && evento.rota_id !== useApiConfig.getState().rotaId) {
+      return;
+    }
+
+    if (evento.tipo === 'rota_cancelada') {
+      const motivo = typeof evento.dados?.motivo === 'string' ? evento.dados.motivo : '';
+      const msg = motivo
+        ? i18n.t('trip.routeCancelledBanner.message', { reason: motivo })
+        : i18n.t('trip.routeCancelledBanner.defaultMessage');
+      set((curr) => ({
+        routeAssignedBanner: null,
+        timeline: appendTimeline(curr.timeline, msg, 'alert', curr.simMinutes, ts),
+      }));
+      useHeadsUpBanner.getState().show({
+        title: i18n.t('trip.routeCancelledBanner.title'),
+        message: msg,
+        tone: 'alert',
+      });
+      void get().syncRouteFromBackend(evento.rota_id ?? undefined);
       return;
     }
 

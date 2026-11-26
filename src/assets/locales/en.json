@@ -198,6 +198,11 @@
       "receiverNoAnswer": "Receiving did not answer. I logged the attempt as proof and notified the control center.",
       "ccoAcknowledged": "The control center took your case and is speaking with receiving.",
       "ccoNoResponseCallingReceiver": "Control center did not respond after {{max}} alerts. I am calling receiving now."
+    },
+    "routeCancelledBanner": {
+      "title": "Trip cancelled by the Control Center",
+      "message": "Reason: {{reason}}",
+      "defaultMessage": "The Control Center cancelled this trip. Wait for a new route."
     }
   },
   "stay": {
@@ -498,7 +503,8 @@
     "TaskEscalated": "Control center alert",
     "TaskAcknowledged": "Control center took it",
     "UnloadConfirmed": "Unloaded",
-    "DocumentQuestionAnswered": "Document question"
+    "DocumentQuestionAnswered": "Document question",
+    "TripCancelled": "Trip cancelled"
   },
   "common": {
     "back": "Back"

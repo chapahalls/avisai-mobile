@@ -115,7 +115,8 @@ function applyBackendPosition(
       | 'em_transito'
       | 'aproximando'
       | 'no_destino'
-      | 'descarregada';
+      | 'descarregada'
+      | 'cancelada';
   },
 ) {
   try {

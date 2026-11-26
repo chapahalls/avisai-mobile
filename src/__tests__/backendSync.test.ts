@@ -68,6 +68,7 @@ describe('backend integration & stream events', () => {
     expect(statusRotaToPhase('aproximando')).toBe('approaching');
     expect(statusRotaToPhase('no_destino')).toBe('waiting');
     expect(statusRotaToPhase('descarregada')).toBe('unloaded');
+    expect(statusRotaToPhase('cancelada')).toBe('idle');
   });
 
   it('não forma WebSocket para URL parcial enquanto o usuário a edita', () => {
