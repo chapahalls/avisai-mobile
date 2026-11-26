@@ -77,7 +77,8 @@ export function announceDriverNotice(notice: DriverNotice): boolean {
   if (!notice?.texto?.trim() || seen.has(notice.id)) return false;
   seen.add(notice.id);
   // Conversa aberta: o agente fala pela Agora; aqui seria repetido.
-  if (useVoice.getState().sessionConnected) return false;
+  const voice = useVoice.getState();
+  if (voice.sessionConnected || voice.offlineRecordingActive) return false;
   queue.push(notice);
   playNext();
   return true;

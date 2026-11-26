@@ -27,7 +27,9 @@ export function startNetworkWatcher() {
     const NetInfo = require('@react-native-community/netinfo') as typeof import('@react-native-community/netinfo');
     const api = NetInfo.default ?? NetInfo;
     return api.addEventListener((s) => {
-      useNetwork.setState({ device: s.isConnected === false ? 'offline' : 'online' });
+      useNetwork.setState({
+        device: s.isConnected === false || s.isInternetReachable === false ? 'offline' : 'online',
+      });
     });
   } catch {
     return () => undefined;

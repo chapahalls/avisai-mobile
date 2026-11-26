@@ -24,6 +24,8 @@ export type EventType =
   | 'DriverMessageSent'
   | 'DriverMessageSpoken'
   | 'DriverMessageAnswered'
+  /** Fala gravada sem sinal: o áudio sobe quando a rede volta e o agente processa no servidor. */
+  | 'DriverVoiceNote'
   | 'DriverOffline'
   | 'TwilioCallFailed'
   | 'AgoraFallbackStarted'

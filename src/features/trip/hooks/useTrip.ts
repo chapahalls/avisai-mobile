@@ -1469,6 +1469,12 @@ export function wireTripToVoice() {
     );
   });
 
+  const offVoiceNote = agentBus.on('voice:offline_note', ({ filePath, durationMs, spokenAt }) => {
+    const s = useTrip.getState();
+    enqueue(s.activeRoute.tripId, 'DriverVoiceNote', { filePath, durationMs, spokenAt }, 'driver');
+    s.addTimelineEntry(i18n.t('trip.timeline.voiceNoteSaved'), 'wait');
+  });
+
   const offDoc = agentBus.on('voice:document_answered', ({ question, answer, documentId, field, found }) => {
     const tripId = useTrip.getState().activeRoute.tripId;
     enqueue(
@@ -1488,6 +1494,7 @@ export function wireTripToVoice() {
     offMissing();
     offOcc();
     offDoc();
+    offVoiceNote();
   };
 }
 

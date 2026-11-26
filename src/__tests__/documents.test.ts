@@ -38,11 +38,13 @@ describe('documents rules (R7)', () => {
   });
 
   it('retorna "nao encontrei" quando o campo nao existe no documento', async () => {
-    expect(answerDocumentQuestion('Qual o CNPJ e o valor do frete?')).toMatch(/Não encontrei/i);
-    expect(answerDocumentQuestion('Qual o valor do CT-e?')).toMatch(/Não encontrei/i);
+    // Compara com o texto do i18n: a frase pode ficar mais coloquial sem quebrar a regra.
+    const notFound = i18n.t('documents.notFound');
+    expect(answerDocumentQuestion('Qual o CNPJ e o valor do frete?')).toBe(notFound);
+    expect(answerDocumentQuestion('Qual o valor do CT-e?')).toBe(notFound);
 
     await i18n.changeLanguage('en');
-    expect(answerDocumentQuestion('What is the freight tax and CNPJ?')).toMatch(/couldn't find/i);
+    expect(answerDocumentQuestion('What is the freight tax and CNPJ?')).toBe(i18n.t('documents.notFound'));
   });
 
   it('gera embeddings deterministicos de 64 dimensoes e calcula similaridade cosseno', () => {

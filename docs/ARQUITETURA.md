@@ -103,6 +103,8 @@ stateDiagram-v2
   sent --> [*]
 ```
 
+`DriverVoiceNote` (fala gravada sem sinal) usa a mesma fila, mas sobe como áudio (`POST /rotas/{id}/falas-offline`, multipart) em vez de `POST /events`. O arquivo fica em `falas_offline/` nos documentos do app e é apagado quando o servidor confirma (200 ou 409). A gravação está em `features/voice/api/offlineVoiceRecorder.ts`; a separação das falas pelo volume, em `features/voice/rules/speechSegmenter.ts` (parâmetros em `OFFLINE_VOICE`, `lib/config.ts`).
+
 ### Voz (estados)
 
 ```mermaid

@@ -49,7 +49,7 @@ O caminhão parado em torno da janela de descarga combinada com o recebedor. O a
 - Cada evento guarda horário do celular (`occurredAt`) e horário do servidor (`receivedAt`).
 - Chegada: GPS do celular + GPS do rastreador (simulado) + confirmação por voz. Posições divergentes → evento `nao_validado` e alerta ao CCO.
 - A resposta do recebedor na ligação fica registrada na Task (prova do outro lado).
-- Áudio: **decisão pendente** (só transcrição × guardar áudio). No mock, só transcrição.
+- Áudio: com rede, a voz vai direto ao agente e o app **não grava**. Sem rede, o app **grava cada fala** (WAV) e guarda até o envio (R8); o arquivo local é apagado quando o servidor confirma. O motorista vê isso em Ajustes e no pedido de permissão do microfone.
 
 ### R7. Documentos
 - Números (NF, peso, valor) vêm **só** dos campos extraídos, citando o documento.
@@ -59,6 +59,7 @@ O caminhão parado em torno da janela de descarga combinada com o recebedor. O a
 - Toda escrita vira evento local + item na fila (`outbox`) com `idempotencyKey`.
 - Sem rede: guarda. Rede fraca: envia só eventos críticos (chegada, ocorrência, descarga, resposta do recebedor).
 - Envio em ordem, com nova tentativa crescente (2 s, 4 s, 8 s… até 60 s). Reenvio nunca duplica.
+- Voz sem rede: nenhum modelo roda no aparelho. Com a conversa aberta, cada fala do motorista vira um áudio WAV (separado só pelo volume do microfone) e entra na fila como `DriverVoiceNote`. O app confirma em voz local ("Guardei o que você falou…"). Quando a rede volta, o áudio sobe para o servidor, que transcreve e passa ao agente na ordem em que as falas foram ditas. O agente registra o que cada fala pede e responde com um aviso ("Sobre o que você falou às 14h32: …"). O arquivo local é apagado quando o servidor confirma.
 
 ### R9. Ligação a terceiros
 - O agente se identifica como assistente virtual da transportadora logo no início e não promete nada em nome do CCO.

@@ -7,6 +7,7 @@ import { LanguageSwitch } from '../components/LanguageSwitch';
 import { useSession } from '../features/auth';
 import { DemoControls, useTrip } from '../features/trip';
 import { useVoice } from '../features/voice';
+import { useOutboxStore } from '../features/outbox';
 import { colors } from '../lib/theme';
 import { useWakeWord } from '../services/wakeWord';
 import { hapticTap } from '../utils/haptics';
@@ -28,6 +29,9 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
   const logout = useSession((s) => s.logout);
   const plate = useTrip((s) => s.activeRoute.plate);
   const preferredMode = useVoice((s) => s.preferredMode);
+  const pendingVoiceNotes = useOutboxStore(
+    (s) => s.rows.filter((r) => r.type === 'DriverVoiceNote' && r.status !== 'sent').length,
+  );
   const agoraStage = useVoice((s) => s.agoraStage);
   const audioRoute = useVoice((s) => s.audioRoute);
   const wakeEnabled = useWakeWord((s) => s.enabled);
@@ -117,11 +121,28 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
                 <Text className="text-ink-50 text-base font-semibold">
                   {modeLabel} · {t(`voice.audioRoute.${audioRoute}`)}
                 </Text>
-                <View className="flex-row items-center gap-1.5">
-                  <Icon name="check" size={14} color={colors.ok[500]} />
-                  <Text className="text-ink-300 text-sm">{t('voice.privacyBadge')}</Text>
+                <View className="flex-row items-start gap-1.5">
+                  <View className="pt-0.5">
+                    <Icon name="mic" size={14} color={colors.ink[300]} />
+                  </View>
+                  <Text className="flex-1 text-ink-300 text-sm">{t('voice.privacyBadge')}</Text>
                 </View>
               </View>
+
+              {preferredMode === 'agora' ? (
+                <View className="bg-ink-900 border border-ink-800 rounded-3xl p-4 gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <Icon name="clock" size={18} color={colors.ink[300]} />
+                    <Text className="text-ink-50 text-base font-semibold">{t('voice.offlineNotes.title')}</Text>
+                  </View>
+                  <Text className="text-ink-300 text-sm leading-5">{t('voice.offlineNotes.body')}</Text>
+                  {pendingVoiceNotes > 0 ? (
+                    <Text className="text-wait-500 text-sm font-semibold">
+                      {t('voice.offlineNotes.pending', { count: pendingVoiceNotes })}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
 
               <View className="bg-ink-900 border border-ink-800 rounded-3xl p-4 gap-2">
                 <View className="flex-row items-center gap-3">

@@ -32,7 +32,8 @@ export type BusinessConfig = {
 export const TIME_SCALE = 60;
 
 /**
- * Voz RTC direta: sem gravação nem legendas/transcrição consumidas pelo cliente.
+ * Voz RTC direta (com rede): sem gravação nem legendas/transcrição consumidas pelo cliente.
+ * Sem rede é diferente: o app grava cada fala em WAV até o envio (ver OFFLINE_VOICE).
  * Os comandos do app chegam do backend como intenção (`acao_cliente`), nunca da transcrição.
  * A wake word usa o reconhecedor do aparelho só para achar "Ei AvisAI": o texto é descartado
  * na hora (não aparece, não é salvo nem enviado).
@@ -72,6 +73,35 @@ export const DRIVER_NOTICES = {
 } as const;
 
 /** Escuta da wake word ("Ei AvisAI") com o reconhecedor de fala do aparelho. */
+/**
+ * Sem rede (offline-first): o app não roda modelo de voz. Grava cada fala do motorista em WAV,
+ * põe na fila e o backend transcreve e processa quando a rede volta. A fala é separada só pelo
+ * volume do microfone (sem modelo): começa quando passa do limiar e termina depois de um silêncio.
+ */
+export const OFFLINE_VOICE = {
+  sampleRate: 16000,
+  /** Tamanho de cada análise de volume. */
+  frameMs: 20,
+  /** Quadros seguidos acima do limiar para contar como início de fala. */
+  startFrames: 4,
+  /** Volume mínimo (RMS em PCM 16 bits) para ser fala, mesmo em cabine silenciosa. */
+  minThreshold: 700,
+  /** O limiar acompanha o ruído da cabine: fala = ruído médio × este fator. */
+  noiseFactor: 2.5,
+  /** Silêncio que encerra a fala. */
+  silenceMs: 1300,
+  /** Abaixo disso (fala útil) a gravação é descartada: tosse, batida, buzina. */
+  minSpeechMs: 400,
+  /** Uma fala longa vira mais de um áudio. */
+  maxClipMs: 30000,
+  /** Áudio guardado antes do início detectado, para não cortar a primeira sílaba. */
+  preRollMs: 300,
+  /** Início de cada escuta: mede o ruído da cabine antes de procurar fala. */
+  calibrationMs: 300,
+  /** Pasta (dentro dos documentos do app) onde os áudios esperam a rede. */
+  folder: 'falas_offline',
+} as const;
+
 export const WAKE_WORD = {
   /** Ligada por padrão; o motorista desliga nas configurações. */
   enabledByDefault: true,
@@ -92,6 +122,7 @@ export const WAKE_WORD = {
 
 export type ApiMode = 'mock' | 'http';
 export type VoiceMode = 'mock' | 'agora';
+export type AuthMode = 'mock' | 'keycloak';
 
 function readHasGoogleMapsKey(): boolean {
   if (process.env.GOOGLE_MAPS_API_KEY_ANDROID?.trim()) return true;
@@ -112,6 +143,7 @@ function readHasGoogleMapsKey(): boolean {
 const rawApiMode = process.env.EXPO_PUBLIC_API_MODE?.trim().toLowerCase();
 const rawApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 const rawVoiceMode = process.env.EXPO_PUBLIC_VOICE_MODE?.trim().toLowerCase();
+const rawAuthMode = process.env.EXPO_PUBLIC_AUTH_MODE?.trim().toLowerCase();
 const parsedRotaId = Number(process.env.EXPO_PUBLIC_ROTA_ID || 1);
 
 export const ENV = {
@@ -122,4 +154,17 @@ export const ENV = {
   rotaId: Number.isFinite(parsedRotaId) && parsedRotaId > 0 ? parsedRotaId : 1,
   voiceMode: (rawVoiceMode === 'agora' ? 'agora' : 'mock') as VoiceMode,
   hasGoogleMapsKey: readHasGoogleMapsKey(),
+  /** mock = SSO do ApiClient (padrão); keycloak = OIDC Authorization Code + PKCE no realm `rodar` (rodarglobal/rodar-keycloak). */
+  authMode: (rawAuthMode === 'keycloak' ? 'keycloak' : 'mock') as AuthMode,
+  /** Issuer do realm. No celular, use o IP da máquina na rede local (ou adb reverse), não localhost. */
+  keycloakIssuer: (
+    process.env.EXPO_PUBLIC_KEYCLOAK_ISSUER?.trim() || 'http://localhost:8180/realms/rodar'
+  ).replace(/\/+$/, ''),
+  keycloakClientId: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID?.trim() || 'rodar-mobile',
 } as const;
+
+/**
+ * Escopos pedidos ao Keycloak. offline_access mantém o motorista logado sem rede; organization:* traz todas as
+ * transportadoras da pessoa sem tela de escolha (o agregado não escolhe: o backend sabe de quem é a viagem).
+ */
+export const KEYCLOAK_SCOPES = ['openid', 'profile', 'email', 'offline_access', 'organization:*'] as const;
