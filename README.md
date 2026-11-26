@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/readme/tour.gif" alt="Tour do app: login com perfil de motorista, viagem iniciada, o AvisAI pergunta sobre a retirada e confirma por voz, o mapa da rota, o recebedor confirma a doca a 8 km, o check-in na chegada, a fila de descarga com o tempo parado acima da franquia, documentos, mensagens enviadas ao CCO e o modo sem conexão" width="320" />
+  <img src="docs/assets/readme/tour.gif" alt="Tour do app: login com perfil de motorista, viagem iniciada, o AvisAI pergunta sobre a retirada e confirma por voz, o mapa da rota, o modo direção com o AvisAI lendo a nota, o recebedor confirma a doca a 8 km, o check-in na chegada, a fila de descarga com o tempo parado acima da franquia, documentos, mensagens enviadas ao CCO e o modo sem conexão" width="320" />
 </p>
 
 <p align="center">
@@ -109,18 +109,21 @@ Ao iniciar a viagem, o AvisAI pergunta só o que falta para a retirada: a carga 
 <summary><strong>3 · Em rota</strong> (Mapa e comandos de voz)</summary>
 <br />
 
-O Mapa mostra destino, distância, horário de chegada e as paradas, e o botão **Navegar** abre a rota no app de mapas do aparelho. Com a chave do Google Maps no Dev Build, o mapa é o Google; sem ela, um mapa SVG simulado (como na captura). Durante a viagem, o motorista pede telas, documentos e recados ao CCO por voz ([comandos](#comandos-de-voz-e-wake-word)).
+O Mapa mostra destino, distância, horário de chegada e as paradas, e o botão **Navegar** abre a rota no app de mapas do aparelho. Com a chave do Google Maps no Dev Build, o mapa é o Google; sem ela, um mapa SVG simulado (como na captura).
 
-<img src="docs/assets/readme/map.jpg" alt="Mapa: rota até o destino, 24 km e 18 minutos restantes, botão Navegar e paradas" width="32%" />
+Com o caminhão andando, entra o **modo direção** (como no Waze, pela velocidade do GPS): a tela trava e só a voz funciona. O motorista pede telas, documentos e recados ao CCO por voz ([comandos](#comandos-de-voz-e-wake-word)), e o AvisAI lê a NF-e ou um anexo em voz alta. O que pede leitura (abrir um PDF, por exemplo) abre sozinho quando o caminhão para.
+
+<img src="docs/assets/readme/map.jpg" alt="Mapa: rota até o destino, distância e chegada, botão Navegar e paradas" width="32%" />
+<img src="docs/assets/readme/driving.jpg" alt="Modo direção: tela travada a 80 km/h, esfera grande e o AvisAI lendo a NF-e em voz alta" width="32%" />
 </details>
 
 <details>
 <summary><strong>4 · O recebedor é avisado a 8 km</strong></summary>
 <br />
 
-A 8 km do destino, o agente liga para o recebedor e pede doca e horário. A resposta chega ao motorista em voz e num aviso no topo da tela, e o selo da viagem passa a mostrar a doca confirmada. Se o recebedor não atende, a tentativa fica registrada como prova.
+A 8 km do destino, o agente liga para o recebedor e pede doca e horário. A resposta chega ao motorista em voz (na captura, na tela de direção) e num aviso no topo da tela quando ele está parado, e o selo da viagem passa a mostrar a doca confirmada. Se o recebedor não atende, a tentativa fica registrada como prova.
 
-<img src="docs/assets/readme/receiver-confirmed.jpg" alt="Aviso no topo: o recebedor confirmou a doca 4 para as 15:00" width="32%" />
+<img src="docs/assets/readme/receiver-confirmed.jpg" alt="Modo direção: o AvisAI avisa por voz que o recebedor confirmou a doca" width="32%" />
 </details>
 
 <details>
@@ -162,12 +165,12 @@ Mensagens mostra o que foi enviado ao CCO e em que ponto do envio cada item est�
     <td width="25%"><img src="docs/assets/readme/login.jpg" alt="Login" /><br /><sub><b>Login</b> · <code>LoginPage</code>: perfil e SSO simulado</sub></td>
     <td width="25%"><img src="docs/assets/readme/home.jpg" alt="Início antes da viagem" /><br /><sub><b>Início</b> · <code>TripPage</code>: próxima viagem</sub></td>
     <td width="25%"><img src="docs/assets/readme/trip-agent.jpg" alt="Início com a viagem em andamento" /><br /><sub><b>Início</b> · viagem em andamento e etapas</sub></td>
-    <td width="25%"><img src="docs/assets/readme/avisai.jpg" alt="Painel do AvisAI" /><br /><sub><b>AvisAI</b> · esfera flutuante e painel de comandos</sub></td>
+    <td width="25%"><img src="docs/assets/readme/avisai.jpg" alt="Painel do AvisAI" /><br /><sub><b>AvisAI</b> · esfera arrastável e painel de comandos</sub></td>
   </tr>
   <tr>
     <td><img src="docs/assets/readme/conversation.jpg" alt="Conversa em tela cheia" /><br /><sub><b>Conversa</b> · tela cheia, modo viagem</sub></td>
     <td><img src="docs/assets/readme/map.jpg" alt="Mapa" /><br /><sub><b>Mapa</b> · <code>MapPage</code>: rota, chegada e Navegar</sub></td>
-    <td><img src="docs/assets/readme/receiver-confirmed.jpg" alt="Recebedor confirmou a doca" /><br /><sub><b>Aviso</b> · resposta do recebedor a 8 km</sub></td>
+    <td><img src="docs/assets/readme/receiver-confirmed.jpg" alt="Recebedor confirmou a doca" /><br /><sub><b>Aviso</b> · resposta do recebedor a 8 km, por voz</sub></td>
     <td><img src="docs/assets/readme/checkin.jpg" alt="Check-in na chegada" /><br /><sub><b>Chegada</b> · check-in e Prova da Espera</sub></td>
   </tr>
   <tr>
@@ -179,7 +182,8 @@ Mensagens mostra o que foi enviado ao CCO e em que ponto do envio cada item est�
   <tr>
     <td><img src="docs/assets/readme/offline.jpg" alt="Sem conexão" /><br /><sub><b>Sem conexão</b> · faixa da fila offline</sub></td>
     <td><img src="docs/assets/readme/settings.jpg" alt="Ajustes" /><br /><sub><b>Ajustes</b> · <code>SettingsSheet</code>: idioma, voz, gravação sem sinal, "Ei AvisAI" e Demo</sub></td>
-    <td colspan="2" valign="top"><sub>Os controles da demo (rede, CCO, tempo, voz, mapa e backend) abrem em Ajustes e no Mapa, com borda tracejada.<br /><br />O visual segue os mockups do repositório web (<a href="https://github.com/rodarglobal/rodar-web/tree/main/docs/RODAR-telas/aplicativo"><code>rodar-web/docs/RODAR-telas/aplicativo/</code></a>) e a paleta de <a href="docs/DESIGN.md">DESIGN.md</a>. Ainda sem tela no app, porque dependem de funções que não existem: login por SMS, checklist de saída em 5 passos, modo viagem curva a curva e chamada de voz com o CCO.<br /><br />Capturas do app real no modo Mock, rodando no navegador em 390 × 844 só para a gravação. No celular, o mapa usa o Google Maps quando há chave. Para regerar as telas e o tour: <code>./scripts/readme-captures/capture.sh</code>.</sub></td>
+    <td><img src="docs/assets/readme/driving.jpg" alt="Modo direção" /><br /><sub><b>Modo direção</b> · <code>DrivingLock</code>: só voz com o caminhão andando</sub></td>
+    <td valign="top"><sub>Os controles da demo (rede, CCO, tempo, voz, mapa e backend) abrem em Ajustes, no Mapa e na tela de direção, com borda tracejada.<br /><br />O visual segue os mockups do repositório web (<a href="https://github.com/rodarglobal/rodar-web/tree/main/docs/RODAR-telas/aplicativo"><code>rodar-web/docs/RODAR-telas/aplicativo/</code></a>) e a paleta de <a href="docs/DESIGN.md">DESIGN.md</a>. Ainda sem tela no app, porque dependem de funções que não existem: login por SMS, checklist de saída em 5 passos, modo viagem curva a curva e chamada de voz com o CCO.<br /><br />Capturas do app real no modo Mock, rodando no navegador em 390 × 844 só para a gravação. No celular, o mapa usa o Google Maps quando há chave. Para regerar as telas e o tour: <code>./scripts/readme-captures/capture.sh</code>.</sub></td>
   </tr>
 </table>
 
