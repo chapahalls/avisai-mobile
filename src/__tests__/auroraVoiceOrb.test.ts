@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { getAuroraVoicePresentation } from '../features/voice/components/AuroraVoiceOrb';
+import { colors, voiceOrb } from '../lib/theme';
+
 vi.mock('react-native', () => ({
   View: () => null,
 }));
@@ -28,9 +31,6 @@ vi.mock('react-native-svg', () => ({
   RadialGradient: () => null,
   Stop: () => null,
 }));
-
-import { getAuroraVoicePresentation } from '../features/voice/components/AuroraVoiceOrb';
-import { colors, voiceOrb } from '../lib/theme';
 
 describe('AuroraVoiceOrb presentation', () => {
   it('mantém o affordance de interromper quando o agente está falando', () => {

@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('react-native', () => ({}));
-
 import { useApiConfig } from '../services/api';
 import { getAccessToken, httpApiClient, setAccessToken } from '../services/httpApi';
+
+vi.mock('react-native', () => ({}));
 
 const sso = {
   token: 'jwt.fixture.token',

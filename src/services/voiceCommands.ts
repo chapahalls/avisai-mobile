@@ -387,7 +387,7 @@ const NAVIGATE_RE =
   /\bme lev\w*\b|\bnaveg\w* (ate|pras?|pros?|para)\b|\bcomo (eu )?chego\b|\babr\w* (o )?(google maps|waze|navegacao)\b|\b(take me|navigate) to\b/;
 const MESSAGE_CCO_RE =
   /\b(?:avis\w*|fal\w*|diz\w*|manda\w*(?: uma)?(?: mensagem| recado)?) (?:pro|pra|para o|ao|o)? ?(?:cco|central|operador)\b[,:]?\s*(?:que\s+)?(.+)/;
-const SCREENS: Array<[AppScreen, RegExp]> = [
+const SCREENS: [AppScreen, RegExp][] = [
   ['fila', /\bfila (do|no|da) (recebedor|recebimento|doca|descarga)\b|\bdoca\b|\breceiver queue\b|\bdock\b/],
   ['mensagens', /\bmensage(m|ns)\b|\bmessages?\b|\bfila\b|\boutbox\b|\bsincroniza\w*|\bsync\b|\bchat\b/],
   ['mapa', /\bmapa\b|\brota\b|\bmap\b|\broute\b/],

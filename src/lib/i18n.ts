@@ -11,7 +11,7 @@ function detectDeviceLanguage(): AppLanguage {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const loc = require('expo-localization') as {
-      getLocales?: () => Array<{ languageTag?: string }>;
+      getLocales?: () => { languageTag?: string }[];
     };
     const tag = loc.getLocales?.()?.[0]?.languageTag ?? 'pt-BR';
     return tag.toLowerCase().startsWith('pt') ? 'pt-BR' : 'en';

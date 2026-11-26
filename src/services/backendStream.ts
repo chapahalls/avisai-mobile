@@ -1,6 +1,4 @@
 import { create } from 'zustand';
-import { useTrip } from '../features/trip/hooks/useTrip';
-import { useVoice } from '../features/voice/hooks/useVoice';
 import type { EventoStream, MensagensStream } from '../types/backend';
 import { useApiConfig } from './api';
 import { announceDriverNotice } from './driverNotices';
@@ -21,6 +19,27 @@ export const useBackendStream = create<BackendStreamState>(() => ({
   eventos: [],
   lastError: null,
 }));
+
+/**
+ * Quem reage ao stream. `services` não conhece as features: a camada `app` liga estes
+ * handlers à viagem e à voz (`app/wireBackendStream.ts`), mantendo a direção
+ * pages → features → services.
+ */
+export interface BackendStreamHandlers {
+  snapshot: (dado: MensagensStream['snapshot']) => void;
+  posicao: (dado: MensagensStream['posicao']) => void;
+  contador: (estadias: NonNullable<MensagensStream['contador']['estadias']>) => void;
+  task: (task: NonNullable<MensagensStream['task']['task']>) => void;
+  evento: (dado: MensagensStream['evento']) => void;
+  reset: () => void;
+  agentSays: (texto: string) => void;
+}
+
+let handlers: BackendStreamHandlers | null = null;
+
+export function setBackendStreamHandlers(next: BackendStreamHandlers | null) {
+  handlers = next;
+}
 
 type StreamEnvelope = {
   [K in keyof MensagensStream]: { canal: K; dado: MensagensStream[K] };
@@ -60,22 +79,22 @@ export function handleStreamMessage(raw: string) {
       useBackendStream.setState({
         eventos: Array.isArray(dado.eventos) ? dado.eventos.slice(0, MAX_EVENTOS) : [],
       });
-      useTrip.getState().applyBackendSnapshot(dado);
+      handlers?.snapshot(dado);
       break;
     }
     case 'posicao': {
-      useTrip.getState().applyBackendPosicao(dado);
+      handlers?.posicao(dado);
       break;
     }
     case 'contador': {
       if (Array.isArray(dado.estadias)) {
-        useTrip.getState().applyBackendContador(dado.estadias);
+        handlers?.contador(dado.estadias);
       }
       break;
     }
     case 'task': {
       if (dado?.task) {
-        useTrip.getState().applyBackendTask(dado.task);
+        handlers?.task(dado.task);
       }
       break;
     }
@@ -87,9 +106,9 @@ export function handleStreamMessage(raw: string) {
     case 'chamado': {
       const chamado = dado?.chamado;
       if (chamado?.resposta) {
-        useVoice.getState().pushTranscript('agent', chamado.resposta);
+        handlers?.agentSays(chamado.resposta);
       } else if (chamado?.status === 'timeout') {
-        useVoice.getState().pushTranscript('agent', 'Não recebi resposta do CCO após cinco tentativas.');
+        handlers?.agentSays('Não recebi resposta do CCO após cinco tentativas.');
       }
       break;
     }
@@ -107,12 +126,12 @@ export function handleStreamMessage(raw: string) {
       useBackendStream.setState((s) => ({
         eventos: [dado, ...s.eventos].slice(0, MAX_EVENTOS),
       }));
-      useTrip.getState().applyBackendEvento(dado);
+      handlers?.evento(dado);
       break;
     }
     case 'reset': {
       useBackendStream.setState({ eventos: [] });
-      useTrip.getState().applyBackendReset();
+      handlers?.reset();
       break;
     }
   }

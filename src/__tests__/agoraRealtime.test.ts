@@ -1,5 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { AgoraStreamParser } from '../features/voice/api/agoraStreamParser';
+import { MockVoiceSession } from '../features/voice/api/mockVoiceSession';
+import { useVoice, wireVoiceToBus } from '../features/voice';
+import { useTrip } from '../features/trip/hooks/useTrip';
+import i18n from '../lib/i18n';
+import { agentBus } from '../services/agentBus';
+import { useApiConfig } from '../services/api';
+import { handleStreamMessage } from '../services/backendStream';
+import { httpApiClient } from '../services/httpApi';
+
 vi.mock('react-native', () => ({}));
 vi.mock('react-native-reanimated', () => ({
   default: { View: () => null },
@@ -24,16 +34,6 @@ vi.mock('react-native-svg', () => ({
   Polyline: () => null,
   Rect: () => null,
 }));
-
-import { AgoraStreamParser } from '../features/voice/api/agoraStreamParser';
-import { MockVoiceSession } from '../features/voice/api/mockVoiceSession';
-import { useVoice, wireVoiceToBus } from '../features/voice';
-import { useTrip } from '../features/trip/hooks/useTrip';
-import i18n from '../lib/i18n';
-import { agentBus } from '../services/agentBus';
-import { useApiConfig } from '../services/api';
-import { handleStreamMessage } from '../services/backendStream';
-import { httpApiClient } from '../services/httpApi';
 
 function toBase64(str: string): string {
   return Buffer.from(str, 'utf-8').toString('base64');

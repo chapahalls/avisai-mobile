@@ -1,5 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  DEFAULT_LOGIN_PROFILES,
+  mergeWithBackendProfiles,
+  useSession,
+} from '../features/auth';
+import { useDocuments } from '../features/documents';
+import { useTrip } from '../features/trip';
+import { useVoice } from '../features/voice';
+import i18n from '../lib/i18n';
+import { useApiConfig } from '../services/api';
+import { httpApiClient } from '../services/httpApi';
+import type { DemoProfile } from '../types/backend';
+
 vi.mock('react-native', () => ({}));
 vi.mock('react-native-reanimated', () => ({
   default: { View: () => null },
@@ -24,19 +37,6 @@ vi.mock('react-native-svg', () => ({
   Polyline: () => null,
   Rect: () => null,
 }));
-
-import {
-  DEFAULT_LOGIN_PROFILES,
-  mergeWithBackendProfiles,
-  useSession,
-} from '../features/auth';
-import { useDocuments } from '../features/documents';
-import { useTrip } from '../features/trip';
-import { useVoice } from '../features/voice';
-import i18n from '../lib/i18n';
-import { useApiConfig } from '../services/api';
-import { httpApiClient } from '../services/httpApi';
-import type { DemoProfile } from '../types/backend';
 
 describe('3-option Driver Profile Switcher & SSO Login (PERFIS-DEMO)', () => {
   beforeEach(async () => {

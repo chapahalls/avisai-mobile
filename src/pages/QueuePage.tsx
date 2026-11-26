@@ -82,7 +82,7 @@ export function QueuePage({ navigation }: NativeStackScreenProps<RootStackParams
             </Svg>
             <Icon name={tone === 'ok' ? 'check' : tone === 'alert' ? 'alert' : 'clock'} size={40} color={ringColor} />
           </View>
-          <View className="flex-1">
+          <View className="flex-1 min-w-0">
             <Text className="text-ink-300 text-sm">{t('queue.expectedDock')}</Text>
             {receiver.kind === 'confirmed' ? (
               <Text className="text-ink-50 text-3xl font-display mt-1">
@@ -92,7 +92,7 @@ export function QueuePage({ navigation }: NativeStackScreenProps<RootStackParams
               <Text className="text-ink-50 text-xl font-bold mt-1">{receiverLabel(receiver, t)}</Text>
             )}
             <View className="mt-2">
-              <Badge tone={tone} label={`${t('trip.receiver')} ${receiverName}`} />
+              <Badge tone={tone} lines={2} label={`${t('trip.receiver')} ${receiverName}`} />
             </View>
           </View>
         </Card>
