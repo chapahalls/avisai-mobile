@@ -87,7 +87,7 @@ export function JourneyTimeline() {
                 {/* Coluna do horário */}
                 <Text
                   style={{ fontVariant: ['tabular-nums'] }}
-                  className="w-11 text-ink-300 text-xs font-mono font-semibold pt-0.5"
+                  className="w-12 text-ink-300 text-sm font-mono font-semibold pt-0.5"
                 >
                   {item.time}
                 </Text>
@@ -104,7 +104,7 @@ export function JourneyTimeline() {
 
                 {/* Descrição do evento */}
                 <View className={`flex-1 ${isLast ? 'pb-0.5' : 'pb-3'}`}>
-                  <Text className={`text-xs font-semibold leading-4 ${labelColor[item.tone]}`}>
+                  <Text className={`text-sm font-semibold leading-5 ${labelColor[item.tone]}`}>
                     {item.label}
                   </Text>
                 </View>

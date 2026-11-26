@@ -53,7 +53,7 @@ export function DocumentList({ onOpen }: { onOpen: (d: TripDocument) => void }) 
                       className="flex-row items-center gap-3 px-4 py-4 active:bg-ink-800"
                     >
                       <View className="w-14 h-14 rounded-2xl border border-ink-700 items-center justify-center">
-                        <Text className="text-ink-300 text-xs font-mono font-bold">
+                        <Text className="text-ink-300 text-sm font-mono font-bold">
                           {isRealFile ? 'PDF' : d.kind}
                         </Text>
                       </View>

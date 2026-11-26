@@ -109,7 +109,7 @@ export function DocumentViewerPage({
         <View className="flex-row gap-3">
           <Button
             size="sm"
-            className="flex-1 min-h-12"
+            className="flex-1"
             variant={reading ? 'primary' : 'outline'}
             label={reading ? t('documents.stopReadingButton') : t('documents.readAloudButton')}
             accessibilityHint={t('documents.readAloudHint')}
@@ -118,7 +118,7 @@ export function DocumentViewerPage({
           />
           <Button
             size="sm"
-            className="flex-1 min-h-12"
+            className="flex-1"
             variant="outline"
             label={t('documents.allDocumentsShort')}
             onPress={() => navigation.goBack()}

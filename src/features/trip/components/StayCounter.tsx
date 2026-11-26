@@ -99,7 +99,7 @@ export function StayCounter() {
               />
             </Svg>
           </View>
-          <Text className="text-ink-300 text-xs font-semibold uppercase tracking-wider">
+          <Text className="text-ink-300 text-sm font-semibold uppercase tracking-wider">
             {t('stay.waiting')}
           </Text>
         </View>
@@ -123,10 +123,10 @@ export function StayCounter() {
       {/* Barra de progresso da franquia de 5 h */}
       <View className="mt-3">
         <View className="flex-row items-center justify-between mb-1.5">
-          <Text className="text-ink-300 text-xs">
+          <Text className="text-ink-300 text-sm">
             {t('stay.franchiseBarLabel', { hours: franchiseHours })}
           </Text>
-          <Text className="text-ink-300 text-xs font-semibold">
+          <Text className="text-ink-300 text-sm font-semibold">
             {t('stay.franchiseLeft', { left: franchiseLeftText })}
           </Text>
         </View>
@@ -150,7 +150,7 @@ export function StayCounter() {
       {/* Stepper de escalonamento ao CCO com os 3 canais rotulados */}
       <View className="mt-4 pt-3 border-t border-ink-700/70">
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-ink-300 text-xs font-medium">
+          <Text className="text-ink-300 text-sm font-medium">
             {ccoAcknowledged
               ? t('stay.ccoAck')
               : t('stay.ccoAttempts', { n: ccoAttempts, max: BUSINESS.maxCcoAttempts })}
@@ -174,7 +174,7 @@ export function StayCounter() {
             return (
               <View key={i} className="flex-1">
                 <View className={`h-2 rounded-full ${barColor}`} />
-                <Text className={`text-[11px] font-semibold mt-1 text-center ${textColor}`}>
+                <Text className={`text-xs font-semibold mt-1 text-center ${textColor}`}>
                   {t(labelKey)}
                 </Text>
               </View>

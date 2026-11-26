@@ -18,15 +18,20 @@ O app está aderente ao que o produto precisa: voz em primeiro lugar, letra gran
 | 5 | Com o agente falando, o nível do áudio chega a cada 160 ms e redesenhava o painel e a conversa em tela cheia, mesmo fechados. | `AvisaiPanel` e `CabinModeModal` com `memo`: só a esfera acompanha o áudio. |
 | 6 | Rodapé do documento com três botões de largura total: com o novo botão, ocupava um terço da tela. | **Ouvir** e **Documentos** lado a lado, mantendo 48 dp de altura. |
 
-## Ainda pede decisão
+## Segunda rodada (corrigido)
 
-1. **Passageiro no modo direção.** O Waze pergunta "você é passageiro?". Aqui não há essa opção: quem usa o app é o motorista. Se um ajudante usar o celular do motorista com o caminhão andando, a tela fica travada. Sugestão: manter assim.
-2. **Tela de direção no Dev Build com voz real.** No modo Agora, a esfera grande abre a conversa por voz. A leitura de documentos é do agente no backend. O prompt do backend precisa da mesma regra (lista de campos, sem chave de acesso, PDF só parado). Hoje só o agente simulado (`agentMock.ts`) segue a regra.
-3. **Textos cortados no Início em 390 dp.** O nome do motorista vira "Carl…" (o selo "AvisAI pronto" disputa a linha) e o destino vira "Mercadão Campinas, CD N…". O destino é a informação mais importante da tela. Sugestão: selo de estado em uma linha própria, ou nome só no primeiro acesso do dia; destino em até 2 linhas.
-4. **Texto pequeno (`text-xs`, 12 px) em informação útil.** Aparece no contador de espera (4×), no mapa SVG/Google (12×) e na conversa em tela cheia (4×). Na cabine, com vibração, 12 px é difícil de ler. Sugestão: mínimo `text-sm` (14 px) fora do painel Demo.
-5. **Botões `size="sm"` (40 dp de altura)** em 9 lugares. O padrão de acessibilidade é 48 dp. Sugestão: `min-h-12` no próprio `Button` quando `size="sm"`.
-6. **O tour do README (`scripts/readme-captures/tour.mjs`) toca no Mapa e no Início durante a viagem.** Com o modo direção, esses toques caem na tela travada. O roteiro precisa passar a usar os **Controles da demo** da tela de direção (ou chegar ao destino antes de navegar pelas abas).
-7. **Início com 484 linhas e 16 campos da viagem.** Funciona, mas cada mudança de posição no simulador redesenha a tela inteira. Separar cartão da viagem, atalhos e jornada em componentes, cada um com o próprio seletor.
+| # | Problema | O que mudou |
+|---|---|---|
+| 7 | Início em 390 dp cortava o nome ("Carl…") e o destino ("Mercadão Campinas, CD N…"). | O estado do AvisAI desce para uma linha própria; o nome encolhe para caber; o destino vai até 2 linhas. |
+| 8 | Texto de 12 px (ou menos) em informação útil. | Contador de espera, mapas, conversa em tela cheia, jornada, avisos, faixa de rede, selos e mensagens sobem para 14 px; o que era 10–11 px vai para 12 px. Ficam em 12 px só os rótulos em caixa alta de seção, o painel Demo e o login simulado. |
+| 9 | Botões `size="sm"` com 40 dp de altura. | `Button` garante 48 dp (`min-h-12`) em todos os tamanhos; o botão de Ajustes e o selo do AvisAI no Início também. |
+| 10 | Tour do README tocava em abas com o caminhão andando. | `scripts/readme-captures/tour.mjs` tira o Mapa antes da saída, usa os **Controles da demo** da tela de direção para chegar a 8 km e ao destino, e ganhou a tela `driving.jpg`. Telas do README regeradas. |
+| 11 | Início com 484 linhas e 16 campos da viagem num componente só. | Dividido em `pages/home/` (`HomeHeader`, `TripCard`, `HomeSections`), cada parte com o próprio seletor. Só o cartão da viagem acompanha a posição, e a distância vem arredondada: redesenha quando o número na tela muda. |
+
+## Ainda pende
+
+1. **Passageiro no modo direção.** Decisão: manter sem a opção "sou passageiro" (quem usa o app é o motorista).
+2. **Prompt do agente no backend (`rodar-backend`).** Com a voz real (Agora), a leitura de documentos é do agente no servidor. O prompt precisa da mesma regra: ler só os campos extraídos (R7), sem a chave de acesso, e com o caminhão andando dizer que o PDF abre quando parar. O app já manda a intenção `open_document`, que espera o caminhão parar.
 
 ## O que foi conferido e está bom
 

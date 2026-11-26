@@ -175,7 +175,7 @@ const AvisaiPanel = memo(function AvisaiPanel({
             </Pressable>
           </View>
 
-          <Text className="text-ink-300 text-xs mt-2">{label} · {hint}</Text>
+          <Text className="text-ink-300 text-sm mt-2">{label} · {hint}</Text>
 
           {lastError ? (
             <Pressable

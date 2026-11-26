@@ -117,10 +117,10 @@ export function HeadsUpBanner() {
           </Svg>
         </View>
         <View className="flex-1">
-          <Text numberOfLines={1} className={`text-xs font-bold ${titleStyles[banner.tone]}`}>
+          <Text numberOfLines={1} className={`text-sm font-bold ${titleStyles[banner.tone]}`}>
             {banner.title}
           </Text>
-          <Text numberOfLines={2} className="text-ink-50 text-xs font-medium mt-0.5">
+          <Text numberOfLines={2} className="text-ink-50 text-sm font-medium mt-0.5">
             {banner.message}
           </Text>
         </View>

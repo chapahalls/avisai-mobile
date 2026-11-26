@@ -119,12 +119,12 @@ export const CabinModeModal = memo(function CabinModeModal({
             <VoiceStateIndicator />
             <View className="flex-row items-center gap-1.5 bg-ink-800 rounded-full px-2.5 py-1">
               <Icon name="speaker" size={13} color={colors.ink[300]} />
-              <Text className="text-ink-300 text-xs font-semibold">
+              <Text className="text-ink-300 text-sm font-semibold">
                 {t(`voice.audioRoute.${audioRoute}`)}
               </Text>
             </View>
             {muted ? (
-              <Text className="text-wait-500 text-xs font-bold">{t('voice.muted')}</Text>
+              <Text className="text-wait-500 text-sm font-bold">{t('voice.muted')}</Text>
             ) : null}
           </View>
 
@@ -135,7 +135,7 @@ export const CabinModeModal = memo(function CabinModeModal({
               }`}
             >
               <Icon name="clock" size={16} color={stayOver ? colors.wait[500] : colors.brand[300]} />
-              <Text className="text-ink-300 text-xs font-bold uppercase">{t('stay.waiting')}</Text>
+              <Text className="text-ink-300 text-sm font-bold uppercase">{t('stay.waiting')}</Text>
               <Text
                 style={{ fontVariant: ['tabular-nums'] }}
                 className={`text-base font-display ${stayOver ? 'text-wait-500' : 'text-ink-50'}`}
@@ -207,7 +207,7 @@ export const CabinModeModal = memo(function CabinModeModal({
               <Text numberOfLines={1} className="text-ink-50 text-base font-semibold">
                 {micLabel}
               </Text>
-              <Text numberOfLines={1} className="text-ink-300 text-xs mt-0.5">
+              <Text numberOfLines={1} className="text-ink-300 text-sm mt-0.5">
                 {t('voice.cabinMode.voiceOnlyWhileMoving')}
               </Text>
             </View>

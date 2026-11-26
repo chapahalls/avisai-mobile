@@ -62,7 +62,7 @@ export function DrivingLock() {
             <Text className="text-ink-50 text-3xl font-display">
               {speedKmh !== null ? t('driving.speed', { kmh: speedKmh }) : t('driving.speedUnknown')}
             </Text>
-            <Text className="text-ink-300 text-xs">
+            <Text className="text-ink-300 text-sm">
               {source === 'gps' ? t('driving.sourceGps') : t('driving.sourceSimulator')}
             </Text>
           </View>

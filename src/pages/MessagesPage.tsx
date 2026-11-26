@@ -215,7 +215,7 @@ function MessageCard({ row, t }: { row: OutboxRow; t: TFunction }) {
         ))}
       </View>
       {row.idempotency_key ? (
-        <Text className="text-ink-300 text-[11px] font-mono mt-2">
+        <Text className="text-ink-300 text-xs font-mono mt-2">
           {t('outbox.idempotencyPrefix')}: {shortKey(row.idempotency_key)}
         </Text>
       ) : null}
