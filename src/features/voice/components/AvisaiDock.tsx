@@ -7,6 +7,7 @@ import { hapticTap } from '../../../utils/haptics';
 import { getQuickUtterances } from '../api/agentMock';
 import { useAvisaiDock } from '../hooks/useAvisaiDock';
 import { useMicStatus } from '../hooks/useMicStatus';
+import { useTalkToAvisai } from '../hooks/useTalkToAvisai';
 import { useVoice } from '../hooks/useVoice';
 import { AuroraVoiceOrb } from './AuroraVoiceOrb';
 import { CabinModeModal } from './CabinModeModal';
@@ -53,7 +54,8 @@ export function AvisaiDock({
   const audioSpeaker = useVoice((s) => s.audioSpeaker);
   const transcript = useVoice((s) => s.transcript);
   const liveTranscript = useVoice((s) => s.liveTranscript);
-  const { panelOpen, chatOpen, openPanel, closePanel, closeChat } = useAvisaiDock();
+  const { panelOpen, chatOpen, closePanel, closeChat } = useAvisaiDock();
+  const talkToAvisai = useTalkToAvisai();
 
   const lastAgent = [...transcript].reverse().find((l) => l.who === 'agent');
   const bubbleText = liveTranscript?.who === 'agent' ? liveTranscript.text : lastAgent?.text;
@@ -86,7 +88,7 @@ export function AvisaiDock({
           audioSpeaker={audioSpeaker}
           bubbleText={bubbleVisible && bubbleText ? bubbleText : null}
           onDismissBubble={() => setBubbleVisible(false)}
-          onOpen={openPanel}
+          onOpen={talkToAvisai}
         />
       ) : null}
 

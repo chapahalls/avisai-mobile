@@ -59,6 +59,8 @@ interface VoiceStore {
   backendLlmMode: string | null;
   /** Modo direção (chega da viagem pelo agentBus): o agente só lê, o PDF espera o caminhão parar. */
   driving: boolean;
+  /** Voz real (LiveKit, mãos-livres): o motorista fala de verdade, sem Painel por cima da tela. */
+  isDirectVoice: () => boolean;
   clearError: () => void;
   connectLiveKitNow: () => Promise<void>;
   startOfflineRecording: () => Promise<void>;
@@ -243,6 +245,8 @@ export const useVoice = create<VoiceStore>((set, get) => {
     liveTranscript: null,
     backendLlmMode: null,
     driving: false,
+
+    isDirectVoice: () => usesDirectVoice(),
 
     clearError: () => set({ lastError: null }),
 

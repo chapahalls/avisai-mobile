@@ -45,7 +45,8 @@ export function DocumentViewerPage({
     // Conversa ao vivo: o próprio agente lê (pedido por voz), sem duas vozes ao mesmo tempo.
     if (voice.sessionConnected) {
       voice.utter(t('documents.readAloudRequest', { title: doc.title }));
-      openPanel();
+      // Voz real (LiveKit): sem Painel com frases prontas por cima da tela.
+      if (!voice.isDirectVoice()) openPanel();
       return;
     }
     readAloudLocal(doc.id, buildDocumentReading(doc));
@@ -59,7 +60,8 @@ export function DocumentViewerPage({
     if (voice.state === 'idle' && !voice.sessionConnected && !voice.offlineRecordingActive) {
       voice.listen();
     }
-    openPanel();
+    // Voz real (LiveKit): sem Painel com frases prontas por cima da tela.
+    if (!voice.isDirectVoice()) openPanel();
   };
 
   const handleOpenFile = async () => {

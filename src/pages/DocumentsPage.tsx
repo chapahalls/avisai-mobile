@@ -9,7 +9,7 @@ import { Screen } from '../components/Screen';
 import { ScreenTitle } from '../components/ScreenTitle';
 import { DocumentList, useDocuments } from '../features/documents';
 import { useTrip } from '../features/trip';
-import { useAvisaiDock, useVoice } from '../features/voice';
+import { useTalkToAvisai, useVoice } from '../features/voice';
 import { useApiConfig } from '../services/api';
 import { hapticTap } from '../utils/haptics';
 
@@ -22,7 +22,7 @@ export function DocumentsPage() {
   const apiMode = useApiConfig((s) => s.mode);
   const rotaId = useApiConfig((s) => s.rotaId);
   const activeRoute = useTrip((s) => s.activeRoute);
-  const openPanel = useAvisaiDock((s) => s.openPanel);
+  const talkToAvisai = useTalkToAvisai();
 
   useEffect(() => {
     if (apiMode === 'http') {
@@ -33,7 +33,7 @@ export function DocumentsPage() {
   const askAvisai = () => {
     hapticTap();
     useVoice.getState().setContext('free');
-    openPanel();
+    talkToAvisai();
   };
 
   return (

@@ -9,7 +9,7 @@ import { DOCK_CLEARANCE, Screen } from '../components/Screen';
 import { ScreenTitle } from '../components/ScreenTitle';
 import { retryFailed, useOutboxStore, type OutboxRow, type OutboxStatus } from '../features/outbox';
 import { useTrip } from '../features/trip';
-import { useAvisaiDock } from '../features/voice';
+import { useTalkToAvisai } from '../features/voice';
 import { colors } from '../lib/theme';
 import { useNetwork } from '../services/network';
 import { hapticTap } from '../utils/haptics';
@@ -57,7 +57,7 @@ export function MessagesPage() {
   const phase = useTrip((s) => s.phase);
   const centralRequest = useTrip((s) => s.centralRequest);
   const sendDriverMessage = useTrip((s) => s.sendDriverMessage);
-  const openPanel = useAvisaiDock((s) => s.openPanel);
+  const talkToAvisai = useTalkToAvisai();
   const [draft, setDraft] = useState('');
 
   const count = (s: OutboxStatus) => rows.filter((r) => r.status === s).length;
@@ -147,7 +147,7 @@ export function MessagesPage() {
           <Pressable
             onPress={() => {
               hapticTap();
-              openPanel();
+              talkToAvisai();
             }}
             accessibilityRole="button"
             accessibilityLabel={t('messages.dictate')}

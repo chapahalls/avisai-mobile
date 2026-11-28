@@ -36,8 +36,10 @@ let busy = false;
 /** Abre a conversa para o motorista responder (o agente sabe a pendência pelo estado da rota). */
 function openConversation(): void {
   if (AppState.currentState !== 'active') return;
-  useAvisaiDock.getState().openPanel();
-  useVoice.getState().listen();
+  const voice = useVoice.getState();
+  // Voz real (LiveKit): só liga o microfone, sem Painel com frases prontas por cima da tela.
+  if (!voice.isDirectVoice()) useAvisaiDock.getState().openPanel();
+  voice.listen();
 }
 
 function finish(notice: DriverNotice): void {

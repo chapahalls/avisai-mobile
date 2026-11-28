@@ -157,8 +157,10 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
     wakeTimer = setTimeout(() => {
       wakeTimer = null;
       waking = false;
-      useAvisaiDock.getState().openPanel();
-      useVoice.getState().listen();
+      const voice = useVoice.getState();
+      // Voz real (LiveKit): só liga o microfone, sem Painel com frases prontas por cima da tela.
+      if (!voice.isDirectVoice()) useAvisaiDock.getState().openPanel();
+      voice.listen();
       sync();
     }, WAKE_WORD.handoffMs);
   };

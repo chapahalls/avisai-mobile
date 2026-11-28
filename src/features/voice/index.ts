@@ -4,6 +4,7 @@ export { CabinModeModal } from './components/CabinModeModal';
 export { AvisaiDock } from './components/AvisaiDock';
 export { useAvisaiDock } from './hooks/useAvisaiDock';
 export { useMicStatus } from './hooks/useMicStatus';
+export { useTalkToAvisai } from './hooks/useTalkToAvisai';
 export { VoiceStateIndicator } from './components/VoiceStateIndicator';
 export { agentRespond, QUICK_UTTERANCES, getQuickUtterances } from './api/agentMock';
 export type {

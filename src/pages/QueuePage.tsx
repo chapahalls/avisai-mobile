@@ -10,7 +10,7 @@ import { Card } from '../components/Card';
 import { Icon } from '../components/Icon';
 import { NetworkBanner } from '../components/NetworkBanner';
 import { StayCounter, useStaySummary, useTrip } from '../features/trip';
-import { useAvisaiDock } from '../features/voice';
+import { useTalkToAvisai } from '../features/voice';
 import { colors } from '../lib/theme';
 import { hapticTap } from '../utils/haptics';
 import { receiverLabel, receiverTone } from './tripUi';
@@ -37,7 +37,7 @@ export function QueuePage({ navigation }: NativeStackScreenProps<RootStackParams
     })),
   );
   const stay = useStaySummary();
-  const openPanel = useAvisaiDock((s) => s.openPanel);
+  const talkToAvisai = useTalkToAvisai();
 
   const { width } = useWindowDimensions();
   // Anel proporcional à tela: num celular pequeno, 132 dp espremia o anel e cortava o desenho.
@@ -125,7 +125,7 @@ export function QueuePage({ navigation }: NativeStackScreenProps<RootStackParams
           label={t('map.talkToAvisai')}
           onPress={() => {
             hapticTap();
-            openPanel();
+            talkToAvisai();
           }}
         />
         {canArrive || canUnload ? (

@@ -4,7 +4,7 @@ import { Icon } from '../../components/Icon';
 import { RodarMark } from '../../components/RodarLogo';
 import { useSession } from '../../features/auth';
 import { useTrip } from '../../features/trip';
-import { useAvisaiDock, useVoice } from '../../features/voice';
+import { useTalkToAvisai, useVoice } from '../../features/voice';
 import { colors } from '../../lib/theme';
 import { useWakeWord } from '../../services/wakeWord';
 import { hapticTap } from '../../utils/haptics';
@@ -28,7 +28,7 @@ export function HomeHeader({ onOpenSettings }: { onOpenSettings: () => void }) {
   const wakeListening = useWakeWord((s) => s.status === 'listening');
   const session = useSession((s) => s.session);
   const routeDriverName = useTrip((s) => s.activeRoute.driverName);
-  const openPanel = useAvisaiDock((s) => s.openPanel);
+  const talkToAvisai = useTalkToAvisai();
 
   const driverName = session?.name || routeDriverName || t('auth.demoDriverName');
   const firstName = driverName.trim().split(/\s+/)[0] || driverName;
@@ -62,7 +62,7 @@ export function HomeHeader({ onOpenSettings }: { onOpenSettings: () => void }) {
         <Pressable
           onPress={() => {
             hapticTap();
-            openPanel();
+            talkToAvisai();
           }}
           accessibilityRole="button"
           accessibilityHint={t('voice.dock.openHint')}
