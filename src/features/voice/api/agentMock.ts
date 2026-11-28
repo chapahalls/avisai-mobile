@@ -11,7 +11,7 @@ import {
 
 /**
  * Agente mock bilíngue (pt-BR e en): decide a resposta a partir do contexto e do que já foi coletado.
- * Na versão real, este papel é do LLM no Conversational AI Engine da Agora, com o mesmo prompt.
+ * Na versão real, este papel é do LLM dos LiveKit Agents no backend, com o mesmo prompt.
  */
 
 export interface AgentTurn {

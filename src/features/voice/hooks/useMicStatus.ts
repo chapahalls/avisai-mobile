@@ -3,41 +3,41 @@ import { useVoice } from './useVoice';
 
 /**
  * Rótulo e dica do botão de voz, iguais em todo lugar (esfera flutuante, painel, tela cheia).
- * Toque com o agente falando = interromper (barge-in); na Agora, toque alterna o mudo.
+ * Toque com o agente falando = interromper (barge-in); no LiveKit, toque alterna o mudo.
  */
 export function useMicStatus() {
   const { t } = useTranslation();
   const state = useVoice((s) => s.state);
   const preferredMode = useVoice((s) => s.preferredMode);
   const activeMode = useVoice((s) => s.activeMode);
-  const agoraStage = useVoice((s) => s.agoraStage);
+  const liveKitStage = useVoice((s) => s.liveKitStage);
   const sessionConnected = useVoice((s) => s.sessionConnected);
   const offlineRecordingActive = useVoice((s) => s.offlineRecordingActive);
   const muted = useVoice((s) => s.muted);
 
   const isListening = state === 'listening' && !muted;
   const isSpeaking = state === 'speaking';
-  const isAgoraConnected = activeMode === 'agora' && sessionConnected;
-  const isAgoraConnecting = preferredMode === 'agora' && agoraStage === 'connecting';
-  const isAgoraWaitingAgent = preferredMode === 'agora' && agoraStage === 'waiting_agent';
-  const isAgoraNeedsConnect =
-    preferredMode === 'agora' &&
+  const isLiveKitConnected = activeMode === 'livekit' && sessionConnected;
+  const isLiveKitConnecting = preferredMode === 'livekit' && liveKitStage === 'connecting';
+  const isLiveKitWaitingAgent = preferredMode === 'livekit' && liveKitStage === 'waiting_agent';
+  const isLiveKitNeedsConnect =
+    preferredMode === 'livekit' &&
     !sessionConnected &&
     !offlineRecordingActive &&
-    !isAgoraConnecting &&
-    !isAgoraWaitingAgent;
+    !isLiveKitConnecting &&
+    !isLiveKitWaitingAgent;
   /** Modo de voz direta: o motorista fala de verdade, sem falas simuladas. */
-  const directVoice = !offlineRecordingActive && (preferredMode === 'agora' || activeMode === 'agora');
+  const directVoice = !offlineRecordingActive && (preferredMode === 'livekit' || activeMode === 'livekit');
 
   const label = isSpeaking
     ? t('voice.interrupt')
-    : isAgoraConnecting
-      ? t('voice.agoraConnecting')
-      : isAgoraWaitingAgent
-        ? t('voice.agoraWaitingAgent')
-        : isAgoraNeedsConnect
-          ? t('voice.connectAgora')
-          : isAgoraConnected && muted
+    : isLiveKitConnecting
+      ? t('voice.liveKitConnecting')
+      : isLiveKitWaitingAgent
+        ? t('voice.liveKitWaitingAgent')
+        : isLiveKitNeedsConnect
+          ? t('voice.connectLiveKit')
+          : isLiveKitConnected && muted
             ? t('voice.muted')
             : isListening
               ? t('voice.listening')
@@ -45,16 +45,16 @@ export function useMicStatus() {
 
   const hint = isSpeaking
     ? t('voice.bargeInHint')
-    : isAgoraConnecting
-      ? t('voice.agoraConnectingHint')
-      : isAgoraWaitingAgent
-        ? t('voice.agoraWaitingAgentHint')
-        : isAgoraNeedsConnect
-          ? t('voice.connectAgoraHint')
-          : isAgoraConnected
+    : isLiveKitConnecting
+      ? t('voice.liveKitConnectingHint')
+      : isLiveKitWaitingAgent
+        ? t('voice.liveKitWaitingAgentHint')
+        : isLiveKitNeedsConnect
+          ? t('voice.connectLiveKitHint')
+          : isLiveKitConnected
             ? muted
               ? t('voice.unmuteHint')
-              : t('voice.agoraLiveHint')
+              : t('voice.liveKitLiveHint')
             : isListening
               ? t('voice.selectQuickHint')
               : t('voice.tapToSpeakHint');
@@ -65,8 +65,8 @@ export function useMicStatus() {
     isListening,
     isSpeaking,
     isActive: isListening || isSpeaking,
-    isBusy: isAgoraConnecting || isAgoraWaitingAgent,
-    isAgoraConnected,
+    isBusy: isLiveKitConnecting || isLiveKitWaitingAgent,
+    isLiveKitConnected,
     directVoice,
   };
 }

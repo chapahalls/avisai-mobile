@@ -397,7 +397,7 @@ const SCREENS: [AppScreen, RegExp][] = [
 
 /**
  * Modo simulado: a fala digitada/tocada nos chips vira a mesma ação que o backend mandaria.
- * Na voz real (Agora) o app não lê transcrição; quem decide é o agente no servidor.
+ * Na voz real (LiveKit) o app não lê transcrição; quem decide é o agente no servidor.
  */
 export function tryExecuteVoiceCommand(text: string): boolean {
   const norm = normalize(text || '').trim();

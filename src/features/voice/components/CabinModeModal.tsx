@@ -38,7 +38,7 @@ export const CabinModeModal = memo(function CabinModeModal({
   const transcript = useVoice((s) => s.transcript);
   const liveTranscript = useVoice((s) => s.liveTranscript);
   const preferredMode = useVoice((s) => s.preferredMode);
-  const agoraStage = useVoice((s) => s.agoraStage);
+  const liveKitStage = useVoice((s) => s.liveKitStage);
   const sessionConnected = useVoice((s) => s.sessionConnected);
   const offlineRecordingActive = useVoice((s) => s.offlineRecordingActive);
   const muted = useVoice((s) => s.muted);
@@ -61,12 +61,12 @@ export const CabinModeModal = memo(function CabinModeModal({
   const modeLabel =
     offlineRecordingActive
       ? t('voice.modePill.offlineRecording')
-      : preferredMode === 'agora'
-        ? agoraStage === 'live'
-          ? t('voice.modePill.agoraLive')
-          : agoraStage === 'waiting_agent' || agoraStage === 'connecting'
-            ? t('voice.modePill.agoraWaitingAgent')
-            : t('voice.modePill.agoraDisconnected')
+      : preferredMode === 'livekit'
+        ? liveKitStage === 'live'
+          ? t('voice.modePill.liveKitLive')
+          : liveKitStage === 'waiting_agent' || liveKitStage === 'connecting'
+            ? t('voice.modePill.liveKitWaitingAgent')
+            : t('voice.modePill.liveKitDisconnected')
         : t('voice.modePill.mock');
 
   return (

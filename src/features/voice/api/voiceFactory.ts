@@ -1,6 +1,6 @@
 import type { VoiceMode } from '../../../lib/config';
 import { useApiConfig } from '../../../services/api';
-import { AgoraVoiceSession, isAgoraNativeAvailable } from './agoraVoiceSession';
+import { isLiveKitNativeAvailable, LiveKitVoiceSession } from './livekitVoiceSession';
 import { MockVoiceSession } from './mockVoiceSession';
 import type { VoiceSession, VoiceSessionCallbacks } from './voiceSession';
 
@@ -11,58 +11,59 @@ export interface VoiceFactoryResult {
   errorMessage?: string | null;
 }
 
-export function getAgoraFallbackReason(): string | null {
-  if (!isAgoraNativeAvailable()) return 'agora_native_unavailable';
-  if (useApiConfig.getState().mode !== 'http') return 'agora_requires_http_api';
+export function getLiveKitFallbackReason(): string | null {
+  if (!isLiveKitNativeAvailable()) return 'livekit_native_unavailable';
+  if (useApiConfig.getState().mode !== 'http') return 'livekit_requires_http_api';
   return null;
 }
 
 /**
- * Instancia `AgoraVoiceSession` quando `preferredMode === 'agora'`, o módulo nativo está disponível
- * e a API está configurada em modo `http`. Se falhar, propaga o erro real sem cair silenciosamente em mock.
+ * Instancia `LiveKitVoiceSession` quando `preferredMode === 'livekit'`, o módulo nativo está
+ * disponível e a API está configurada em modo `http`. Se falhar, propaga o erro real sem cair
+ * silenciosamente em mock.
  */
 export async function createAndStartVoiceSession(
   preferredMode: VoiceMode,
   channel: string,
   callbacks: VoiceSessionCallbacks,
 ): Promise<VoiceFactoryResult> {
-  if (preferredMode === 'agora') {
-    const precheck = getAgoraFallbackReason();
+  if (preferredMode === 'livekit') {
+    const precheck = getLiveKitFallbackReason();
     if (precheck) {
       const errMsg =
-        precheck === 'agora_requires_http_api'
-          ? 'Agora requer API em modo Backend (HTTP). Ative o Backend no painel Demo.'
-          : 'SDK nativo react-native-agora indisponível neste build.';
+        precheck === 'livekit_requires_http_api'
+          ? 'LiveKit requer API em modo Backend (HTTP). Ative o Backend no painel Demo.'
+          : 'SDK nativo @livekit/react-native indisponível neste build.';
       callbacks.onModeFallback?.(precheck);
-      callbacks.onAgoraStage?.('error', errMsg);
+      callbacks.onLiveKitStage?.('error', errMsg);
       callbacks.onError(errMsg);
       return {
-        session: new AgoraVoiceSession(),
-        activeMode: 'agora',
+        session: new LiveKitVoiceSession(),
+        activeMode: 'livekit',
         fallbackReason: precheck,
         errorMessage: errMsg,
       };
     }
 
-    const agoraSession = new AgoraVoiceSession();
+    const livekitSession = new LiveKitVoiceSession();
     try {
-      await agoraSession.start(channel, callbacks);
+      await livekitSession.start(channel, callbacks);
       return {
-        session: agoraSession,
-        activeMode: 'agora',
+        session: livekitSession,
+        activeMode: 'livekit',
         fallbackReason: null,
         errorMessage: null,
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      const fallbackReason = errorMessage.startsWith('agora_native_unavailable')
-        ? 'agora_native_unavailable'
-        : errorMessage.startsWith('agora_permission_denied')
-          ? 'agora_permission_denied'
+      const fallbackReason = errorMessage.startsWith('livekit_native_unavailable')
+        ? 'livekit_native_unavailable'
+        : errorMessage.startsWith('livekit_permission_denied')
+          ? 'livekit_permission_denied'
           : null;
       return {
-        session: agoraSession,
-        activeMode: 'agora',
+        session: livekitSession,
+        activeMode: 'livekit',
         fallbackReason,
         errorMessage,
       };

@@ -13,11 +13,11 @@ import { agentRespond } from '../api/agentMock';
 import { useAvisaiDock } from './useAvisaiDock';
 import { MockVoiceSession } from '../api/mockVoiceSession';
 import { OfflineVoiceRecorder } from '../api/offlineVoiceRecorder';
-import { createAndStartVoiceSession, getAgoraFallbackReason } from '../api/voiceFactory';
+import { createAndStartVoiceSession, getLiveKitFallbackReason } from '../api/voiceFactory';
 import type {
-  AgoraStage,
   AudioRouteType,
   AudioSpeaker,
+  LiveKitStage,
   VoiceSession,
   VoiceSessionCallbacks,
 } from '../api/voiceSession';
@@ -33,34 +33,34 @@ interface VoiceStore {
   preferredMode: VoiceMode;
   activeMode: VoiceMode;
   fallbackReason: string | null;
-  agoraStage: AgoraStage;
-  agoraChannel: string | null;
+  liveKitStage: LiveKitStage;
+  liveKitRoom: string | null;
   lastError: string | null;
-  /** Em modo `agora`, indica se a sessão RTC (/sessions) está conectada. */
+  /** Em modo `livekit`, indica se a sessão RTC (/sessions) está conectada. */
   sessionConnected: boolean;
   /**
    * Sem rede (offline-first): o app grava cada fala em áudio e põe na fila; o servidor transcreve e
    * o agente processa quando a rede volta. Nenhum modelo de voz roda no aparelho.
    */
   offlineRecordingActive: boolean;
-  /** Em modo `agora`, indica se o microfone local está em mudo. */
+  /** Em modo `livekit`, indica se o microfone local está em mudo. */
   muted: boolean;
   /** Nível de volume normalizado (0..1) do microfone ou agente. */
   audioLevel: number;
   /** Quem está emitindo áudio no momento (motorista, agente ou silêncio). */
   audioSpeaker: AudioSpeaker;
-  /** Rota de áudio ativa reportada pela Agora (viva-voz, bluetooth ou fone). */
+  /** Rota de áudio ativa (viva-voz, bluetooth ou fone); hoje fixa em alto-falante no modo LiveKit. */
   audioRoute: AudioRouteType;
   /** Banner visual temporário (1800 ms) indicando barge-in acionado. */
   bargeInBanner: boolean;
-  /** Legenda parcial em tempo real (stream de chunks Agora ConvoAI) antes da frase finalizar. */
+  /** Legenda parcial em tempo real (stream do agente LiveKit) antes da frase finalizar. */
   liveTranscript: { who: 'driver' | 'agent'; text: string } | null;
   /** Modo LLM reportado pela sessão ativa no backend (`custom`, `realtime`, `mllm`, etc.). */
   backendLlmMode: string | null;
   /** Modo direção (chega da viagem pelo agentBus): o agente só lê, o PDF espera o caminhão parar. */
   driving: boolean;
   clearError: () => void;
-  connectAgoraNow: () => Promise<void>;
+  connectLiveKitNow: () => Promise<void>;
   startOfflineRecording: () => Promise<void>;
   listen: () => void;
   utter: (text: string) => void;
@@ -110,7 +110,7 @@ function clearBargeInTimer() {
 
 const initialMockSession = new MockVoiceSession();
 let activeSession: VoiceSession = initialMockSession;
-let startingAgora = false;
+let startingLiveKit = false;
 let offlineRecorder: OfflineVoiceRecorder | null = null;
 /** A primeira fala guardada explica o que acontece; as seguintes só confirmam. */
 let offlineAckedOnce = false;
@@ -121,7 +121,7 @@ let voiceSessionGeneration = 0;
 export const useVoice = create<VoiceStore>((set, get) => {
   const usesDirectVoice = () => {
     const { activeMode, preferredMode, offlineRecordingActive } = get();
-    return !offlineRecordingActive && (activeMode === 'agora' || preferredMode === 'agora');
+    return !offlineRecordingActive && (activeMode === 'livekit' || preferredMode === 'livekit');
   };
 
   const resumeOfflineListening = () => {
@@ -184,21 +184,21 @@ export const useVoice = create<VoiceStore>((set, get) => {
     onError: (msg) => {
       set((s) => ({
         lastError: msg,
-        agoraStage: 'error',
+        liveKitStage: 'error',
         audioLevel: 0,
         audioSpeaker: 'none',
         state: s.state === 'speaking' || s.state === 'thinking' ? 'idle' : s.state,
       }));
     },
-    onAgoraStage: (stage, detail) => {
+    onLiveKitStage: (stage, detail) => {
       set((s) => ({
-        agoraStage: stage,
-        agoraChannel:
+        liveKitStage: stage,
+        liveKitRoom:
           stage === 'disconnected'
             ? null
             : detail && stage !== 'error'
               ? detail
-              : s.agoraChannel,
+              : s.liveKitRoom,
         ...(stage === 'error' && detail ? { lastError: detail } : {}),
         ...(stage === 'live' || stage === 'waiting_agent' ? { lastError: null } : {}),
         ...(stage === 'disconnected'
@@ -228,10 +228,10 @@ export const useVoice = create<VoiceStore>((set, get) => {
     transcript: [],
     lastLatencyMs: null,
     preferredMode: ENV.voiceMode,
-    activeMode: ENV.voiceMode === 'agora' ? 'agora' : 'mock',
-    fallbackReason: ENV.voiceMode === 'agora' ? getAgoraFallbackReason() : null,
-    agoraStage: 'disconnected',
-    agoraChannel: null,
+    activeMode: ENV.voiceMode === 'livekit' ? 'livekit' : 'mock',
+    fallbackReason: ENV.voiceMode === 'livekit' ? getLiveKitFallbackReason() : null,
+    liveKitStage: 'disconnected',
+    liveKitRoom: null,
     lastError: null,
     sessionConnected: false,
     offlineRecordingActive: false,
@@ -254,8 +254,8 @@ export const useVoice = create<VoiceStore>((set, get) => {
       }));
     },
 
-    connectAgoraNow: async () => {
-      if (startingAgora) return;
+    connectLiveKitNow: async () => {
+      if (startingLiveKit) return;
       voiceSessionGeneration += 1;
       if (offlineRecorder) {
         const localSession = offlineRecorder;
@@ -264,23 +264,23 @@ export const useVoice = create<VoiceStore>((set, get) => {
         await localSession.stop().catch(() => undefined);
         set({ offlineRecordingActive: false, muted: false });
       }
-      setSetting('voice_mode', 'agora');
+      setSetting('voice_mode', 'livekit');
       const apiState = useApiConfig.getState();
       if (apiState.mode !== 'http' && Boolean(apiState.baseUrl?.trim())) {
         apiState.setMode('http');
       }
 
-      const precheck = getAgoraFallbackReason();
+      const precheck = getLiveKitFallbackReason();
       if (precheck) {
         const errMsg =
-          precheck === 'agora_requires_http_api'
-            ? 'Agora requer API em modo Backend (HTTP). Ative o Backend no painel Demo.'
-            : 'SDK nativo react-native-agora indisponível neste build.';
+          precheck === 'livekit_requires_http_api'
+            ? 'LiveKit requer API em modo Backend (HTTP). Ative o Backend no painel Demo.'
+            : 'SDK nativo @livekit/react-native indisponível neste build.';
         set({
-          preferredMode: 'agora',
-          activeMode: 'agora',
+          preferredMode: 'livekit',
+          activeMode: 'livekit',
           fallbackReason: precheck,
-          agoraStage: 'error',
+          liveKitStage: 'error',
           lastError: errMsg,
           sessionConnected: false,
           muted: false,
@@ -289,7 +289,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
         return;
       }
 
-      startingAgora = true;
+      startingLiveKit = true;
       clearThinkTimer();
       const prevSession = activeSession;
       if (prevSession !== initialMockSession) {
@@ -297,34 +297,34 @@ export const useVoice = create<VoiceStore>((set, get) => {
       }
 
       set({
-        preferredMode: 'agora',
-        activeMode: 'agora',
+        preferredMode: 'livekit',
+        activeMode: 'livekit',
         state: 'thinking',
         fallbackReason: null,
         lastError: null,
-        agoraStage: 'connecting',
+        liveKitStage: 'connecting',
       });
 
       try {
         const res = await createAndStartVoiceSession(
-          'agora',
-          `avisai-rota-${useApiConfig.getState().rotaId}`,
+          'livekit',
+          `rodar-rota-${useApiConfig.getState().rotaId}`,
           callbacks,
         );
         if (res.errorMessage) {
           set({
-            activeMode: 'agora',
+            activeMode: 'livekit',
             fallbackReason: res.fallbackReason,
             sessionConnected: false,
             muted: false,
-            agoraStage: 'error',
+            liveKitStage: 'error',
             lastError: res.errorMessage,
             state: 'idle',
           });
         } else {
           activeSession = res.session;
           set({
-            activeMode: 'agora',
+            activeMode: 'livekit',
             fallbackReason: null,
             sessionConnected: true,
             muted: false,
@@ -332,7 +332,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
           });
         }
       } finally {
-        startingAgora = false;
+        startingLiveKit = false;
       }
       if (useNetwork.getState().quality() === 'offline' && !get().sessionConnected) {
         void get().startOfflineRecording();
@@ -388,8 +388,8 @@ export const useVoice = create<VoiceStore>((set, get) => {
           sessionConnected: false,
           muted: false,
           state: 'listening',
-          agoraStage: 'disconnected',
-          agoraChannel: null,
+          liveKitStage: 'disconnected',
+          liveKitRoom: null,
           fallbackReason: null,
           lastError: null,
         });
@@ -399,7 +399,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
         offlineRecorder = null;
         set({
           offlineRecordingActive: false,
-          activeMode: 'agora',
+          activeMode: 'livekit',
           sessionConnected: false,
           state: 'idle',
           lastError: error instanceof Error ? error.message : String(error),
@@ -430,18 +430,18 @@ export const useVoice = create<VoiceStore>((set, get) => {
         }
       }
 
-      // Modo Agora: primeiro toque na esfera do AvisAI inicia a sessão real (POST /sessions + joinChannel)
-      if (preferredMode === 'agora' && !sessionConnected) {
+      // Modo LiveKit: primeiro toque na esfera do AvisAI inicia a sessão real (POST /sessions + room.connect)
+      if (preferredMode === 'livekit' && !sessionConnected) {
         if (useNetwork.getState().quality() === 'offline') {
           void get().startOfflineRecording();
           return;
         }
-        void get().connectAgoraNow();
+        void get().connectLiveKitNow();
         return;
       }
 
-      // Sessão Agora já conectada: toque durante fala do agente = barge-in; caso contrário alterna mudo
-      if (activeMode === 'agora' && sessionConnected) {
+      // Sessão LiveKit já conectada: toque durante fala do agente = barge-in; caso contrário alterna mudo
+      if (activeMode === 'livekit' && sessionConnected) {
         if (current === 'speaking') {
           if (get().muted) {
             activeSession.setMuted?.(false);
@@ -552,7 +552,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
         return;
       }
       if (
-        get().preferredMode === 'agora' &&
+        get().preferredMode === 'livekit' &&
         !get().offlineRecordingActive &&
         activeSession === initialMockSession
       ) {
@@ -584,8 +584,8 @@ export const useVoice = create<VoiceStore>((set, get) => {
         offlineRecordingActive: false,
         muted: false,
         state: 'idle',
-        agoraStage: 'disconnected',
-        agoraChannel: null,
+        liveKitStage: 'disconnected',
+        liveKitRoom: null,
         audioLevel: 0,
         audioSpeaker: 'none',
         bargeInBanner: false,
@@ -619,8 +619,8 @@ export const useVoice = create<VoiceStore>((set, get) => {
         sessionConnected: false,
         offlineRecordingActive: false,
         muted: false,
-        agoraStage: 'disconnected',
-        agoraChannel: null,
+        liveKitStage: 'disconnected',
+        liveKitRoom: null,
         lastError: null,
         audioLevel: 0,
         audioSpeaker: 'none',
@@ -647,14 +647,14 @@ export const useVoice = create<VoiceStore>((set, get) => {
       resumeOfflineAfterReply = false;
       await localSession?.stop();
 
-      if (mode === 'agora') {
-        const reason = getAgoraFallbackReason();
+      if (mode === 'livekit') {
+        const reason = getLiveKitFallbackReason();
         set({
-          preferredMode: 'agora',
-          activeMode: 'agora',
+          preferredMode: 'livekit',
+          activeMode: 'livekit',
           fallbackReason: reason,
-          agoraStage: 'disconnected',
-          agoraChannel: null,
+          liveKitStage: 'disconnected',
+          liveKitRoom: null,
           lastError: null,
           sessionConnected: false,
           offlineRecordingActive: false,
@@ -674,8 +674,8 @@ export const useVoice = create<VoiceStore>((set, get) => {
         preferredMode: 'mock',
         activeMode: 'mock',
         fallbackReason: null,
-        agoraStage: 'disconnected',
-        agoraChannel: null,
+        liveKitStage: 'disconnected',
+        liveKitRoom: null,
         lastError: null,
         sessionConnected: false,
         offlineRecordingActive: false,
@@ -693,23 +693,24 @@ export const useVoice = create<VoiceStore>((set, get) => {
 
 export function loadPersistedVoiceMode(): void {
   const saved = getSetting('voice_mode');
-  if (saved === 'agora' || saved === 'mock') {
-    void useVoice.getState().setVoiceMode(saved);
+  // `agora` é o nome legado (antes da migração para LiveKit); trata como `livekit`.
+  if (saved === 'livekit' || saved === 'agora' || saved === 'mock') {
+    void useVoice.getState().setVoiceMode(saved === 'agora' ? 'livekit' : saved);
   }
 }
 
 /** Liga o agente aos eventos da viagem. Chamar uma vez no bootstrap. */
 export function wireVoiceToBus() {
-  if (ENV.voiceMode === 'agora') {
-    void useVoice.getState().setVoiceMode('agora');
+  if (ENV.voiceMode === 'livekit') {
+    void useVoice.getState().setVoiceMode('livekit');
   }
   const unsubApi = useApiConfig.subscribe((apiState, prevApiState) => {
     if (apiState.mode !== prevApiState.mode) {
       const voice = useVoice.getState();
-      if (voice.preferredMode === 'agora' && !voice.sessionConnected) {
-        const reason = getAgoraFallbackReason();
+      if (voice.preferredMode === 'livekit' && !voice.sessionConnected) {
+        const reason = getLiveKitFallbackReason();
         useVoice.setState({
-          activeMode: 'agora',
+          activeMode: 'livekit',
           fallbackReason: reason,
         });
       }
@@ -717,13 +718,13 @@ export function wireVoiceToBus() {
   });
   const syncOfflineMode = () => {
     const voice = useVoice.getState();
-    if (voice.preferredMode !== 'agora') return;
+    if (voice.preferredMode !== 'livekit') return;
     if (useNetwork.getState().quality() === 'offline') {
       if (voice.sessionConnected) {
         void voice.startOfflineRecording();
       }
     } else if (voice.offlineRecordingActive) {
-      void voice.connectAgoraNow();
+      void voice.connectLiveKitNow();
     }
   };
   const offNetwork = useNetwork.subscribe((state, previous) => {
@@ -734,9 +735,9 @@ export function wireVoiceToBus() {
   syncOfflineMode();
   const offSay = agentBus.on('agent:say', ({ text }) => {
     const v = useVoice.getState();
-    // Em modo Agora (tempo real), nunca reproduz TTS local (expo-speech).
+    // Em modo LiveKit (tempo real), nunca reproduz TTS local (expo-speech).
     // O áudio vem exclusivamente do agente no RTC; o app não armazena legendas.
-    if (!v.offlineRecordingActive && (v.preferredMode === 'agora' || v.activeMode === 'agora')) {
+    if (!v.offlineRecordingActive && (v.preferredMode === 'livekit' || v.activeMode === 'livekit')) {
       return;
     }
     v.say(text);

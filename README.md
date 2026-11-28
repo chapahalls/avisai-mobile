@@ -219,7 +219,7 @@ Mensagens mostra o que foi enviado ao CCO e em que ponto do envio cada item est�
 
 **Telas de leitura só com o caminhão parado:** documentos e mensagens pedidos por voz com o caminhão andando ficam esperando; abrem sozinhos quando ele para, e o agente avisa isso em vez de dizer "abrindo".
 
-**Avisos com a conversa fechada:** quando o agente precisa falar e não há conversa aberta (aproximação, resposta do CCO ou do recebedor, rota nova, pergunta da central), o backend manda `aviso_motorista` pelo `/ws`. O app fala o aviso em voz local (`expo-speech`, sem gastar minutos da Agora), mostra na tela e, se for pergunta, abre a conversa para o motorista responder. A wake word pausa enquanto o aviso é falado.
+**Avisos com a conversa fechada:** quando o agente precisa falar e não há conversa aberta (aproximação, resposta do CCO ou do recebedor, rota nova, pergunta da central), o backend manda `aviso_motorista` pelo `/ws`. O app fala o aviso em voz local (`expo-speech`, sem gastar minutos do LiveKit), mostra na tela e, se for pergunta, abre a conversa para o motorista responder. A wake word pausa enquanto o aviso é falado.
 
 **Sem rede:** nenhum modelo de voz roda no celular. Com a conversa aberta, cada fala vira um áudio WAV, separado só pelo volume do microfone (`features/voice/rules/speechSegmenter.ts`, parâmetros em `OFFLINE_VOICE`). O app confirma em voz local, guarda a fala na fila e, quando a rede volta, envia para `POST /rotas/{id}/falas-offline`. O servidor transcreve e o agente responde com um aviso.
 
@@ -235,7 +235,7 @@ npx expo install --fix
 npx expo start
 ```
 
-Abra o QR code no Expo Go. O app detecta os módulos nativos que faltam e cai para o equivalente simulado: Agora → voz Mock, Google Maps → mapa SVG.
+Abra o QR code no Expo Go. O app detecta os módulos nativos que faltam e cai para o equivalente simulado: LiveKit → voz Mock, Google Maps → mapa SVG.
 
 ```bash
 npm run lint
@@ -254,7 +254,7 @@ O CI do GitHub roda os três a cada push e PR.
 | Ajuste | Valores | O que muda |
 |---|---|---|
 | `EXPO_PUBLIC_API_MODE` | `mock` (padrão) · `http` | `mock` roda a operação no aparelho, com dados fictícios. `http` usa o [rodar-backend](https://github.com/rodarglobal/rodar-backend): rota, eventos, ligação ao recebedor e stream `/ws`. |
-| `EXPO_PUBLIC_VOICE_MODE` | `mock` (padrão) · `agora` | `mock` usa frases prontas e `expo-speech`. `agora` conecta o RTC ao agente Conversational AI configurado no backend (só no Dev Build). |
+| `EXPO_PUBLIC_VOICE_MODE` | `mock` (padrão) · `livekit` | `mock` usa frases prontas e `expo-speech`. `livekit` conecta a sala LiveKit ao agente de voz configurado no backend (só no Dev Build). |
 | `EXPO_PUBLIC_AUTH_MODE` | `mock` (padrão) · `keycloak` | `mock` entra pelo SSO do `ApiClient`. `keycloak` faz login OIDC (Authorization Code + PKCE) no realm `rodar` do Keycloak do [rodar-keycloak](https://github.com/rodarglobal/rodar-keycloak); configure `EXPO_PUBLIC_KEYCLOAK_ISSUER` (IP da máquina, ou `localhost` com `adb reverse tcp:8180 tcp:8180`). Exige Dev Build novo (`expo-web-browser`). |
 | `GOOGLE_MAPS_API_KEY_ANDROID` | vazia (padrão) · chave | Sem chave, mapa SVG simulado. Com chave, Google Maps no Dev Build. |
 
@@ -278,7 +278,7 @@ Toda a infraestrutura de desenvolvimento e build Android roda isolada em contain
 ./scripts/android-dev.sh metro
 ```
 
-Para testar os módulos nativos (`react-native-agora`, `react-native-maps`, `expo-dev-client`, wake word e voz sem rede) num celular Android via cabo USB:
+Para testar os módulos nativos (`@livekit/react-native`, `react-native-maps`, `expo-dev-client`, wake word e voz sem rede) num celular Android via cabo USB:
 
 ```bash
 # 1. (Opcional) Copie .env.example para .env e preencha as variáveis desejadas
@@ -316,7 +316,7 @@ O script gera o app para a web com `scripts/web-demo/build.sh` (o mesmo da demo 
 </details>
 
 <details>
-<summary><strong>Conectar ao backend RODAR e à voz Agora</strong></summary>
+<summary><strong>Conectar ao backend RODAR e à voz LiveKit</strong></summary>
 <br />
 
 Configure a `.env` local (nunca versionada, **E7**):
@@ -325,15 +325,15 @@ Configure a `.env` local (nunca versionada, **E7**):
 EXPO_PUBLIC_API_MODE=http
 EXPO_PUBLIC_API_BASE_URL=http://localhost:8000
 EXPO_PUBLIC_ROTA_ID=1
-EXPO_PUBLIC_VOICE_MODE=agora
+EXPO_PUBLIC_VOICE_MODE=livekit
 GOOGLE_MAPS_API_KEY_ANDROID=
 ```
 
 **Pelo túnel `trycloudflare.com`:**
 
 1. No [rodar-backend](https://github.com/rodarglobal/rodar-backend), suba a API FastAPI na porta `8000` com o túnel Cloudflare (`https://xxxx.trycloudflare.com`) e rode o seed (`python -m app.seed`).
-2. No app, abra **Demo**, alterne **API: Backend** e **Voz: Agora**, cole a URL do túnel em **URL do Backend** e toque em **Testar** (`GET /health` → `Online` e `WS conectado`).
-3. Toque na esfera do AvisAI e no microfone para iniciar a sessão real (`POST /sessions`) e conversar com o agente no canal RTC (`uid 1001` motorista ↔ `uid 9001` agente).
+2. No app, abra **Demo**, alterne **API: Backend** e **Voz: LiveKit**, cole a URL do túnel em **URL do Backend** e toque em **Testar** (`GET /health` → `Online` e `WS conectado`).
+3. Toque na esfera do AvisAI e no microfone para iniciar a sessão real (`POST /sessions`) e conversar com o agente na sala LiveKit `rodar-rota-{id}` (identidade `motorista-{id}` ↔ agente `rodar-agente-*`).
 
 **Acesso:** no modo `http`, o login guarda em memória o JWT devolvido pelo `/auth/sso` e o manda como `Authorization: Bearer` em toda chamada; ao sair, o token é apagado.
 
@@ -344,7 +344,7 @@ GOOGLE_MAPS_API_KEY_ANDROID=
 | Disponibilidade e perfil | `GET /health`, `GET /usuarios?role=driver`, `POST /auth/sso` | verifica a API, lista perfis de demonstração e seleciona a identidade do motorista |
 | Rota atribuída | `GET /api/route?driverId={id}` ou `?tripId={id}`; `GET /rotas/{id}` | consulta autoritativa da viagem e seu detalhe |
 | Tempo real | `WS /ws?motorista_id={id}` e `WS /ws?rota_id={id}` | recebe novas atribuições e atualizações de rota; após reconectar, o app faz refetch |
-| Voz Agora | `POST /sessions`, `DELETE /sessions/{id}`, `POST /sessions/{id}/speak`, `GET /token?channel=&uid=` | cria/encerra a sessão e renova o token RTC |
+| Voz LiveKit | `POST /sessions`, `DELETE /sessions/{id}`, `POST /sessions/{id}/speak`, `GET /token?room=&identity=` | cria/encerra a sessão e renova o token LiveKit |
 | GPS e operação | `POST /rotas/{id}/posicao`, `/chegada`, `/descarga` | envia posição e registra os marcos operacionais autorizados pelo motorista |
 | Falas sem rede | `POST /rotas/{id}/falas-offline` (multipart) | sobe os áudios gravados sem sinal; o arquivo local é apagado na confirmação (200 ou 409) |
 | Documentos | `GET /api/documents?tripId={id}`, `GET /rotas/{id}/arquivos`, `/arquivos/{arquivoId}/download` | separa NF-e/CT-e MOCK dos anexos reais recebidos do CCO |
@@ -353,7 +353,7 @@ GOOGLE_MAPS_API_KEY_ANDROID=
 O mobile **não** publica rota, atribui motorista, confirma Task do CCO, chama o recebedor nem chama reset para obter sua viagem. Com `AUTH_OBRIGATORIA=true` (padrão do backend), toda escrita exige o JWT do `/auth/sso` e o motorista só age na rota atribuída a ele (403 na rota de outro). O login continua sem senha e as leituras seguem abertas; o que falta para produção está no [README do backend](https://github.com/rodarglobal/rodar-backend#o-que-falta-para-produção).
 
 - **Google Maps (`GOOGLE_MAPS_API_KEY_ANDROID`):** lida em tempo de build pelo `app.config.ts` para injetar `android.config.googleMaps.apiKey` somente quando não-vazia, expondo apenas o booleano `extra.hasGoogleMapsKey` para o runtime JS. Se a chave ou o módulo nativo não estiverem presentes, `RouteMap` faz fallback automático para `RouteMapSvg`.
-- **Voz Agora (`EXPO_PUBLIC_VOICE_MODE=agora`):** `AgoraVoiceSession` (`react-native-agora`) aplica os parâmetros `aplicarAudioIA` recomendados pela Agora (`AudioScenarioAiClient`, `ChannelProfileLiveBroadcasting`, AEC/AINS baixa latência), conecta o RTC ao agente configurado no backend, processa eventos de estado/interrupção/métricas e evita TTS local. Solicita permissão `RECORD_AUDIO`, renova token via `GET /token`, detecta barge-in por volume/fala local e expõe controles de **Mudo** e **Encerrar sessão**.
+- **Voz LiveKit (`EXPO_PUBLIC_VOICE_MODE=livekit`):** `LiveKitVoiceSession` (`@livekit/react-native` + `livekit-client`) entra na sala (`room.connect`) com a URL/token devolvidos por `POST /sessions`, mapeia o atributo `lk.agent.state` do agente LiveKit Agents para o estado visual do app e usa `ActiveSpeakersChanged`/`audioLevel` para o indicador de volume, evitando TTS local. Solicita permissão `RECORD_AUDIO`, detecta barge-in pelo próprio agente (sem sinal explícito do cliente) e expõe controles de **Mudo** e **Encerrar sessão**.
 </details>
 
 ## O que é simulado
@@ -364,10 +364,10 @@ Todos os controles de simulação ficam isolados no componente `DemoControls` (i
 - **Mapa:** `RouteMap` usa `RouteMapGoogle` (`react-native-maps` com `PROVIDER_GOOGLE` e estilo escuro) quando `GOOGLE_MAPS_API_KEY_ANDROID` está configurada no Dev Build, e cai para `RouteMapSvg` (mapa simulado em SVG) sem chave ou em modo SVG.
 - **GPS e relógio:** o simulador percorre a polilinha da rota em tempo acelerado (`1 s real = 1 min simulado`), com atalhos na demo (`+1 h`, `Ir p/ Aproximação (8 km)`, `Ir p/ Chegada`). O GPS real do celular pode ser ligado na demo e envia a posição para `POST /rotas/{id}/posicao`.
 - **Modo direção:** no modo Mock a velocidade vem do simulador (80 km/h na estrada); com o GPS do celular ligado, vem dele. A tela de direção mostra um bloco tracejado só para a demo, com falas simuladas e os **Controles da demo** (para chegar ao destino sem dirigir).
-- **Leitura de documentos em voz alta:** o botão **Ouvir em voz alta** usa a voz local (`expo-speech`). Na conversa ao vivo (Agora), o pedido vai ao agente; o backend precisa da mesma regra de leitura (R7) no prompt.
+- **Leitura de documentos em voz alta:** o botão **Ouvir em voz alta** usa a voz local (`expo-speech`). Na conversa ao vivo (LiveKit), o pedido vai ao agente; o backend precisa da mesma regra de leitura (R7) no prompt.
 - **Voz:** `VoiceSession` tem dois adapters:
   - `MockVoiceSession`: frases rápidas bilíngues (`pt-BR` / `en`) + síntese de voz `expo-speech` + barge-in + medição de latência.
-  - `AgoraVoiceSession`: conexão RTC via `react-native-agora` integrada ao Conversational AI Engine pelo backend (com fallback automático para Mock sem módulo nativo, sem backend ou sem permissão de microfone).
+  - `LiveKitVoiceSession`: sala RTC via `@livekit/react-native` integrada ao agente LiveKit Agents pelo backend (com fallback automático para Mock sem módulo nativo, sem backend ou sem permissão de microfone).
 - **Recebedor:** no modo `mock`, respostas sorteadas (confirma doca e horário, não recebe hoje, não atende); no modo `http`, o backend liga (`POST /rotas/{id}/ligar-recebedor`) e a resposta chega em tempo real pelo `/ws` (`resposta_recebedor`).
 - **Rede:** a demo simula rede real, fraca (só eventos críticos sobem) ou sem rede.
 - **Documentos:** NF-e e CT-e são MOCK; os anexos do CCO são reais quando baixados do backend. Visualizador local, indexação vetorial local em SQLite (embedding determinístico de 64 dimensões + similaridade cosseno) e resposta estrita por campos extraídos (**R7**).
@@ -401,7 +401,7 @@ src/
 ├── features/            um domínio por pasta; só o index.ts é público
 │   ├── auth/            seleção de perfil e SSO MOCK
 │   ├── trip/            rota, geocerca, estadia, escalonamento, mapa e controles da demo
-│   ├── voice/           sessões Mock/Agora, esfera do AvisAI, conversa e voz sem rede
+│   ├── voice/           sessões Mock/LiveKit, esfera do AvisAI, conversa e voz sem rede
 │   ├── documents/       documentos, busca local e respostas por campo
 │   ├── report/          campos obrigatórios do reporte por voz
 │   └── outbox/          fila offline FIFO e sincronização
@@ -422,7 +422,7 @@ As dependências seguem `pages → features → components/lib/services/utils/ty
 Nenhum código proprietário anterior ao hackathon foi usado. Só pacotes open-source públicos, fixados para o **Expo SDK 52** (`package.json`):
 
 - **Core:** Expo SDK 52 (`~52.0.37`), React `18.3.1`, React Native `0.76.7`, TypeScript `~5.3.3`, `expo-dev-client`, `expo-build-properties`, `expo-constants`.
-- **Voz e RTC:** `react-native-agora` (`^4.5.1`), `expo-speech` (`~13.0.1`), `expo-speech-recognition` (`^1.1.1`, wake word), `@fugood/react-native-audio-pcm-stream` (`^1.1.4`, microfone da voz sem rede), `react-native-fs` (`^2.20.0`, arquivos das falas sem rede).
+- **Voz e RTC:** `@livekit/react-native` (`^3.2.0`), `@livekit/react-native-webrtc` (`^150.2.0`), `livekit-client` (`^2.25.0`), `expo-speech` (`~13.0.1`), `expo-speech-recognition` (`^1.1.1`, wake word), `@fugood/react-native-audio-pcm-stream` (`^1.1.4`, microfone da voz sem rede), `react-native-fs` (`^2.20.0`, arquivos das falas sem rede).
 - **Mapa, GPS e UI:** `react-native-maps` (`1.18.0`), `expo-location`, `expo-task-manager`, `react-native-svg` (`15.8.0`), NativeWind `^4.1.23` + Tailwind CSS `^3.4.17`, React Navigation v7, `react-native-reanimated` (`~3.16.1`), `react-native-safe-area-context`, `react-native-screens`.
 - **Dados, estado e i18n:** `expo-sqlite` (`~15.1.2`), `zustand` (`^5.0.3`), `i18next` (`^24.2.2`), `react-i18next` (`^15.4.0`), `expo-localization` (`~16.0.1`), `expo-crypto` (`~14.0.2`), `@react-native-community/netinfo` (`11.4.1`).
 - **Testes:** `vitest` (`^3.0.5`).
@@ -432,11 +432,11 @@ Nenhum código proprietário anterior ao hackathon foi usado. Só pacotes open-s
 
 | Decisão | Por quê | Onde |
 |---|---|---|
-| **Voz pela Agora Conversational AI, com o LLM no nosso backend** | Latência baixa, interrupção (barge-in) e cancelamento de ruído da cabine prontos; o raciocínio, as ferramentas e as regras ficam no backend, que é dono do estado | `features/voice/api/agoraVoiceSession.ts`, [rodar-backend](https://github.com/rodarglobal/rodar-backend) |
+| **Voz pelo LiveKit Agents, com o LLM no nosso backend** | Latência baixa, interrupção (barge-in) e cancelamento de ruído da cabine prontos; o raciocínio, as ferramentas e as regras ficam no backend, que é dono do estado | `features/voice/api/livekitVoiceSession.ts`, [rodar-backend](https://github.com/rodarglobal/rodar-backend) |
 | **App só lê e reage; o backend decide** | Estadia, Tasks e ligações têm uma fonte de verdade só. O app não publica rota nem confirma Task | `services/httpApi.ts`, `services/backendStream.ts` |
 | **Fila offline (outbox) em SQLite, FIFO estrito e idempotente** | Na estrada falta sinal. Cada escrita leva uma `idempotencyKey`; 409 conta como enviado; rede fraca sobe só o que é crítico; erro 4xx definitivo não trava a fila. Coberto por 11 testes com SQLite de verdade | `features/outbox/`, `src/__tests__/outbox.test.ts` |
 | **Sem rede, gravar a fala em vez de rodar um modelo no celular** | Um modelo de voz local (Whisper) exigia baixar 466 MB no celular do motorista; o time decidiu não rodar modelo no aparelho. O áudio espera a rede e o servidor transcreve | `features/voice/api/offlineVoiceRecorder.ts`, `OFFLINE_VOICE` |
-| **Adaptadores Mock e real, com troca automática** | O júri e o time rodam o app no Expo Go, sem módulos nativos; no Dev Build entram Agora, Google Maps e wake word. Os módulos nativos são carregados com `require` opcional (por isso as exceções de lint `no-require-imports`) | `VoiceSession`, `RouteMap`, `services/api.ts` |
+| **Adaptadores Mock e real, com troca automática** | O júri e o time rodam o app no Expo Go, sem módulos nativos; no Dev Build entram LiveKit, Google Maps e wake word. Os módulos nativos são carregados com `require` opcional (por isso as exceções de lint `no-require-imports`) | `VoiceSession`, `RouteMap`, `services/api.ts` |
 | **Arquitetura por domínio** | Cada feature expõe só o `index.ts`; `trip` e `voice` conversam pelo `agentBus`; `services` não importa features (a camada `app` faz a ligação) | `src/features/`, `src/app/wireBackendStream.ts` |
 | **Parâmetros num lugar só** | Franquia, valor da estadia, raio da geocerca, tentativas da fila e limites de voz mudam por contrato, não no código espalhado | `src/lib/config.ts` |
 

@@ -72,13 +72,13 @@ function playNext(): void {
 
 /**
  * Aviso do agente que chegou sem conversa aberta (`aviso_motorista` do `/ws`): o app fala em
- * voz local, sem gastar minutos da Agora, e mostra o aviso na tela. Se for pergunta
+ * voz local, sem gastar minutos do LiveKit, e mostra o aviso na tela. Se for pergunta
  * ("A central pergunta…", "Confirma a retirada?"), abre a conversa para a resposta.
  */
 export function announceDriverNotice(notice: DriverNotice): boolean {
   if (!notice?.texto?.trim() || seen.has(notice.id)) return false;
   seen.add(notice.id);
-  // Conversa aberta: o agente fala pela Agora; aqui seria repetido.
+  // Conversa aberta: o agente fala pelo LiveKit; aqui seria repetido.
   const voice = useVoice.getState();
   if (voice.sessionConnected || voice.offlineRecordingActive) return false;
   queue.push(notice);
@@ -88,7 +88,7 @@ export function announceDriverNotice(notice: DriverNotice): boolean {
 
 /**
  * Leitura em voz local de um documento (botão "Ouvir em voz alta" no visualizador). Usa a mesma
- * voz dos avisos, sem gastar minutos da Agora, e pausa a wake word para ela não se ouvir.
+ * voz dos avisos, sem gastar minutos do LiveKit, e pausa a wake word para ela não se ouvir.
  */
 export function readAloudLocal(id: string, text: string): void {
   const Speech = loadSpeech();

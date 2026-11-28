@@ -105,7 +105,7 @@ export const httpApiClient: ApiClient = {
       const data = (await res.json()) as {
         ok?: boolean;
         public_url?: string | null;
-        agora_configurada?: boolean;
+        livekit_configurada?: boolean;
         llm_mode?: string | null;
         llm_upstream?: boolean;
         recebedor_modo?: string | null;
@@ -113,8 +113,8 @@ export const httpApiClient: ApiClient = {
       return {
         ok: Boolean(data.ok),
         publicUrl: data.public_url ?? undefined,
-        agoraConfigured:
-          typeof data.agora_configurada === 'boolean' ? data.agora_configurada : undefined,
+        livekitConfigured:
+          typeof data.livekit_configurada === 'boolean' ? data.livekit_configurada : undefined,
         llmMode: data.llm_mode ?? undefined,
         llmUpstream: typeof data.llm_upstream === 'boolean' ? data.llm_upstream : undefined,
         receiverMode: data.recebedor_modo ?? undefined,
@@ -154,7 +154,7 @@ export const httpApiClient: ApiClient = {
 
   async getVoiceToken(params: VoiceTokenParams): Promise<VoiceTokenResponse> {
     const res = await fetchWithTimeout(
-      `/token?channel=${encodeURIComponent(params.channel)}&uid=${params.uid}`,
+      `/token?room=${encodeURIComponent(params.room)}&identity=${encodeURIComponent(params.identity)}`,
       { method: 'GET' },
     );
     if (!res.ok) throw new NetworkError(`HTTP ${res.status}`);

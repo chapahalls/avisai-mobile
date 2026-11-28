@@ -364,10 +364,7 @@ describe('backend integration & stream events', () => {
               recebedor_empresa: 'Cliente Live',
               recebedor_nome: 'Portaria',
               motorista_nome: 'Marina Souza',
-              canal_motorista: 'avisai-rota-9',
-              uid_motorista: 1001,
-              uid_cco: 2001,
-              uid_agente: 9001,
+              canal_motorista: 'rodar-rota-9',
             },
           ],
           tasks: [

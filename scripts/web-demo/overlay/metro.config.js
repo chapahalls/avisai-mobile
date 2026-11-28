@@ -9,7 +9,8 @@ const config = getDefaultConfig(__dirname);
 // deles (cai para voz Mock e mapa SVG), como no Expo Go.
 const NATIVE_ONLY = [
   'react-native-maps',
-  'react-native-agora',
+  '@livekit/react-native',
+  '@livekit/react-native-webrtc',
   'react-native-fs',
   '@fugood/react-native-audio-pcm-stream',
   'expo-speech-recognition',

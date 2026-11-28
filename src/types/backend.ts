@@ -59,8 +59,8 @@ export type TipoEvento =
   | 'mensagem_motorista_respondida'
   | 'motorista_offline'
   | 'chamada_twilio_falhou'
-  | 'chamada_agora_iniciada'
-  | 'chamada_agora_atendida'
+  | 'chamada_livekit_iniciada'
+  | 'chamada_livekit_atendida'
   | 'chamada_sem_resposta'
   | 'escalada_supervisor';
 
@@ -69,12 +69,11 @@ export interface Sessao {
   rota_id: number;
   papel: 'motorista' | 'recebedor';
   canal: string;
-  agent_uid: number;
-  user_uid: number;
   agent_id: string | null;
   status: 'iniciando' | 'ativa' | 'encerrada' | 'falhou';
   llm_mode: string;
-  app_id: string | null;
+  livekit_url?: string | null;
+  identity?: string | null;
   token: string | null;
   erro?: string | null;
   criada_em?: string;
@@ -163,9 +162,6 @@ export interface Rota {
   recebedor_nome: string;
   motorista_nome: string | null;
   canal_motorista: string;
-  uid_motorista: number;
-  uid_cco: number;
-  uid_agente: number;
 }
 
 export interface Snapshot {
@@ -229,9 +225,7 @@ export interface ApiRouteResponse {
     distanceM: number | null;
     etaMin: number | null;
   };
-  channel: string;
-  driverUid: number;
-  agentUid: number;
+  room: string;
 }
 
 export interface ApiDocumentResponse {
@@ -363,12 +357,3 @@ export const CANAIS: CanalStream[] = [
   'reset',
   'chamado',
 ];
-
-/** UIDs fixos (README > Canais e UIDs). */
-export const UID = {
-  MOTORISTA: 1001,
-  CCO: 2001,
-  RECEBEDOR: 3001,
-  AGENTE_MOTORISTA: 9001,
-  AGENTE_RECEBEDOR: 9002,
-} as const;

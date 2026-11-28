@@ -1,7 +1,7 @@
 import type { VoiceMode } from '../../../lib/config';
 import type { VoiceState } from '../types';
 
-export type AgoraStage = 'connecting' | 'waiting_agent' | 'live' | 'disconnected' | 'error';
+export type LiveKitStage = 'connecting' | 'waiting_agent' | 'live' | 'disconnected' | 'error';
 export type AudioSpeaker = 'driver' | 'agent' | 'none';
 export type AudioRouteType = 'speaker' | 'bluetooth' | 'headset';
 
@@ -13,7 +13,7 @@ export interface VoiceSessionCallbacks {
   onLatency: (ms: number) => void;
   onError: (message: string) => void;
   onModeFallback?: (reason: string) => void;
-  onAgoraStage?: (stage: AgoraStage, detail?: string) => void;
+  onLiveKitStage?: (stage: LiveKitStage, detail?: string) => void;
   onVolume?: (level: number, speaker: AudioSpeaker) => void;
   onAudioRouteChange?: (route: AudioRouteType) => void;
 }
@@ -21,7 +21,7 @@ export interface VoiceSessionCallbacks {
 /**
  * Contrato de sessão de voz:
  * - `mock`: TTS local via `expo-speech` + falas rápidas (chips) + barge-in.
- * - `agora`: canal RTC real via `react-native-agora` + Conversational AI Engine da Agora.
+ * - `livekit`: sala RTC real via `@livekit/react-native` + LiveKit Agents do backend.
  * O cliente não grava áudio nem consome/mostra legendas do canal RTC.
  */
 export interface VoiceSession {

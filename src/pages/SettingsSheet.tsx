@@ -32,7 +32,7 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
   const pendingVoiceNotes = useOutboxStore(
     (s) => s.rows.filter((r) => r.type === 'DriverVoiceNote' && r.status !== 'sent').length,
   );
-  const agoraStage = useVoice((s) => s.agoraStage);
+  const liveKitStage = useVoice((s) => s.liveKitStage);
   const audioRoute = useVoice((s) => s.audioRoute);
   const wakeEnabled = useWakeWord((s) => s.enabled);
   const wakeStatus = useWakeWord((s) => s.status);
@@ -43,12 +43,12 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
   const companyName = session?.company || t('auth.demoCompanyName');
 
   const modeLabel =
-    preferredMode === 'agora'
-      ? agoraStage === 'live'
-        ? t('voice.modePill.agoraLive')
-        : agoraStage === 'waiting_agent' || agoraStage === 'connecting'
-          ? t('voice.modePill.agoraWaitingAgent')
-          : t('voice.modePill.agoraDisconnected')
+    preferredMode === 'livekit'
+      ? liveKitStage === 'live'
+        ? t('voice.modePill.liveKitLive')
+        : liveKitStage === 'waiting_agent' || liveKitStage === 'connecting'
+          ? t('voice.modePill.liveKitWaitingAgent')
+          : t('voice.modePill.liveKitDisconnected')
       : t('voice.modePill.mock');
 
   const close = () => {
@@ -129,7 +129,7 @@ export function SettingsSheet({ visible, onClose }: { visible: boolean; onClose:
                 </View>
               </View>
 
-              {preferredMode === 'agora' ? (
+              {preferredMode === 'livekit' ? (
                 <View className="bg-ink-900 border border-ink-800 rounded-3xl p-4 gap-2">
                   <View className="flex-row items-center gap-2">
                     <Icon name="clock" size={18} color={colors.ink[300]} />

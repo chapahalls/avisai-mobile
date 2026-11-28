@@ -1,7 +1,6 @@
 import i18n from '../lib/i18n';
 import { ROUTE } from './demoRoute';
 import {
-  UID,
   type ApiDocumentResponse,
   type ApiRouteFile,
   type ApiRouteResponse,
@@ -191,14 +190,13 @@ export async function createSession(rotaId = 1): Promise<Sessao> {
     id: 1,
     rota_id: rotaId,
     papel: 'motorista',
-    canal: `avisai-rota-${rotaId}`,
-    agent_uid: UID.AGENTE_MOTORISTA,
-    user_uid: UID.MOTORISTA,
+    canal: `rodar-rota-${rotaId}`,
     agent_id: `mock-agent-${Date.now()}`,
     status: 'ativa',
     llm_mode: 'mock',
-    app_id: 'mock-agora-app-id',
-    token: 'mock-agora-token',
+    livekit_url: 'wss://mock.livekit.local',
+    identity: `motorista-${rotaId}`,
+    token: 'mock-livekit-token',
   };
 }
 
@@ -209,10 +207,10 @@ export async function deleteSession(_sessionId: number): Promise<void> {
 export async function getVoiceToken(params: VoiceTokenParams): Promise<VoiceTokenResponse> {
   await sleep(120);
   return {
-    app_id: 'mock-agora-app-id',
-    token: 'mock-agora-token',
-    channel: params.channel,
-    uid: params.uid,
+    url: 'wss://mock.livekit.local',
+    token: 'mock-livekit-token',
+    room: params.room,
+    identity: params.identity,
   };
 }
 
@@ -245,10 +243,7 @@ export async function getRoute(rotaId = 1): Promise<Rota | null> {
     recebedor_empresa: fixture.receiver.company,
     recebedor_nome: fixture.receiver.rotaReceiverName,
     motorista_nome: fixture.name,
-    canal_motorista: `avisai-rota-${rotaId}`,
-    uid_motorista: UID.MOTORISTA,
-    uid_cco: UID.CCO,
-    uid_agente: UID.AGENTE_MOTORISTA,
+    canal_motorista: `rodar-rota-${rotaId}`,
   };
 }
 
@@ -300,9 +295,7 @@ export async function getAssignedRoute(params?: {
       distanceM: fixture.distanceM,
       etaMin: fixture.etaMin,
     },
-    channel: `avisai-rota-${parsedTripId}`,
-    driverUid: UID.MOTORISTA,
-    agentUid: UID.AGENTE_MOTORISTA,
+    room: `rodar-rota-${parsedTripId}`,
   };
 }
 

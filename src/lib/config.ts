@@ -158,14 +158,14 @@ export const WAKE_WORD = {
   restartDelayMs: 400,
   /** Pausa maior depois de erro, para não ficar em laço. */
   errorBackoffMs: 3000,
-  /** Tempo para o microfone ser liberado antes de a Agora assumir. */
+  /** Tempo para o microfone ser liberado antes de o LiveKit assumir. */
   handoffMs: 350,
   /** Trechos de fala seguidos com texto vazio antes de trocar o reconhecimento no aparelho pelo padrão. */
   emptyResultsBeforeFallback: 2,
 } as const;
 
 export type ApiMode = 'mock' | 'http';
-export type VoiceMode = 'mock' | 'agora';
+export type VoiceMode = 'mock' | 'livekit';
 export type AuthMode = 'mock' | 'keycloak';
 
 function readHasGoogleMapsKey(): boolean {
@@ -196,7 +196,7 @@ export const ENV = {
   apiBaseUrl: (rawApiBaseUrl || 'http://localhost:8000').replace(/\/+$/, ''),
   apiBaseUrlConfigured: Boolean(rawApiBaseUrl),
   rotaId: Number.isFinite(parsedRotaId) && parsedRotaId > 0 ? parsedRotaId : 1,
-  voiceMode: (rawVoiceMode === 'agora' ? 'agora' : 'mock') as VoiceMode,
+  voiceMode: (rawVoiceMode === 'livekit' ? 'livekit' : 'mock') as VoiceMode,
   hasGoogleMapsKey: readHasGoogleMapsKey(),
   /** mock = SSO do ApiClient (padrão); keycloak = OIDC Authorization Code + PKCE no realm `rodar` (rodarglobal/rodar-keycloak). */
   authMode: (rawAuthMode === 'keycloak' ? 'keycloak' : 'mock') as AuthMode,

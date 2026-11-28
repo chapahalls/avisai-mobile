@@ -38,7 +38,7 @@ export const useWakeWord = create<WakeWordState>((set) => ({
 
 /**
  * Escuta "Ei AvisAI" com o app aberto e sem conversa ativa. Ao ouvir, libera o microfone,
- * abre o painel do AvisAI e inicia a conversa (na Agora, conecta a sessão). O texto
+ * abre o painel do AvisAI e inicia a conversa (no LiveKit, conecta a sessão). O texto
  * reconhecido serve só para achar a wake word e é descartado.
  */
 export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngine()): () => void {
@@ -67,8 +67,8 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
       !v.sessionConnected &&
       !v.offlineRecordingActive &&
       v.state === 'idle' &&
-      v.agoraStage !== 'connecting' &&
-      v.agoraStage !== 'waiting_agent'
+      v.liveKitStage !== 'connecting' &&
+      v.liveKitStage !== 'waiting_agent'
     );
   };
 
@@ -153,7 +153,7 @@ export function startWakeWordWatcher(engine: WakeWordEngine = createWakeWordEngi
     stopNow();
     setStatus('paused');
     hapticTap();
-    // Dá tempo de o reconhecedor soltar o microfone antes de a Agora abrir o dela.
+    // Dá tempo de o reconhecedor soltar o microfone antes de o LiveKit abrir o dele.
     wakeTimer = setTimeout(() => {
       wakeTimer = null;
       waking = false;

@@ -21,7 +21,7 @@ import { useShallow } from 'zustand/react/shallow';
  * - Rede: Real / Fraca / Sem rede
  * - Switch: CCO responde na 2ª tentativa
  * - Atalhos de tempo/rota: +1 h, Ir p/ Aproximação (8 km), Ir p/ Chegada
- * - Toggles de modo: API (Mock | Backend), Voz (Mock | Agora) e Mapa (Auto | SVG)
+ * - Toggles de modo: API (Mock | Backend), Voz (Mock | LiveKit) e Mapa (Auto | SVG)
  * - URL do Backend em tempo real (trycloudflare.com) + Testar (/health) + status do WebSocket + Resetar rota
  */
 export function DemoControls({ onClose }: { onClose?: () => void }) {
@@ -44,7 +44,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
   const voiceLastError = useVoice((s) => s.lastError);
   const sessionConnected = useVoice((s) => s.sessionConnected);
   const setVoiceMode = useVoice((s) => s.setVoiceMode);
-  const connectAgoraNow = useVoice((s) => s.connectAgoraNow);
+  const connectLiveKitNow = useVoice((s) => s.connectLiveKitNow);
   const { mapMode, setMapMode, fallbackReason: getMapFallbackReason } = useMapMode();
 
   const apiMode = useApiConfig((s) => s.mode);
@@ -72,7 +72,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
   ];
   const voiceModes: { mode: VoiceMode; label: string }[] = [
     { mode: 'mock', label: t('demo.voiceMock') },
-    { mode: 'agora', label: t('demo.voiceAgora') },
+    { mode: 'livekit', label: t('demo.voiceLiveKit') },
   ];
   const mapModes: { mode: MapMode; label: string }[] = [
     { mode: 'auto', label: t('demo.mapAuto') },
@@ -99,7 +99,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
     }
   };
 
-  const handleConnectBackendAndAgora = async () => {
+  const handleConnectBackendAndLiveKit = async () => {
     setBaseUrl(urlInput);
     addRecentUrl(urlInput);
     setConnectingAll(true);
@@ -111,7 +111,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
         setApiMode('http');
         void useTrip.getState().syncRouteFromBackend();
         void useDocuments.getState().syncFromBackend();
-        await connectAgoraNow();
+        await connectLiveKitNow();
         const voiceState = useVoice.getState();
         if (voiceState.sessionConnected && !voiceState.lastError) {
           setComboReady(true);
@@ -144,7 +144,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
     comboReady &&
     healthResult?.ok &&
     apiMode === 'http' &&
-    preferredVoiceMode === 'agora' &&
+    preferredVoiceMode === 'livekit' &&
     sessionConnected &&
     !voiceLastError;
 
@@ -171,11 +171,11 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
         ) : null}
       </View>
 
-      {/* 1. TOPO: Conexão Backend & Voz Agora */}
+      {/* 1. TOPO: Conexão Backend & Voz LiveKit */}
       <View className="bg-ink-950/70 border border-brand-500/40 rounded-xl p-3 mb-3">
         <View className="flex-row items-center justify-between mb-2">
           <Text className="text-ink-50 text-xs font-bold">
-            {t('demo.backendAndAgoraSection')}
+            {t('demo.backendAndLiveKitSection')}
           </Text>
           <View className="flex-row items-center gap-1.5">
             {healthResult && (
@@ -275,13 +275,13 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
         )}
 
         <Pressable
-          onPress={() => void handleConnectBackendAndAgora()}
+          onPress={() => void handleConnectBackendAndLiveKit()}
           disabled={connectingAll}
           accessibilityRole="button"
           className="bg-brand-500 border border-brand-500 rounded-xl py-2.5 px-3.5 items-center justify-center active:opacity-85 mb-2.5"
         >
           <Text className="text-ink-50 text-xs font-bold">
-            {connectingAll ? t('demo.connectingBackendAndAgora') : t('demo.connectBackendAndAgora')}
+            {connectingAll ? t('demo.connectingBackendAndLiveKit') : t('demo.connectBackendAndLiveKit')}
           </Text>
         </Pressable>
 
@@ -304,10 +304,10 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
           </View>
         )}
 
-        {healthResult?.ok && healthResult.agoraConfigured === false && (
+        {healthResult?.ok && healthResult.livekitConfigured === false && (
           <View className="bg-wait-500/15 border border-wait-500/60 rounded-lg px-2.5 py-2 mb-2.5">
             <Text className="text-wait-500 text-xs font-semibold">
-              {t('demo.agoraNotConfiguredWarning')}
+              {t('demo.livekitNotConfiguredWarning')}
             </Text>
           </View>
         )}
@@ -327,7 +327,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
           </View>
         )}
 
-        {/* Toggles manuais Mock | Backend, Mock | Agora e Auto | SVG */}
+        {/* Toggles manuais Mock | Backend, Mock | LiveKit e Auto | SVG */}
         <View className="flex-row flex-wrap items-center justify-between gap-2 pt-2 border-t border-ink-800">
           <View className="flex-row items-center gap-1.5">
             <Text className="text-ink-300 text-xs mr-1">{t('demo.apiModeLabel')}</Text>
@@ -389,7 +389,7 @@ export function DemoControls({ onClose }: { onClose?: () => void }) {
           </View>
         </View>
 
-        {preferredVoiceMode === 'agora' && voiceFallbackReason && (
+        {preferredVoiceMode === 'livekit' && voiceFallbackReason && (
           <View className="bg-wait-500/15 border border-wait-500/40 rounded-lg px-2.5 py-1.5 mt-2">
             <Text className="text-wait-500 text-xs">
               {t(`demo.fallback.${voiceFallbackReason}`, voiceFallbackReason)}

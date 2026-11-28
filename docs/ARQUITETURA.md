@@ -1,6 +1,6 @@
 # RODAR Mobile — Arquitetura
 
-Expo SDK 52 + React Native 0.76 + TypeScript + NativeWind 4 (Tailwind 3.4) + i18next (`pt-BR` e `en`) + zustand + expo-sqlite + `react-native-agora` + `react-native-maps`. Suporta **Android Dev Build** (com módulos nativos Agora RTC e Google Maps) e fallback automático para rodar sem backend/chaves ou no Expo Go. Plano geral: `docs/arquitetura-avisai.md` no repositório de ideias.
+Expo SDK 52 + React Native 0.76 + TypeScript + NativeWind 4 (Tailwind 3.4) + i18next (`pt-BR` e `en`) + zustand + expo-sqlite + `@livekit/react-native` + `react-native-maps`. Suporta **Android Dev Build** (com módulos nativos LiveKit RTC e Google Maps) e fallback automático para rodar sem backend/chaves ou no Expo Go. Plano geral: `docs/arquitetura-avisai.md` no repositório de ideias.
 
 ## Estrutura (feature/domínio)
 
@@ -15,7 +15,7 @@ src/
 │   ├── trip/       # rota mock, simulador de GPS e relógio, geocerca, aproximação, escalonamento, estadia, modo direção (useDrivingMode)
 │   │   ├── components/ # RouteMap (ErrorBoundary), RouteMapGoogle, RouteMapSvg, StayCounter, JourneyTimeline, DemoControls
 │   │   └── rules/  # stay.ts (estadia Lei 11.442/2007), escalation.ts (canais e tentativas), drivingMode.ts (velocidade → modo direção, R10)
-│   ├── voice/      # VoiceSession, MockVoiceSession (expo-speech), AgoraVoiceSession (react-native-agora), voiceFactory; AvisaiDock (esfera arrastável `FloatingOrb` + painel) e CabinModeModal (tela cheia)
+│   ├── voice/      # VoiceSession, MockVoiceSession (expo-speech), LiveKitVoiceSession (@livekit/react-native), voiceFactory; AvisaiDock (esfera arrastável `FloatingOrb` + painel) e CabinModeModal (tela cheia)
 │   ├── report/     # campos obrigatórios por momento e extração bilíngue pt-BR/en (rules/requiredFields.ts)
 │   ├── outbox/     # fila offline FIFO em SQLite + motor de sincronização (syncEngine.ts)
 │   └── documents/  # PDFs mock, viewer mock, busca vetorial local em SQLite por trip_id, respostas só por campo e leitura em voz alta (R7)
@@ -31,12 +31,12 @@ Regra de dependência: `pages` → `features` → (`components`, `lib`, `service
 
 ## Adapters Mock × Real (Dev Build)
 
-| Peça | Modo Mock / Fallback (`mock`) | Modo Real (`http` / `agora` / Dev Build) |
+| Peça | Modo Mock / Fallback (`mock`) | Modo Real (`http` / `livekit` / Dev Build) |
 |---|---|---|
 | Mapa | `RouteMapSvg` em SVG com rota, geocercas e caminhão | `RouteMapGoogle` (`react-native-maps` `PROVIDER_GOOGLE`, tema escuro `ink-950`, mesmas coordenadas) com fallback automático em `RouteMap` |
 | GPS | simulador percorre a polilinha (`startTripSimulator`) + atalhos de demo (`+1 h`, `8 km`, `Chegada`) | `expo-location` + rastreador |
-| Voz | `MockVoiceSession`: falas prontas bilíngues (chips) + `expo-speech` (TTS) + barge-in; latência medida | `AgoraVoiceSession`: `react-native-agora` no canal RTC do Conversational AI Engine (`onStreamMessage` + `onAudioVolumeIndication`) com `voiceFactory` |
-| Agente | `agentMock.ts` bilíngue (`pt-BR`/`en`) com as regras R1–R9 | LLM no Conversational AI Engine da Agora iniciado via `POST /agent/start` (`transcriptionOnly: true`, `recordAudio: false`) |
+| Voz | `MockVoiceSession`: falas prontas bilíngues (chips) + `expo-speech` (TTS) + barge-in; latência medida | `LiveKitVoiceSession`: `@livekit/react-native` na sala RTC do agente LiveKit Agents (`lk.agent.state` + `ActiveSpeakersChanged`) com `voiceFactory` |
+| Agente | `agentMock.ts` bilíngue (`pt-BR`/`en`) com as regras R1–R9 | LLM no LiveKit Agents, dispatchado pelo backend via `POST /sessions` (voz direta, `recordAudio: false`) |
 | Recebedor | `mockApiClient.callReceiver()` com resposta simulada após 2,5 s | `httpApiClient.callReceiver()` → `POST /call/receiver` (SIP de saída) |
 | PDF | `MockPdfViewer` (páginas em texto) | visualizador nativo |
 | Busca vetorial | embedding determinístico por hash (64 dimensões) + cosseno em JS sobre `chunks` filtrados por `trip_id` | embeddings do modelo real, mesma tabela |

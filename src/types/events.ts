@@ -28,8 +28,8 @@ export type EventType =
   | 'DriverVoiceNote'
   | 'DriverOffline'
   | 'TwilioCallFailed'
-  | 'AgoraFallbackStarted'
-  | 'AgoraFallbackAnswered'
+  | 'LiveKitFallbackStarted'
+  | 'LiveKitFallbackAnswered'
   | 'AgentCallNoAnswer'
   | 'SupervisorEscalated';
 

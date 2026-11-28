@@ -76,7 +76,7 @@ describe('startWakeWordWatcher', () => {
     vi.useFakeTimers();
     await i18n.changeLanguage('pt-BR');
     listen.mockReset();
-    useVoice.setState({ state: 'idle', sessionConnected: false, agoraStage: 'disconnected', listen });
+    useVoice.setState({ state: 'idle', sessionConnected: false, liveKitStage: 'disconnected', listen });
     useAvisaiDock.setState({ panelOpen: false });
     setSetting('wake_word', 'on');
     useWakeWord.setState({ enabled: true, status: 'off' });
@@ -121,11 +121,11 @@ describe('startWakeWordWatcher', () => {
     await settle();
     expect(engine.start).toHaveBeenCalledTimes(1);
 
-    useVoice.setState({ sessionConnected: true, agoraStage: 'live', state: 'listening' });
+    useVoice.setState({ sessionConnected: true, liveKitStage: 'live', state: 'listening' });
     expect(engine.abort).toHaveBeenCalled();
     expect(useWakeWord.getState().status).toBe('paused');
 
-    useVoice.setState({ sessionConnected: false, agoraStage: 'disconnected', state: 'idle' });
+    useVoice.setState({ sessionConnected: false, liveKitStage: 'disconnected', state: 'idle' });
     await settle();
     expect(engine.start).toHaveBeenCalledTimes(2);
   });
@@ -194,7 +194,7 @@ describe('avisos do agente sem conversa aberta', () => {
     await i18n.changeLanguage('pt-BR');
     resetDriverNoticesForTests();
     listen.mockReset();
-    useVoice.setState({ state: 'idle', sessionConnected: false, agoraStage: 'disconnected', listen });
+    useVoice.setState({ state: 'idle', sessionConnected: false, liveKitStage: 'disconnected', listen });
     useAvisaiDock.setState({ panelOpen: false });
   });
 

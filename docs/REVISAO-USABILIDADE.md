@@ -31,7 +31,7 @@ O app está aderente ao que o produto precisa: voz em primeiro lugar, letra gran
 ## Ainda pende
 
 1. **Passageiro no modo direção.** Decisão: manter sem a opção "sou passageiro" (quem usa o app é o motorista).
-2. **Prompt do agente no backend (`rodar-backend`).** Com a voz real (Agora), a leitura de documentos é do agente no servidor. O prompt precisa da mesma regra: ler só os campos extraídos (R7), sem a chave de acesso, e com o caminhão andando dizer que o PDF abre quando parar. O app já manda a intenção `open_document`, que espera o caminhão parar.
+2. **Prompt do agente no backend (`rodar-backend`).** Com a voz real (LiveKit), a leitura de documentos é do agente no servidor. O prompt precisa da mesma regra: ler só os campos extraídos (R7), sem a chave de acesso, e com o caminhão andando dizer que o PDF abre quando parar. O app já manda a intenção `open_document`, que espera o caminhão parar.
 
 ## O que foi conferido e está bom
 

@@ -38,14 +38,14 @@ export interface CallReceiverParams {
 }
 
 export interface VoiceTokenParams {
-  channel: string;
-  uid: number;
+  room: string;
+  identity: string;
 }
 
 export interface VoiceTokenResponse {
-  app_id: string;
-  channel: string;
-  uid: number;
+  url: string;
+  room: string;
+  identity: string;
   token: string;
 }
 
@@ -60,7 +60,7 @@ export interface SendPositionBody {
 export interface HealthCheckResult {
   ok: boolean;
   publicUrl?: string;
-  agoraConfigured?: boolean;
+  livekitConfigured?: boolean;
   llmMode?: string;
   llmUpstream?: boolean;
   receiverMode?: string;

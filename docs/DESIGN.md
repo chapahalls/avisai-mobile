@@ -1,6 +1,6 @@
 # RODAR — Design system
 
-Mesma identidade do painel web (`rodar-web`, `src/index.css` e `docs/DESIGN.md`): superfícies quase pretas com tom verde, verde da marca para ações e o lima só no símbolo RODAR. O produto é o **RODAR**; **AvisAI** é o nome do agente de voz dentro dele ("RODAR com AvisAI, seu copiloto de voz"). Mockups de referência das telas: `rodar-web/docs/RODAR-telas/aplicativo/`. O selo "Powered by Agora" só conforme as regras de marca da Agora.
+Mesma identidade do painel web (`rodar-web`, `src/index.css` e `docs/DESIGN.md`): superfícies quase pretas com tom verde, verde da marca para ações e o lima só no símbolo RODAR. O produto é o **RODAR**; **AvisAI** é o nome do agente de voz dentro dele ("RODAR com AvisAI, seu copiloto de voz"). Mockups de referência das telas: `rodar-web/docs/RODAR-telas/aplicativo/`. O selo "Powered by LiveKit" só conforme as regras de marca do LiveKit.
 
 Os tokens ficam em `tailwind.config.js` (classes NativeWind) e em `src/lib/theme.ts` (valores em JS para SVG, mapa, navegação e sombras). O teste `src/__tests__/theme.test.ts` falha se os dois divergirem. Nenhum componente usa hexadecimal solto.
 
