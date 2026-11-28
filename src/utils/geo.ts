@@ -51,3 +51,39 @@ export function pathLengthKm(path: LatLng[]): number {
   for (let i = 1; i < path.length; i++) total += distanceKm(path[i - 1], path[i]);
   return total;
 }
+
+/**
+ * Liga os pontos em sequência, com `pointsPerSegment` passos entre cada par: usado para contornar
+ * waypoints (reais ou de curva) em vez de desenhar uma única linha reta de origem a destino.
+ */
+export function threadWaypoints(waypoints: LatLng[], pointsPerSegment = 8): LatLng[] {
+  if (waypoints.length < 2) return waypoints;
+  const steps = Math.max(1, Math.round(pointsPerSegment));
+  const path: LatLng[] = [waypoints[0]];
+  for (let i = 1; i < waypoints.length; i++) {
+    const from = waypoints[i - 1];
+    const to = waypoints[i];
+    for (let s = 1; s <= steps; s++) {
+      const t = s / steps;
+      path.push({
+        lat: Number((from.lat + (to.lat - from.lat) * t).toFixed(6)),
+        lng: Number((from.lng + (to.lng - from.lng) * t).toFixed(6)),
+      });
+    }
+  }
+  return path;
+}
+
+/**
+ * Sem waypoints reais conhecidos: curva o meio do trajeto para o lado (duas dobras, tipo "S"),
+ * só para não desenhar uma linha matematicamente reta de origem a destino num mapa de verdade.
+ */
+export function bendRoute(from: LatLng, to: LatLng, offsetRatio = 0.09): LatLng[] {
+  const dLat = to.lat - from.lat;
+  const dLng = to.lng - from.lng;
+  const at = (t: number, side: number): LatLng => ({
+    lat: from.lat + dLat * t - dLng * offsetRatio * side,
+    lng: from.lng + dLng * t + dLat * offsetRatio * side,
+  });
+  return [from, at(1 / 3, 1), at(2 / 3, 0.55), to];
+}

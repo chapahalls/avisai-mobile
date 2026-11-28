@@ -17,7 +17,7 @@ import type {
   TaskCCO,
 } from '../../../types/backend';
 import type { LatLng } from '../../../types/geo';
-import { distanceKm, pathLengthKm, pointAt } from '../../../utils/geo';
+import { bendRoute, distanceKm, pathLengthKm, pointAt, threadWaypoints } from '../../../utils/geo';
 import { useDocuments } from '../../documents';
 import { enqueue } from '../../outbox';
 import { ROUTE } from '../api/route.mock';
@@ -726,7 +726,11 @@ export const useTrip = create<TripState>((set, get) => ({
       const parsedPolyline = Array.isArray(apiRoute.polyline)
         ? apiRoute.polyline.map(normalizePolylinePoint).filter((p): p is LatLng => p !== null)
         : [];
-      const path: LatLng[] = parsedPolyline.length >= 2 ? parsedPolyline : [originPos, destPos];
+      const rawPath: LatLng[] = parsedPolyline.length >= 2 ? parsedPolyline : [originPos, destPos];
+      // Backend mandou só origem e destino (sem forma real da estrada): curva pra não desenhar
+      // uma linha reta cruzando campo no mapa de verdade. 3+ pontos já vêm do backend como rota.
+      const path: LatLng[] =
+        rawPath.length > 2 ? rawPath : threadWaypoints(bendRoute(rawPath[0], rawPath[1]), 8);
       const receiverLabel =
         apiRoute.receiver?.company && apiRoute.receiver?.name
           ? `${apiRoute.receiver.company} · ${apiRoute.receiver.name}`

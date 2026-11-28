@@ -13,6 +13,7 @@ import {
 } from '../types/backend';
 import type { DomainEvent } from '../types/events';
 import type { LatLng } from '../types/geo';
+import { bendRoute, threadWaypoints } from '../utils/geo';
 import { useApiConfig } from './api';
 import {
   NetworkError,
@@ -49,12 +50,12 @@ interface DriverSeedFixture {
   polyline: LatLng[];
 }
 
-function buildPolyline(from: LatLng, to: LatLng, count = 10): LatLng[] {
-  const steps = Math.max(2, count) - 1;
-  return Array.from({ length: steps + 1 }, (_, i) => ({
-    lat: Number((from.lat + ((to.lat - from.lat) * i) / steps).toFixed(6)),
-    lng: Number((from.lng + ((to.lng - from.lng) * i) / steps).toFixed(6)),
-  }));
+/**
+ * Sem waypoints reais conhecidos para estes recebedores fictícios: curva o trajeto (ao invés de
+ * uma linha reta origem→destino) para parecer uma estrada ao ser desenhado sobre o mapa real.
+ */
+function buildPolyline(from: LatLng, to: LatLng, pointsPerSegment = 8): LatLng[] {
+  return threadWaypoints(bendRoute(from, to), pointsPerSegment);
 }
 
 const ORIGIN_JUNDIAI: LatLng = {
