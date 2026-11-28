@@ -14,3 +14,4 @@
 5. Textos de tela sempre por i18n (`src/assets/locales`), em pt-BR e en.
 6. Cores só pelos tokens (`tailwind.config.js`, `docs/DESIGN.md`). Cor nunca comunica sozinha.
 7. Nada de chave, token ou telefone real no git (E7).
+8. Depois de entregar, cortar ou decidir algo aqui, rode `/registrar` antes de encerrar: o status, as decisões e a nota deste repo ficam em `rodar-ideas/repos/rodar-mobile/`.
