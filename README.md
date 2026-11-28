@@ -31,7 +31,7 @@
 | **Abrir o app no navegador** | [rodarglobal.github.io/rodar-mobile](https://rodarglobal.github.io/rodar-mobile/): o app real do motorista, no modo simulado (dados fictícios, sem login) |
 | **Ver sem instalar nada** | [tour do app (1 min)](docs/assets/readme/tour.mp4) · [tour do site e do painel (1 min)](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) · [validação ponta a ponta com a API real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](#telas-do-aplicativo) |
 | **Repositórios** | [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-web](https://github.com/rodarglobal/rodar-web) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) (este) |
-| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 554 testes automatizados: 318 no backend, 127 no web, 109 no mobile · lint do mobile sem nenhum aviso |
+| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 721 testes automatizados: 435 no backend, 146 no web, 140 no mobile · lint do mobile sem nenhum aviso · [teste ponta a ponta no celular](docs/E2E-CELULAR.md): app nativo + voz LiveKit real + backend + CCO, 20 de 20 etapas por voz |
 | **Segurança** | JWT assinado no login, papel `cco` nas ações da central, CORS restrito, segredo do LLM e limite de ligações ([detalhes](https://github.com/rodarglobal/rodar-backend#segurança)) |
 | **O que é simulado** | login sem senha, GPS da rota, documentos fiscais e o modo Mock do app: [lista completa](#o-que-é-simulado) |
 | **Glossário** | **CCO**: a central de operações da transportadora · **recebedor**: quem descarrega (CD, atacado, loja) · **doca**: o portão de descarga · **estadia**: o valor que a lei manda pagar pelo caminhão parado além de 5 h (a **franquia**; Lei 11.442) · **geocerca**: o raio em volta do destino (300 m no app) que marca a chegada · **Task**: o pedido que o CCO precisa responder |
@@ -305,6 +305,19 @@ npx eas-cli build --profile development --platform android
 </details>
 
 <details>
+<summary><strong>Teste ponta a ponta no celular (voz real)</strong></summary>
+<br />
+
+Com o backend local no ar, o Dev Build no celular (USB) e o Metro rodando, o script percorre a viagem inteira por voz: login, retirada, relatório inicial, aproximação, chegada, check-in e descarga. Ele fala com o AvisAI pelo alto-falante do computador e confere cada etapa na API.
+
+```bash
+python3 scripts/e2e/celular.py --sink <id do alto-falante em `wpctl status`>
+```
+
+O que ele cobre, o resultado da última rodada (20 de 20) e os defeitos que achou estão em [docs/E2E-CELULAR.md](docs/E2E-CELULAR.md).
+</details>
+
+<details>
 <summary><strong>Regerar as telas e o tour do README</strong></summary>
 <br />
 
@@ -445,6 +458,7 @@ Nenhum código proprietário anterior ao hackathon foi usado. Só pacotes open-s
 - [Arquitetura e fluxos](docs/ARQUITETURA.md)
 - [Regras de negócio](docs/REGRAS-DE-NEGOCIO.md)
 - [Design system](docs/DESIGN.md)
+- [Teste ponta a ponta no celular](docs/E2E-CELULAR.md)
 - [Mockups das telas do app](https://github.com/rodarglobal/rodar-web/tree/main/docs/RODAR-telas/aplicativo) (no rodar-web)
 
 ## Licença e versão
