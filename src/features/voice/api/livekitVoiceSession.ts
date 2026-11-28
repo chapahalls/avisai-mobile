@@ -1,6 +1,7 @@
 import { VOICE_PRIVACY } from '../../../lib/config';
 import { getApiClient, useApiConfig } from '../../../services/api';
 import type { Sessao } from '../../../types/backend';
+import { isVoiceAgentParticipant } from '../rules/agentParticipant';
 import type { VoiceState } from '../types';
 import type { AudioSpeaker, VoiceSession, VoiceSessionCallbacks } from './voiceSession';
 
@@ -141,7 +142,10 @@ export class LiveKitVoiceSession implements VoiceSession {
       room.on(client.RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
         this.handleAgentJoined(participant);
       });
-      room.on(client.RoomEvent.ParticipantDisconnected, () => {
+      room.on(client.RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
+        // Participantes de passagem (o backend entrando só para pedir uma fala proativa)
+        // não encerram a conversa: só a saída do agente encerra.
+        if (!isVoiceAgentParticipant(participant)) return;
         this.agentPresent = false;
         // O agente encerrou pelo backend (por exemplo, após "AvisAI, encerrar sessão").
         // Fecha só o RTC local: não chama DELETE novamente.
@@ -189,6 +193,7 @@ export class LiveKitVoiceSession implements VoiceSession {
   }
 
   private handleAgentJoined(participant: RemoteParticipant) {
+    if (!isVoiceAgentParticipant(participant)) return;
     this.agentPresent = true;
     this.callbacks.onLiveKitStage?.('live', this.sessao?.canal);
     if (!this.muted && (this.currentState === 'thinking' || this.currentState === 'idle')) {
