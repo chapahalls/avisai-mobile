@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { isCompactWidth } from '../utils/layout';
+
 vi.mock('react-native', () => ({ useWindowDimensions: () => ({ width: 384, fontScale: 1 }) }));
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ bottom: 0 }) }));
-
-import { isCompactWidth } from '../utils/layout';
 
 describe('isCompactWidth', () => {
   it('celular comum com fonte normal não é compacto', () => {

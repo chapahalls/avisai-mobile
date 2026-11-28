@@ -6,6 +6,6 @@ export {
   markSent,
   oldestPending,
 } from './api/outboxRepo';
-export { startSyncEngine, flushOutbox } from './api/syncEngine';
+export { startSyncEngine, flushOutbox, isPermanentFailure } from './api/syncEngine';
 export { useOutboxStore } from './hooks/useOutbox';
 export type { OutboxRow, OutboxStatus } from './types';

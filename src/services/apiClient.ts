@@ -68,9 +68,13 @@ export interface HealthCheckResult {
 }
 
 export class NetworkError extends Error {
-  constructor(message = 'network_error') {
+  /** Status HTTP da resposta, quando o servidor respondeu. */
+  readonly status?: number;
+
+  constructor(message = 'network_error', status?: number) {
     super(message);
     this.name = 'NetworkError';
+    this.status = status;
   }
 }
 

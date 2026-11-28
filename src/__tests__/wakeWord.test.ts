@@ -1,5 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useSession, type Session } from '../features/auth';
+import { useAvisaiDock, useVoice, type WakeWordEngine } from '../features/voice';
+import { matchWakePhrase } from '../features/voice/rules/wakePhrase';
+import type { WakeEngineHandlers } from '../features/voice/api/wakeWordEngine';
+import i18n from '../lib/i18n';
+import { WAKE_WORD } from '../lib/config';
+import { setSetting } from '../lib/db';
+import { startWakeWordWatcher, useWakeWord } from '../services/wakeWord';
+import { announceDriverNotice, resetDriverNoticesForTests, useDriverNotices } from '../services/driverNotices';
+import { useVoiceCommandToast } from '../services/voiceCommands';
+
 vi.mock('../lib/config', async (importOriginal) => {
   const mod = await importOriginal<typeof import('../lib/config')>();
   // Os testes cobrem também o caminho do reconhecimento no aparelho.
@@ -27,17 +38,6 @@ vi.mock('react-native-svg', () => ({
   Polyline: () => null,
   Rect: () => null,
 }));
-
-import { useSession, type Session } from '../features/auth';
-import { useAvisaiDock, useVoice, type WakeWordEngine } from '../features/voice';
-import { matchWakePhrase } from '../features/voice/rules/wakePhrase';
-import type { WakeEngineHandlers } from '../features/voice/api/wakeWordEngine';
-import i18n from '../lib/i18n';
-import { WAKE_WORD } from '../lib/config';
-import { setSetting } from '../lib/db';
-import { startWakeWordWatcher, useWakeWord } from '../services/wakeWord';
-import { announceDriverNotice, resetDriverNoticesForTests, useDriverNotices } from '../services/driverNotices';
-import { useVoiceCommandToast } from '../services/voiceCommands';
 
 describe('matchWakePhrase', () => {
   it.each(['Ei AvisAI', 'ei avisa aí', 'Hey Avis AI', 'avisaí', 'AvisAI, abre o mapa', 'oi avisa i'])(

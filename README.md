@@ -28,12 +28,24 @@
 |---|---|
 | **Trilha** | Logística & automação |
 | **Em uma frase** | Um agente de voz que avisa o recebedor antes da chegada, conta a estadia do caminhão parado (Lei 11.442) e só chama a central quando alguém precisa decidir. |
+| **Abrir o app no navegador** | [rodarglobal.github.io/rodar-mobile](https://rodarglobal.github.io/rodar-mobile/): o app real do motorista, no modo simulado (dados fictícios, sem login) |
 | **Ver sem instalar nada** | [tour do app (1 min)](docs/assets/readme/tour.mp4) · [tour do site e do painel (1 min)](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) · [validação ponta a ponta com a API real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](#telas-do-aplicativo) |
 | **Repositórios** | [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-web](https://github.com/rodarglobal/rodar-web) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) (este) |
-| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 524 testes automatizados: 299 no backend, 127 no web, 98 no mobile |
+| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 554 testes automatizados: 318 no backend, 127 no web, 109 no mobile · lint do mobile sem nenhum aviso |
 | **Segurança** | JWT assinado no login, papel `cco` nas ações da central, CORS restrito, segredo do LLM e limite de ligações ([detalhes](https://github.com/rodarglobal/rodar-backend#segurança)) |
 | **O que é simulado** | login sem senha, GPS da rota, documentos fiscais e o modo Mock do app: [lista completa](#o-que-é-simulado) |
-<!-- Demo publicada e vídeo de 3 min do Hack Brasil: incluir as duas linhas aqui antes de 30/11. -->
+| **Glossário** | **CCO**: a central de operações da transportadora · **recebedor**: quem descarrega (CD, atacado, loja) · **doca**: o portão de descarga · **estadia**: o valor que a lei manda pagar pelo caminhão parado além de 5 h (a **franquia**; Lei 11.442) · **geocerca**: o raio em volta do destino (300 m no app) que marca a chegada · **Task**: o pedido que o CCO precisa responder |
+<!-- Vídeo de 3 min do Hack Brasil: incluir a linha aqui antes de 30/11. -->
+
+## Por que importa
+
+- **11h40 parado num CD.** Na Grande SP, a descarga levou 5h09 em média em 2025, a maior em 10 anos, e 11h40 nos centros de distribuição ([IER 2025, IPTC/SETCESP](https://setcesp.org.br/noticias/a-demora-que-compromete-a-eficiencia-2/), 175 recebedores).
+- **9 em cada 10 não recebem pela espera.** 91% dos caminhoneiros autônomos que esperam mais de 5 h não recebem a estadia, embora a lei a garanta ([CNTA 2025](https://mundologistica.com.br/noticias/caminhoneiros-autonomos-aceitam-frete-abaixo-do-piso-por-necessidade), 2.002 autônomos; amostra não probabilística).
+- **Ninguém registra o tempo parado.** Sem hora de chegada provada, não há o que cobrar. E os sistemas de pátio e agendamento pressupõem que o motorista lê e digita, o que ele não pode fazer dirigindo (CTB, art. 252).
+
+**Quanto vale, por entrega:** uma carreta de 30 t que espera 11h40 num CD tem 7 h além da franquia: 7 h × 30 t × R$ 2,50 ([valor da ANTT](https://mundologistica.com.br/noticias/antt-reajusta-estadia-tempo-adicional-carga-descarga)) = **R$ 525 de estadia**, a mesma conta que o app faz na tela da Fila. Numa frota de 50 carretas com uma entrega assim por semana, são cerca de **R$ 113 mil por mês** de estadia devida que hoje não é cobrada por falta de prova (estimativa nossa, com as premissas acima).
+
+**O que o RODAR muda:** o recebedor sabe da chegada antes e prepara a doca; cada hora parada vira um registro com o horário do celular e o do servidor; a estadia devida aparece em R$, pronta para cobrar; e o CCO só é chamado nas exceções.
 
 ## Para que serve
 
@@ -42,7 +54,7 @@ O motorista dirige; o AvisAI fala por ele. O app fica na cabine, recebe a rota q
 | | Pilar | Como o app entrega |
 |---|---|---|
 | 🎙️ | **Mãos no volante** | Retirada, chegada, ocorrências e descarga são confirmadas por voz. Com o caminhão andando, o app aceita só voz; telas de leitura (documentos, mensagens) esperam o caminhão parar. |
-| 📞 | **Recebedor avisado antes** | A 8 km do destino, o agente liga para o recebedor. A resposta (doca e horário, "não recebe hoje" ou "não atendeu") chega ao motorista em voz e num aviso na tela. |
+| 📞 | **Recebedor avisado antes** | A 8 km do destino, o backend liga para o recebedor (por telefone, quando há número e credenciais configurados; senão, por um canal de voz na internet). A resposta (doca e horário, "não recebe hoje" ou "não atendeu") chega ao motorista em voz e num aviso na tela. No modo simulado, a resposta é sorteada. |
 | ⏱️ | **Cada hora parada provada** | Na chegada, o tempo parado começa a contar. A tela mostra a franquia de 5 h (Lei 11.442), a estadia acumulada e os avisos ao CCO. Cada evento guarda o horário do celular e o do servidor. |
 | 📶 | **Funciona sem sinal** | Toda escrita entra numa fila local (`outbox`) com `idempotencyKey` e sobe em ordem quando a rede volta. Sem rede, as falas do motorista são guardadas e o AvisAI as processa depois. |
 | 📄 | **Documentos na voz** | NF-e, CT-e e anexos do CCO ficam no celular. O agente responde só com o que está nos campos do documento, e "não encontrei" quando o campo não existe. |
@@ -132,7 +144,7 @@ A chegada é a entrada na geocerca do destino **e** o check-in por voz ou pelo b
 <img src="docs/assets/readme/checkin.jpg" alt="Check-in feito: o AvisAI avisa que o CCO foi notificado e a contagem do tempo parado começou" width="32%" />
 <img src="docs/assets/readme/queue.jpg" alt="Fila de descarga: doca 4 às 15:00, 6h17 parado, franquia excedida e estadia acumulada de R$ 140,00" width="32%" />
 
-<sub>Na captura, o relógio da demo foi adiantado: 6h17 parado, 28 t, R$ 2,50 por t/h → 2 h excedentes × 28 t × R$ 2,50 = R$ 140,00.</sub>
+<sub>Na captura, o relógio da demo foi adiantado para pouco mais de 6 h parado: com 28 t, são 2 h excedentes (a fração conta como hora) × 28 t × R$ 2,50 = R$ 140,00.</sub>
 </details>
 
 <details>
@@ -242,6 +254,8 @@ O CI do GitHub roda os três a cada push e PR.
 | `EXPO_PUBLIC_AUTH_MODE` | `mock` (padrão) · `keycloak` | `mock` entra pelo SSO do `ApiClient`. `keycloak` faz login OIDC (Authorization Code + PKCE) no realm `rodar` do Keycloak do [rodar-keycloak](https://github.com/rodarglobal/rodar-keycloak); configure `EXPO_PUBLIC_KEYCLOAK_ISSUER` (IP da máquina, ou `localhost` com `adb reverse tcp:8180 tcp:8180`). Exige Dev Build novo (`expo-web-browser`). |
 | `GOOGLE_MAPS_API_KEY_ANDROID` | vazia (padrão) · chave | Sem chave, mapa SVG simulado. Com chave, Google Maps no Dev Build. |
 
+**No navegador**, o mesmo app que está publicado em [rodarglobal.github.io/rodar-mobile](https://rodarglobal.github.io/rodar-mobile/): `./scripts/web-demo/build.sh dist-web` e sirva a pasta `dist-web` (ex.: `npx serve dist-web`). O workflow `Demo (GitHub Pages)` faz isso a cada push na `main`.
+
 Tudo isso também muda **em tempo real** pelo painel **Demo** (Ajustes ou botão Demo do Mapa), sem reiniciar o Metro.
 
 <details>
@@ -294,7 +308,7 @@ npx eas-cli build --profile development --platform android
 ./scripts/readme-captures/capture.sh
 ```
 
-O script monta uma cópia temporária do projeto, instala ali o suporte web do Expo, troca os módulos nativos por stubs (como no Expo Go) e percorre o app no Chromium em 390 × 844, em pt-BR e no modo Mock. As telas e o tour (GIF e MP4) saem em `docs/assets/readme/`. O projeto em si não muda. Precisa de Playwright com Chromium e de ffmpeg; leva cerca de 4 min. O roteiro está em `scripts/readme-captures/tour.mjs`: se uma tela mudar de lugar, ajuste ali.
+O script gera o app para a web com `scripts/web-demo/build.sh` (o mesmo da demo pública: cópia temporária do projeto, suporte web do Expo, stubs dos módulos nativos como no Expo Go e SQLite em memória) e percorre o app no Chromium em 390 × 844, em pt-BR e no modo Mock. As telas e o tour (GIF e MP4) saem em `docs/assets/readme/`. O projeto em si não muda. Precisa de Playwright com Chromium e de ffmpeg; leva cerca de 4 min. O roteiro está em `scripts/readme-captures/tour.mjs`: se uma tela mudar de lugar, ajuste ali.
 </details>
 
 <details>
@@ -407,6 +421,18 @@ Nenhum código proprietário anterior ao hackathon foi usado. Só pacotes open-s
 - **Dados, estado e i18n:** `expo-sqlite` (`~15.1.2`), `zustand` (`^5.0.3`), `i18next` (`^24.2.2`), `react-i18next` (`^15.4.0`), `expo-localization` (`~16.0.1`), `expo-crypto` (`~14.0.2`), `@react-native-community/netinfo` (`11.4.1`).
 - **Testes:** `vitest` (`^3.0.5`).
 </details>
+
+## Decisões técnicas
+
+| Decisão | Por quê | Onde |
+|---|---|---|
+| **Voz pela Agora Conversational AI, com o LLM no nosso backend** | Latência baixa, interrupção (barge-in) e cancelamento de ruído da cabine prontos; o raciocínio, as ferramentas e as regras ficam no backend, que é dono do estado | `features/voice/api/agoraVoiceSession.ts`, [rodar-backend](https://github.com/rodarglobal/rodar-backend) |
+| **App só lê e reage; o backend decide** | Estadia, Tasks e ligações têm uma fonte de verdade só. O app não publica rota nem confirma Task | `services/httpApi.ts`, `services/backendStream.ts` |
+| **Fila offline (outbox) em SQLite, FIFO estrito e idempotente** | Na estrada falta sinal. Cada escrita leva uma `idempotencyKey`; 409 conta como enviado; rede fraca sobe só o que é crítico; erro 4xx definitivo não trava a fila. Coberto por 11 testes com SQLite de verdade | `features/outbox/`, `src/__tests__/outbox.test.ts` |
+| **Sem rede, gravar a fala em vez de rodar um modelo no celular** | Um modelo de voz local (Whisper) exigia baixar 466 MB no celular do motorista; o time decidiu não rodar modelo no aparelho. O áudio espera a rede e o servidor transcreve | `features/voice/api/offlineVoiceRecorder.ts`, `OFFLINE_VOICE` |
+| **Adaptadores Mock e real, com troca automática** | O júri e o time rodam o app no Expo Go, sem módulos nativos; no Dev Build entram Agora, Google Maps e wake word. Os módulos nativos são carregados com `require` opcional (por isso as exceções de lint `no-require-imports`) | `VoiceSession`, `RouteMap`, `services/api.ts` |
+| **Arquitetura por domínio** | Cada feature expõe só o `index.ts`; `trip` e `voice` conversam pelo `agentBus`; `services` não importa features (a camada `app` faz a ligação) | `src/features/`, `src/app/wireBackendStream.ts` |
+| **Parâmetros num lugar só** | Franquia, valor da estadia, raio da geocerca, tentativas da fila e limites de voz mudam por contrato, não no código espalhado | `src/lib/config.ts` |
 
 ## Documentação
 

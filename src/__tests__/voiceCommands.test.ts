@@ -21,7 +21,7 @@ describe('comandos do app vindos do backend (acao_cliente)', () => {
   });
 
   it('abre cada tela pedida pelo agente', () => {
-    const casos: Array<[Parameters<typeof executeClientAction>[1], string]> = [
+    const casos: [Parameters<typeof executeClientAction>[1], string][] = [
       [{ tela: 'mapa' }, 'Comando de voz: Abrindo Mapa'],
       [{ tela: 'documentos' }, 'Comando de voz: Abrindo Documentos'],
       [{ tela: 'mensagens' }, 'Comando de voz: Abrindo Mensagens'],
@@ -60,7 +60,7 @@ describe('modo simulado: a fala vira a mesma ação', () => {
   });
 
   it('navega pelas telas em pt-BR e en', async () => {
-    const casos: Array<[string, string]> = [
+    const casos: [string, string][] = [
       ['Abrir mapa da rota', 'Comando de voz: Abrindo Mapa'],
       ['Vai pras mensagens', 'Comando de voz: Abrindo Mensagens'],
       ['Mudar para documentos', 'Comando de voz: Abrindo Documentos'],

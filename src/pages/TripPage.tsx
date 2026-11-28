@@ -131,12 +131,12 @@ export function TripPage() {
     <Screen>
       {/* Cabeçalho: símbolo, saudação e estado do AvisAI */}
       <View className="flex-row items-center gap-3">
-        <RodarMark size={52} />
-        <View className="flex-1">
+        <RodarMark size={48} />
+        <View className="flex-1 min-w-0">
           <Text numberOfLines={1} className="text-ink-300 text-base">
             {t(greetingKey(new Date()))}
           </Text>
-          <Text numberOfLines={1} className="text-ink-50 text-3xl font-display">
+          <Text numberOfLines={1} className="text-ink-50 text-2xl font-display">
             {firstName}
           </Text>
         </View>

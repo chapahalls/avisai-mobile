@@ -1,4 +1,4 @@
-// Entrada do build web de captura: carrega o SQLite em memória (sql.js) antes do app,
+// Entrada do build web (demo pública e capturas): carrega o SQLite em memória (sql.js) antes do app,
 // porque o app abre o banco de forma síncrona na inicialização.
 import { registerRootComponent } from 'expo';
 

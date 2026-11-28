@@ -1,3 +1,4 @@
+import { OUTBOX } from '../../../lib/config';
 import { db } from '../../../lib/db';
 import { newId } from '../../../lib/id';
 import { CRITICAL_EVENTS, type DomainEvent, type EventType } from '../../../types/events';
@@ -98,9 +99,9 @@ export const markSent = (id: string, receivedAt = new Date().toISOString()) => {
   notifyOutboxChange();
 };
 
-export const markRetry = (row: OutboxRow, maxAttempts: number) => {
+export const markRetry = (row: OutboxRow, maxAttempts: number = OUTBOX.maxAttempts) => {
   const attempts = row.attempts + 1;
-  const backoffMs = Math.min(60_000, 2 ** attempts * 1000);
+  const backoffMs = Math.min(OUTBOX.maxBackoffMs, 2 ** attempts * 1000);
   const status = attempts > maxAttempts ? 'failed' : 'pending';
   db.runSync(
     'UPDATE outbox SET attempts = ?, status = ?, next_try_at = ? WHERE id = ?',
@@ -109,6 +110,12 @@ export const markRetry = (row: OutboxRow, maxAttempts: number) => {
     Date.now() + backoffMs,
     row.id,
   );
+  notifyOutboxChange();
+};
+
+/** Erro definitivo: o item sai da fila na hora (o motorista pode reenviar pelo retryFailed). */
+export const markFailed = (row: OutboxRow) => {
+  db.runSync("UPDATE outbox SET attempts = ?, status = 'failed' WHERE id = ?", row.attempts + 1, row.id);
   notifyOutboxChange();
 };
 

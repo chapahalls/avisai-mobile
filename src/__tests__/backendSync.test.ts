@@ -1,5 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { statusRotaToPhase, useTrip } from '../features/trip/hooks/useTrip';
+import {
+  apiDocumentToTripDocument,
+  apiRouteFileToTripDocument,
+  useDocuments,
+} from '../features/documents';
+import { useVoice } from '../features/voice';
+import { useHeadsUpBanner } from '../components/HeadsUpBanner';
+import i18n from '../lib/i18n';
+import { useApiConfig } from '../services/api';
+import {
+  buildBackendWebSocketUrl,
+  handleStreamMessage,
+  useBackendStream,
+} from '../services/backendStream';
+import { mockApiClient } from '../services/mockApi';
+import { useVoiceCommandToast } from '../services/voiceCommands';
+import { wireBackendStream } from '../app/wireBackendStream';
+
 vi.mock('react-native', () => ({}));
 vi.mock('react-native-reanimated', () => ({
   default: { View: () => null },
@@ -25,26 +44,9 @@ vi.mock('react-native-svg', () => ({
   Rect: () => null,
 }));
 
-import { statusRotaToPhase, useTrip } from '../features/trip/hooks/useTrip';
-import {
-  apiDocumentToTripDocument,
-  apiRouteFileToTripDocument,
-  useDocuments,
-} from '../features/documents';
-import { useVoice } from '../features/voice';
-import { useHeadsUpBanner } from '../components/HeadsUpBanner';
-import i18n from '../lib/i18n';
-import { useApiConfig } from '../services/api';
-import {
-  buildBackendWebSocketUrl,
-  handleStreamMessage,
-  useBackendStream,
-} from '../services/backendStream';
-import { mockApiClient } from '../services/mockApi';
-import { useVoiceCommandToast } from '../services/voiceCommands';
-
 describe('backend integration & stream events', () => {
   beforeEach(async () => {
+    wireBackendStream();
     await i18n.changeLanguage('pt-BR');
     useApiConfig.setState({
       mode: 'mock',

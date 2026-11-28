@@ -1,5 +1,5 @@
 import i18n from '../lib/i18n';
-import { ROUTE } from '../features/trip/api/route.mock';
+import { ROUTE } from './demoRoute';
 import {
   UID,
   type ApiDocumentResponse,

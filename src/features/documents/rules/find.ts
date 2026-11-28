@@ -1,7 +1,7 @@
 import { normalize } from '../../../utils/text';
 import type { TripDocument } from '../types';
 
-const KIND_ALIASES: Array<[TripDocument['kind'], RegExp]> = [
+const KIND_ALIASES: [TripDocument['kind'], RegExp][] = [
   ['NF-e', /\bnf-?e\b|\bnota( fiscal)?\b|\bnf\b|\bdanfe\b|\binvoice\b/],
   ['CT-e', /\bct-?e\b|\bconhecimento\b|\bdacte\b/],
   ['MDF-e', /\bmdf-?e\b|\bmanifesto\b/],

@@ -9,6 +9,7 @@ import { resetStuckSending, startSyncEngine, useOutboxStore } from '../features/
 import { startTripSimulator, useTrip, wireTripToVoice, ROUTE } from '../features/trip';
 import { loadPersistedVoiceMode, wireVoiceToBus } from '../features/voice';
 import { indexDocuments } from '../features/documents';
+import { wireBackendStream } from './wireBackendStream';
 
 /** Liga tudo uma vez: banco, idioma/config persistida, rede, fila, stream WS, simulador, voz, wake word e índice vetorial. Retorna o "desligar". */
 export function bootstrap() {
@@ -25,6 +26,7 @@ export function bootstrap() {
   const stops = [
     startNetworkWatcher(),
     startSyncEngine(),
+    wireBackendStream(),
     startBackendStreamWatcher(),
     wireVoiceToBus(),
     wireTripToVoice(),
