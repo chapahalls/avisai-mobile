@@ -28,7 +28,7 @@
 |---|---|
 | **Trilha** | Logística & automação |
 | **Em uma frase** | Um agente de voz que avisa o recebedor antes da chegada, conta a estadia do caminhão parado (Lei 11.442) e só chama a central quando alguém precisa decidir. |
-| **Abrir o app no navegador** | [rodarglobal.github.io/rodar-mobile](https://rodarglobal.github.io/rodar-mobile/): o app real do motorista, no modo simulado (dados fictícios, sem login) |
+| **Abrir o app no navegador** | [rodar-web-beta.vercel.app/mobile-web](https://rodar-web-beta.vercel.app/mobile-web): demonstração interativa do app do motorista, sem login e com dados fictícios (publicada pelo [rodar-web](https://github.com/rodarglobal/rodar-web)). O botão **Testar ao vivo (LiveKit)** fala com o agente de voz real |
 | **Ver sem instalar nada** | [tour do app (1 min)](docs/assets/readme/tour.mp4) · [tour do site e do painel (1 min)](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) · [validação ponta a ponta com a API real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](#telas-do-aplicativo) |
 | **Repositórios** | [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-web](https://github.com/rodarglobal/rodar-web) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) (este) |
 | **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 724 testes automatizados: 438 no backend, 146 no web, 140 no mobile · lint do mobile sem nenhum aviso · [teste ponta a ponta no celular](docs/E2E-CELULAR.md): app nativo + voz LiveKit real + backend + CCO, 20 de 20 etapas por voz |
@@ -258,7 +258,7 @@ O CI do GitHub roda os três a cada push e PR.
 | `EXPO_PUBLIC_AUTH_MODE` | `mock` (padrão) · `keycloak` | `mock` entra pelo SSO do `ApiClient`. `keycloak` faz login OIDC (Authorization Code + PKCE) no realm `rodar` do Keycloak do [rodar-keycloak](https://github.com/rodarglobal/rodar-keycloak); configure `EXPO_PUBLIC_KEYCLOAK_ISSUER` (IP da máquina, ou `localhost` com `adb reverse tcp:8180 tcp:8180`). Exige Dev Build novo (`expo-web-browser`). |
 | `GOOGLE_MAPS_API_KEY_ANDROID` | vazia (padrão) · chave | Sem chave, mapa SVG simulado. Com chave, Google Maps no Dev Build. |
 
-**No navegador**, o mesmo app que está publicado em [rodarglobal.github.io/rodar-mobile](https://rodarglobal.github.io/rodar-mobile/): `./scripts/web-demo/build.sh dist-web` e sirva a pasta `dist-web` (ex.: `npx serve dist-web`). O workflow `Demo (GitHub Pages)` faz isso a cada push na `main`.
+**No navegador**, este app (o código React Native, em modo Mock): `./scripts/web-demo/build.sh dist-web` e sirva a pasta `dist-web` (ex.: `npx serve dist-web`). O workflow `Demo (GitHub Pages)` está pronto para publicar isso a cada push na `main`, mas a Pages deste repositório não está ativada; a demo no ar é a do rodar-web, no link acima.
 
 Tudo isso também muda **em tempo real** pelo painel **Demo** (Ajustes ou botão Demo do Mapa), sem reiniciar o Metro.
 
