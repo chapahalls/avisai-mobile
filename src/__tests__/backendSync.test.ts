@@ -500,4 +500,26 @@ describe('backend integration & stream events', () => {
       plate: newRoute.plate,
     });
   });
+  it('na descarga, mostra a estadia final do backend e não o último tique do contador', () => {
+    useApiConfig.setState({ mode: 'http', rotaId: 2, driverId: 2 });
+    const base = {
+      estadia_id: 20, rota_id: 2, inicio: '2026-11-28T15:08:30Z', fim: null, encerrada: false,
+      franquia_h: 5, franquia_restante_h: 0, franquia_restante: '0h00', capacidade_t: 18, valor_t_h: 2.5,
+    };
+    handleStreamMessage(JSON.stringify({ canal: 'contador', dado: { estadias: [{
+      ...base, horas_paradas: 20.1, tempo_parado: '20h07', horas_excedentes: 15, valor: 675, valor_fmt: 'R$ 675,00',
+    }] } }));
+    expect(useTrip.getState().backendStay?.tempo_parado).toBe('20h07');
+
+    handleStreamMessage(JSON.stringify({ canal: 'evento', dado: {
+      id: 1327, tipo: 'descarga', rota_id: 2, timestamp: '2026-11-28T15:10:32Z',
+      mensagem: 'Descarga confirmada por motorista (voz). Tempo parado 20h19, estadia R$ 720,00.',
+      dados: { estadia: { ...base, fim: '2026-11-28T15:10:32Z', encerrada: true, horas_paradas: 20.32,
+        tempo_parado: '20h19', horas_excedentes: 16, valor: 720, valor_fmt: 'R$ 720,00' } },
+    } }));
+
+    const s = useTrip.getState();
+    expect(s.phase).toBe('unloaded');
+    expect(s.backendStay).toMatchObject({ tempo_parado: '20h19', valor_fmt: 'R$ 720,00', encerrada: true });
+  });
 });

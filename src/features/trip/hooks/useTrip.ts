@@ -196,6 +196,17 @@ function findProgressForRemainingKm(route: RouteMock, targetKm: number): number 
   return 1;
 }
 
+/** Estadia encerrada enviada pelo backend no evento `descarga` (só se for desta rota). */
+function closedStayFrom(raw: unknown, rotaId: number | null): Estadia | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const e = raw as Partial<Estadia>;
+  if (typeof e.tempo_parado !== 'string' || typeof e.valor !== 'number' || typeof e.valor_fmt !== 'string') {
+    return null;
+  }
+  if (rotaId !== null && e.rota_id !== undefined && e.rota_id !== rotaId) return null;
+  return { ...(e as Estadia), encerrada: true };
+}
+
 function computeProgressFromPosition(pos: LatLng, route: RouteMock): number {
   const totalKm = pathLengthKm(route.path);
   const leftKm = distanceKm(pos, route.destination.position);
@@ -1375,12 +1386,15 @@ export const useTrip = create<TripState>((set, get) => ({
     }
 
     if (evento.tipo === 'descarga') {
+      // A estadia fechada vem no próprio evento: é o valor final do backend. Sem ela, o
+      // contador ficava parado no último tique (minutos a menos que a descarga registrada).
+      const finalStay = closedStayFrom(evento.dados?.estadia, evento.rota_id);
       set((curr) => ({
         phase: 'unloaded',
         etaMin: 0,
         speedKmh: 0,
         unloadedAtMin: curr.unloadedAtMin ?? curr.simMinutes,
-        backendStay: curr.backendStay ? { ...curr.backendStay, encerrada: true } : null,
+        backendStay: finalStay ?? (curr.backendStay ? { ...curr.backendStay, encerrada: true } : null),
         timeline: appendTimeline(
           curr.timeline,
           evento.mensagem || i18n.t('trip.timeline.unloadCompleted'),
