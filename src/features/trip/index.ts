@@ -1,4 +1,12 @@
 export { useTrip, startTripSimulator, wireTripToVoice } from './hooks/useTrip';
+export {
+  useDrivingMode,
+  evaluateDrivingMode,
+  startDrivingModeWatcher,
+  resetDrivingModeForTests,
+  type DrivingModeState,
+} from './hooks/useDrivingMode';
+export { nextDriving, currentSpeed, INITIAL_DRIVING } from './rules/drivingMode';
 export { useStaySummary, type StaySummary } from './hooks/useStaySummary';
 export { ROUTE } from './api/route.mock';
 export { computeStay, type StayConfig } from './rules/stay';

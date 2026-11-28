@@ -240,13 +240,13 @@ export function needsStop(action: ClientAction, opts: ClientActionOptions = {}):
   );
 }
 
+/** Modo direção (velocidade do GPS ou do simulador): andando, leitura espera o caminhão parar. */
 function tripIsMoving(): boolean {
   if (isTest()) return false;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { useTrip } = require('../features/trip') as typeof import('../features/trip');
-    const { phase } = useTrip.getState();
-    return phase === 'driving' || phase === 'approaching';
+    const { useDrivingMode } = require('../features/trip') as typeof import('../features/trip');
+    return useDrivingMode.getState().driving;
   } catch {
     return false;
   }
@@ -283,9 +283,9 @@ function deferUntilStopped(action: ClientAction, opts: ClientActionOptions): voi
   if (unsubPending || isTest()) return;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { useTrip } = require('../features/trip') as typeof import('../features/trip');
-    unsubPending = useTrip.subscribe(() => {
-      resumeWhenStopped();
+    const { useDrivingMode } = require('../features/trip') as typeof import('../features/trip');
+    unsubPending = useDrivingMode.subscribe((s, prev) => {
+      if (prev.driving && !s.driving) resumeWhenStopped();
     });
   } catch {
     // sem viagem: fica pendente até o próximo comando

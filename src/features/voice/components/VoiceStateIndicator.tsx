@@ -34,13 +34,13 @@ export function VoiceStateIndicator() {
   return (
     <View className={`flex-row items-center gap-1.5 border rounded-full px-2.5 py-1 ${pillTone[state]}`}>
       <View className={`w-2 h-2 rounded-full ${dotTone[state]}`} />
-      <Text className={`text-xs font-semibold ${textTone[state]}`}>
+      <Text className={`text-sm font-semibold ${textTone[state]}`}>
         {t(`voice.state.${state}`)}
       </Text>
       {latency !== null && (
         <Text
           style={{ fontVariant: ['tabular-nums'] }}
-          className="text-ink-300 text-[11px] font-medium"
+          className="text-ink-300 text-xs font-medium"
         >
           · {latency} ms
         </Text>

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { LatLng } from '../types/geo';
 import { getApiClient, useApiConfig } from './api';
 import { colors } from '../lib/theme';
+import { speedBetweenKmh } from '../utils/geo';
 
 interface GeolocationCoords {
   latitude: number;
@@ -73,6 +74,8 @@ export interface DeviceGpsState {
   enabled: boolean;
   lastPosition: LatLng | null;
   lastSpeedKmh: number | null;
+  /** Hora (ms) da última posição recebida: sem posição nova há tempo, o caminhão está parado. */
+  lastFixAt: number | null;
   error: string | null;
   setEnabled: (enabled: boolean) => void;
 }
@@ -153,10 +156,15 @@ function handleCoords(coords: GeolocationCoords) {
   const lng = coords.longitude;
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
+  const now = Date.now();
+  const prev = useDeviceGps.getState();
+  // Sem velocidade do aparelho (-1 ou vazia): calcula pela distância desde a posição anterior.
   const speedKmh =
     typeof coords.speed === 'number' && coords.speed >= 0
       ? Math.round(coords.speed * 3.6)
-      : null;
+      : prev.lastPosition && prev.lastFixAt !== null
+        ? speedBetweenKmh(prev.lastPosition, prev.lastFixAt, { lat, lng }, now)
+        : null;
   const accuracyM =
     typeof coords.accuracy === 'number' && coords.accuracy >= 0
       ? Math.round(coords.accuracy)
@@ -165,10 +173,10 @@ function handleCoords(coords: GeolocationCoords) {
   useDeviceGps.setState({
     lastPosition: { lat, lng },
     lastSpeedKmh: speedKmh,
+    lastFixAt: now,
     error: null,
   });
 
-  const now = Date.now();
   if (now - lastSentAt < 2500) return;
   lastSentAt = now;
 
@@ -335,11 +343,12 @@ export const useDeviceGps = create<DeviceGpsState>((set) => ({
   enabled: false,
   lastPosition: null,
   lastSpeedKmh: null,
+  lastFixAt: null,
   error: null,
   setEnabled: (enabled) => {
     stopActiveWatcher();
     if (!enabled) stopBackgroundTracking();
-    set({ enabled, error: null });
+    set({ enabled, error: null, lastFixAt: null, lastSpeedKmh: null });
     if (enabled) {
       activeStop = startNativeWatcher();
     }

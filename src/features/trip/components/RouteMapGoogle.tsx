@@ -152,18 +152,18 @@ export function RouteMapGoogle({
         <View className="absolute top-3 left-3 right-3 flex-row items-center justify-between">
           <View className="flex-row items-center gap-1.5 bg-ink-950/85 border border-ink-700/80 rounded-full px-3 py-1.5">
             <View className={`w-2 h-2 rounded-full ${phaseDotColor[phase]}`} />
-            <Text className="text-ink-50 text-xs font-semibold">{t(`trip.phase.${phase}`)}</Text>
+            <Text className="text-ink-50 text-sm font-semibold">{t(`trip.phase.${phase}`)}</Text>
           </View>
           <View className="bg-ink-950/85 border border-ink-700/80 rounded-full px-3 py-1.5 flex-row items-center gap-1.5">
             <Text
-              className="text-brand-300 text-xs font-bold"
+              className="text-brand-300 text-sm font-bold"
               style={{ fontVariant: ['tabular-nums'] }}
             >
               {t('trip.left', { km: leftKm.toFixed(1) })}
             </Text>
             {computedEta > 0 && (
               <Text
-                className="text-ink-300 text-xs font-semibold"
+                className="text-ink-300 text-sm font-semibold"
                 style={{ fontVariant: ['tabular-nums'] }}
               >
                 · {t('map.etaShort', { min: computedEta })}
@@ -190,7 +190,7 @@ export function RouteMapGoogle({
             accessibilityRole="button"
             className="bg-ink-950/90 border border-brand-500/60 rounded-full px-3 py-1.5 active:opacity-80"
           >
-            <Text className="text-brand-300 text-xs font-bold">{t('map.focusTruck')}</Text>
+            <Text className="text-brand-300 text-sm font-bold">{t('map.focusTruck')}</Text>
           </Pressable>
 
           <Pressable
@@ -206,7 +206,7 @@ export function RouteMapGoogle({
             accessibilityRole="button"
             className="bg-ink-950/90 border border-ink-700 rounded-full px-3 py-1.5 active:opacity-80"
           >
-            <Text className="text-ink-50 text-xs font-bold">{t('map.fitRoute')}</Text>
+            <Text className="text-ink-50 text-sm font-bold">{t('map.fitRoute')}</Text>
           </Pressable>
         </View>
       </View>
@@ -214,17 +214,17 @@ export function RouteMapGoogle({
       <View className="flex-row items-center justify-between px-3.5 py-2.5 border-t border-ink-700/80 bg-ink-900 gap-2">
         <View className="flex-1 flex-row items-center gap-1.5">
           <View className="w-2 h-2 rounded-full bg-brand-500" />
-          <Text numberOfLines={1} className="flex-1 text-ink-50 text-xs font-medium">
+          <Text numberOfLines={1} className="flex-1 text-ink-50 text-sm font-medium">
             {activeRoute.origin.name}
           </Text>
         </View>
         <View className="bg-brand-500/15 border border-brand-500/50 rounded-full px-2 py-0.5">
-          <Text numberOfLines={1} className="text-brand-300 text-[10px] font-semibold">
+          <Text numberOfLines={1} className="text-brand-300 text-xs font-semibold">
             {t('trip.mapGoogle')}
           </Text>
         </View>
         <View className="flex-1 flex-row items-center justify-end gap-1.5">
-          <Text numberOfLines={1} className="flex-1 text-right text-ink-50 text-xs font-medium">
+          <Text numberOfLines={1} className="flex-1 text-right text-ink-50 text-sm font-medium">
             {activeRoute.destination.name}
           </Text>
           <View className="w-2 h-2 rounded-full bg-wait-500" />

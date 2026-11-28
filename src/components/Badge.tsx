@@ -18,7 +18,7 @@ export type BadgeTone = keyof typeof tones;
 export function Badge({ label, tone, lines = 1 }: { label: string; tone: BadgeTone; lines?: number }) {
   return (
     <View className={`rounded-lg px-2.5 py-1 self-start max-w-full ${tones[tone].box}`}>
-      <Text numberOfLines={lines} className={`text-xs font-bold ${tones[tone].text}`}>
+      <Text numberOfLines={lines} className={`text-sm font-bold ${tones[tone].text}`}>
         {label}
       </Text>
     </View>

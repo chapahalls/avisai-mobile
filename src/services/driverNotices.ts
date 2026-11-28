@@ -11,9 +11,11 @@ export type DriverNotice = MensagensStream['aviso_motorista'];
 interface DriverNoticesState {
   /** Falando um aviso em voz local: a wake word pausa para não se ouvir. */
   speaking: boolean;
+  /** Documento sendo lido em voz alta pelo botão "Ouvir" (id), ou `null`. */
+  readingId: string | null;
 }
 
-export const useDriverNotices = create<DriverNoticesState>(() => ({ speaking: false }));
+export const useDriverNotices = create<DriverNoticesState>(() => ({ speaking: false, readingId: null }));
 
 type SpeechModule = typeof import('expo-speech');
 
@@ -84,10 +86,37 @@ export function announceDriverNotice(notice: DriverNotice): boolean {
   return true;
 }
 
+/**
+ * Leitura em voz local de um documento (botão "Ouvir em voz alta" no visualizador). Usa a mesma
+ * voz dos avisos, sem gastar minutos da Agora, e pausa a wake word para ela não se ouvir.
+ */
+export function readAloudLocal(id: string, text: string): void {
+  const Speech = loadSpeech();
+  if (!Speech || !text.trim()) return;
+  Speech.stop();
+  const done = () => {
+    if (useDriverNotices.getState().readingId !== id) return;
+    useDriverNotices.setState({ speaking: false, readingId: null });
+  };
+  useDriverNotices.setState({ speaking: true, readingId: id });
+  Speech.speak(text, {
+    language: i18n.language?.startsWith('en') ? 'en-US' : 'pt-BR',
+    onDone: done,
+    onStopped: done,
+    onError: done,
+  });
+}
+
+export function stopReadingLocal(): void {
+  if (!useDriverNotices.getState().readingId) return;
+  loadSpeech()?.stop();
+  useDriverNotices.setState({ speaking: false, readingId: null });
+}
+
 /** Só para testes. */
 export function resetDriverNoticesForTests(): void {
   queue.length = 0;
   seen.clear();
   busy = false;
-  useDriverNotices.setState({ speaking: false });
+  useDriverNotices.setState({ speaking: false, readingId: null });
 }

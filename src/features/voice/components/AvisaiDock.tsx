@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../../components/Icon';
@@ -10,16 +10,19 @@ import { useMicStatus } from '../hooks/useMicStatus';
 import { useVoice } from '../hooks/useVoice';
 import { AuroraVoiceOrb } from './AuroraVoiceOrb';
 import { CabinModeModal } from './CabinModeModal';
+import { FloatingOrb } from './FloatingOrb';
 
 /** Quanto tempo o balão com a última fala do agente fica visível. */
 const BUBBLE_MS = 6000;
-const ORB_SIZE = 76;
 
 export interface AvisaiDockProps {
   /** Mostra a esfera flutuante (só nas abas; telas empilhadas têm os próprios botões). */
   showOrb: boolean;
-  /** Distância da esfera até a base da tela (acima da barra de abas). */
+  /** Posição inicial da esfera até o motorista arrastá-la (acima da barra de abas). */
   bottomOffset: number;
+  /** Áreas do sistema (barra de status e de navegação) que a esfera não cobre. */
+  safeTop: number;
+  safeBottom: number;
   /** Resumo da espera repassado à conversa em tela cheia. */
   stayTimer?: string | null;
   stayValue?: string | null;
@@ -29,13 +32,15 @@ export interface AvisaiDockProps {
 }
 
 /**
- * Componente AvisAI (mockup `13-componente-avisai`): esfera flutuante que abre o painel
- * de comandos; o painel abre a conversa em tela cheia. Quando o agente fala, um balão
+ * Componente AvisAI (mockup `13-componente-avisai`): esfera flutuante (arrastável para qualquer
+ * lugar da tela) que abre o painel de comandos; o painel abre a conversa em tela cheia. Quando o agente fala, um balão
  * mostra a fala ao lado da esfera por alguns segundos.
  */
 export function AvisaiDock({
   showOrb,
   bottomOffset,
+  safeTop,
+  safeBottom,
   stayTimer,
   stayValue,
   stayOver,
@@ -70,47 +75,19 @@ export function AvisaiDock({
   return (
     <>
       {showOrb && !panelOpen && !chatOpen ? (
-        <View
-          pointerEvents="box-none"
-          style={{ position: 'absolute', right: 12, left: 12, bottom: bottomOffset }}
-          className="flex-row items-end justify-end"
-        >
-          {bubbleVisible && bubbleText ? (
-            <Pressable
-              onPress={() => setBubbleVisible(false)}
-              accessibilityRole="button"
-              accessibilityLabel={`${t('voice.agentTag')}: ${bubbleText}`}
-              accessibilityHint={t('voice.dock.bubbleDismissHint')}
-              className="flex-1 bg-ink-900 border border-brand-500 rounded-3xl px-4 py-3 -mr-3 mb-2"
-            >
-              <Text className="text-brand-300 text-sm font-bold">
-                {t('voice.agentTag')} · {stateLabel}
-              </Text>
-              <Text numberOfLines={3} className="text-ink-50 text-base mt-0.5">
-                {bubbleText}
-              </Text>
-            </Pressable>
-          ) : null}
-          <Pressable
-            onPress={() => {
-              hapticTap();
-              openPanel();
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={t('voice.dock.open', { state: stateLabel })}
-            style={{ width: ORB_SIZE, height: ORB_SIZE }}
-            className="items-center justify-center rounded-full active:opacity-85"
-          >
-            <AuroraVoiceOrb
-              state={state}
-              muted={muted}
-              audioLevel={audioLevel}
-              audioSpeaker={audioSpeaker}
-              size={ORB_SIZE}
-              showGlyph={false}
-            />
-          </Pressable>
-        </View>
+        <FloatingOrb
+          defaultBottomOffset={bottomOffset}
+          safeTop={safeTop}
+          safeBottom={safeBottom}
+          state={state}
+          stateLabel={stateLabel}
+          muted={muted}
+          audioLevel={audioLevel}
+          audioSpeaker={audioSpeaker}
+          bubbleText={bubbleVisible && bubbleText ? bubbleText : null}
+          onDismissBubble={() => setBubbleVisible(false)}
+          onOpen={openPanel}
+        />
       ) : null}
 
       <AvisaiPanel visible={panelOpen} onClose={closePanel} />
@@ -128,7 +105,13 @@ export function AvisaiDock({
 }
 
 /** Painel de comandos (mockup `13-componente-avisai/painel-aberto`). */
-function AvisaiPanel({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+const AvisaiPanel = memo(function AvisaiPanel({
+  visible,
+  onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const state = useVoice((s) => s.state);
   const muted = useVoice((s) => s.muted);
@@ -145,7 +128,7 @@ function AvisaiPanel({ visible, onClose }: { visible: boolean; onClose: () => vo
   const lang = getCurrentLanguage();
   const utterances = Array.from(
     new Set([...getQuickUtterances(context, lang), ...getQuickUtterances('free', lang)]),
-  ).slice(0, 5);
+  ).slice(0, 6);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -192,7 +175,7 @@ function AvisaiPanel({ visible, onClose }: { visible: boolean; onClose: () => vo
             </Pressable>
           </View>
 
-          <Text className="text-ink-300 text-xs mt-2">{label} · {hint}</Text>
+          <Text className="text-ink-300 text-sm mt-2">{label} · {hint}</Text>
 
           {lastError ? (
             <Pressable
@@ -245,5 +228,4 @@ function AvisaiPanel({ visible, onClose }: { visible: boolean; onClose: () => vo
       </View>
     </Modal>
   );
-}
-
+});

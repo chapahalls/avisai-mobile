@@ -28,7 +28,7 @@ export function VoiceCommandToast() {
             />
           </Svg>
         </View>
-        <Text numberOfLines={1} className="text-ink-50 text-xs font-bold flex-1">
+        <Text numberOfLines={1} className="text-ink-50 text-sm font-bold flex-1">
           {message}
         </Text>
       </View>

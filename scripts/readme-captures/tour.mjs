@@ -59,12 +59,17 @@ async function tap(text, after = 1500) {
   await (await visible(text)).click();
   await wait(after);
 }
-async function until(text, timeoutMs = 20000) {
+async function until(text, timeoutMs = 20000, exact = true) {
   for (let t = 0; t < timeoutMs; t += 500) {
-    if (await page.getByText(text, { exact: true }).count()) return;
+    if (await page.getByText(text, { exact }).count()) return;
     await wait(500);
   }
   throw new Error(`não apareceu: ${text}`);
+}
+// Para itens de listas horizontais (falas simuladas da tela de direção): rola até o item.
+async function tapScrolling(text, after = 1500) {
+  await page.getByText(text, { exact: true }).last().click();
+  await wait(after);
 }
 async function shot(name) {
   if (video) return;
@@ -103,27 +108,44 @@ await tap('Iniciar viagem', 2500);
 await shot('trip-agent');
 await pause(2000);
 
-await at(...ORB, 1500);
-await shot('avisai');
-await pause(1500);
-await tap('“Peguei a carga, caminhão ok”', 1000);
-await tap('Abrir conversa em tela cheia', 2500);
-await shot('conversation');
-await pause(1500);
-await at(...CONVERSATION_BACK);
-
+// Mapa antes de confirmar a retirada: com o caminhão andando, o modo direção trava as abas.
 await tap('Mapa');
 await shot('map');
 await pause(2500);
-
 await tap('Início', 1200);
-await until('Recebedor confirmou doca!', 30000);
+
+await at(...ORB, 1500);
+await shot('avisai');
+await pause(1500);
+// Confirmada a retirada, o caminhão sai em ~4 s e a tela de direção fecha a conversa:
+// a foto da conversa precisa sair antes.
+await tap('“Peguei a carga, caminhão ok”', 600);
+await tap('Abrir conversa em tela cheia', 1500);
+await shot('conversation');
+await pause(1500);
+
+// Modo direção: só voz. O AvisAI lê a nota em voz alta.
+await until('Modo direção', 20000);
+await wait(800);
+await tapScrolling('“Lê a nota fiscal pra mim”', 3000);
+await shot('driving');
+await pause(3000);
+
+// A 8 km, o recebedor confirma a doca: o aviso chega por voz na tela de direção.
+await tap('Controles da demo', 1000);
+await tap('Ir p/ Aproximação (8 km)', 600);
+await at(...DEMO_CLOSE, 1000);
+await until('confirmou a doca', 30000, false);
 await wait(600);
 await shot('receiver-confirmed');
 await pause(2500);
 
+// Chegada: o caminhão chega sozinho (8 km a 80 km/h) e, parado, a tela de direção some.
+for (let t = 0; t < 40000 && (await page.getByText('Modo direção', { exact: true }).count()); t += 500) {
+  await wait(500);
+}
 await until('Cheguei', 30000);
-await wait(9000); // o caminhão chega ao destino
+await wait(1500);
 await tap('Cheguei', 3000);
 await shot('checkin');
 await pause(1500);

@@ -1,7 +1,13 @@
 import i18n, { getCurrentLanguage, type AppLanguage } from '../../../lib/i18n';
 import { normalize } from '../../../utils/text';
 import { extractFields, missingFields, type FieldKey, type ReportContext } from '../../report';
-import { answerDocumentQuestionWithMeta } from '../../documents';
+import {
+  DOCUMENTS,
+  answerDocumentQuestionWithMeta,
+  isDocumentReadRequest,
+  readDocumentAloud,
+  useDocuments,
+} from '../../documents';
 
 /**
  * Agente mock bilíngue (pt-BR e en): decide a resposta a partir do contexto e do que já foi coletado.
@@ -64,10 +70,16 @@ function extractOccurrenceFields(
   return next;
 }
 
+export interface AgentOptions {
+  /** Caminhão andando (modo direção): o agente lê, mas o PDF só abre parado. */
+  driving?: boolean;
+}
+
 export function agentRespond(
   context: ReportContext,
   utterance: string,
   collected: Partial<Record<FieldKey, string>>,
+  options: AgentOptions = {},
 ): AgentTurn {
   const text = normalize(utterance);
 
@@ -113,6 +125,30 @@ export function agentRespond(
       collected,
       completed: false,
       occurrence: { text: utterance, descricao: utterance, km: null, rodovia: null },
+    };
+  }
+
+  // "Lê a nota pra mim": lê os campos do documento em voz alta (R7). O PDF fica para quando parar.
+  if (isDocumentReadRequest(utterance)) {
+    const docs = useDocuments.getState().documents;
+    const reading = readDocumentAloud(utterance, docs.length ? docs : DOCUMENTS);
+    const suffix = reading.found
+      ? ' ' +
+        i18n.t(options.driving ? 'documents.reading.pdfWhenStopped' : 'documents.reading.pdfOffer', {
+          title: reading.title,
+        })
+      : '';
+    return {
+      reply: reading.text + suffix,
+      collected,
+      completed: false,
+      documentAnswer: {
+        question: utterance,
+        answer: reading.text,
+        documentId: reading.documentId,
+        field: 'leitura',
+        found: reading.found,
+      },
     };
   }
 
@@ -174,6 +210,7 @@ export const QUICK_UTTERANCES_BY_LANG: Record<AppLanguage, Record<ReportContext,
     free: [
       'Abrir mapa',
       'Abrir nota fiscal',
+      'Lê a nota fiscal pra mim',
       'Tem um acidente no km 230',
       'Qual o peso da nota?',
       'Qual o número do CT-e?',
@@ -187,6 +224,7 @@ export const QUICK_UTTERANCES_BY_LANG: Record<AppLanguage, Record<ReportContext,
     free: [
       'Open map',
       'Open invoice',
+      'Read me the invoice',
       'There is an accident at km 230',
       'What is the invoice weight?',
       'What is the CT-e number?',

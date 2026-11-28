@@ -11,6 +11,16 @@ export function distanceKm(a: LatLng, b: LatLng): number {
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
+/**
+ * Velocidade (km/h) entre duas posições do GPS. Alguns aparelhos mandam a velocidade vazia (-1):
+ * aí ela sai da distância percorrida no intervalo. Intervalo zero ou negativo → `null`.
+ */
+export function speedBetweenKmh(a: LatLng, aAtMs: number, b: LatLng, bAtMs: number): number | null {
+  const hours = (bAtMs - aAtMs) / 3_600_000;
+  if (!(hours > 0)) return null;
+  return Math.round(distanceKm(a, b) / hours);
+}
+
 /** Ponto ao longo da polilinha para um progresso 0..1. */
 export function pointAt(path: LatLng[], progress: number): LatLng {
   if (path.length === 1 || progress <= 0) return path[0];

@@ -10,6 +10,7 @@ import { openDirectionsTo } from '../services/directions';
 import { distanceKm } from '../utils/geo';
 import { hapticTap } from '../utils/haptics';
 import { receiverLabel, receiverTone } from './tripUi';
+import { useShallow } from 'zustand/react/shallow';
 
 function clockIn(minutes: number): string {
   const d = new Date(Date.now() + minutes * 60_000);
@@ -19,7 +20,18 @@ function clockIn(minutes: number): string {
 /** Mapa (mockup `08-mapa`): destino no topo, mapa ao centro e folha com chegada e paradas. */
 export function MapPage() {
   const { t } = useTranslation();
-  const { phase, position, receiver, activeRoute, etaMin, speedKmh, start } = useTrip();
+  const { phase, position, receiver, activeRoute, etaMin, speedKmh, start } = useTrip(
+    // Só os campos usados: o simulador grava o relógio a cada 500 ms e a tela não precisa redesenhar.
+    useShallow((s) => ({
+      phase: s.phase,
+      position: s.position,
+      receiver: s.receiver,
+      activeRoute: s.activeRoute,
+      etaMin: s.etaMin,
+      speedKmh: s.speedKmh,
+      start: s.start,
+    })),
+  );
   const [demoOpen, setDemoOpen] = useState(false);
 
   const leftKm = distanceKm(position, activeRoute.destination.position);

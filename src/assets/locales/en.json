@@ -237,7 +237,7 @@
     "bargeInBanner": "⚡ Interrupted · listening to you",
     "tapToSpeakHint": "Tap to talk to the agent",
     "selectQuickHint": "Pick a simulated utterance below or tap mic to cancel",
-    "agoraLiveHint": "GPT-Live session active · speak freely or tap to mute",
+    "agoraLiveHint": "Live voice session active · speak freely or tap to mute",
     "unmuteHint": "Microphone muted · tap to unmute",
     "muted": "Muted",
     "muteButton": "Mute",
@@ -271,7 +271,7 @@
     "agoraWaitingAgent": "Waiting for agent…",
     "agoraWaitingAgentHint": "Channel connected · waiting for agent (9001)…",
     "modePill": {
-      "agoraLive": "GPT-Live",
+      "agoraLive": "Agora · Live",
       "agoraWaitingAgent": "Waiting for agent (9001)…",
       "agoraDisconnected": "Agora · Disconnected",
       "offlineRecording": "No signal · recording",
@@ -331,7 +331,9 @@
       "simulateLabel": "Tap to simulate what you'd say:",
       "openChat": "Open full-screen conversation",
       "dismissErrorHint": "Tap to dismiss the error",
-      "commandsHint": "Try: “open the map”, “take me to the receiver”, “tell the CCO that…”, “repeat” or “bye, AvisAI”."
+      "commandsHint": "Try: “open the map”, “take me to the receiver”, “tell the CCO that…”, “repeat” or “bye, AvisAI”.",
+      "dragHint": "Tap to open. Drag to move the orb somewhere else.",
+      "moved": "AvisAI orb moved"
     },
     "wake": {
       "title": "Listen for “Hey AvisAI”",
@@ -403,7 +405,20 @@
     "badge": {
       "verified": "Verified",
       "file": "Attachment"
-    }
+    },
+    "reading": {
+      "intro": "{{title}}.",
+      "item": "{{label}}: {{value}}",
+      "noFields": "This document has no fields read by the system. You can see the file once you stop.",
+      "fileOnlyInPdf": "The rest is in the file; I will open it for you when you stop.",
+      "pdfWhenStopped": "When you stop, say “open {{title}}” and I will show the PDF.",
+      "pdfOffer": "Want to see the PDF? Say “open {{title}}”."
+    },
+    "readAloudButton": "Read aloud",
+    "stopReadingButton": "Stop reading",
+    "readAloudHint": "AvisAI reads the fields of this document.",
+    "readAloudRequest": "Read me the document {{title}}",
+    "allDocumentsShort": "Documents"
   },
   "outbox": {
     "title": "Send queue",
@@ -482,8 +497,8 @@
     "resettingBackendRoute": "Resetting…",
     "fallback": {
       "agora_native_unavailable": "Mock fallback: Agora native module unavailable in this build",
-      "agora_requires_http_api": "Mock fallback: Agora requires HTTP API (agent-server)",
-      "agora_backend_unreachable": "Mock fallback: agent-server unreachable to start Agora session",
+      "agora_requires_http_api": "Mock fallback: Agora requires the HTTP backend (rodar-backend)",
+      "agora_backend_unreachable": "Mock fallback: rodar-backend unreachable to start Agora session",
       "agora_permission_denied": "Mock fallback: microphone permission denied",
       "maps_no_key": "SVG fallback: GOOGLE_MAPS_API_KEY_ANDROID not configured",
       "maps_native_unavailable": "SVG fallback: Google Maps native module unavailable"
@@ -573,5 +588,20 @@
     "stoppedTime": "Time stopped",
     "stayStartsOnArrival": "The count starts when you arrive at the receiver (geofence + voice).",
     "noPositionNote": "The receiver does not report your queue position yet."
+  },
+  "driving": {
+    "title": "Driving mode",
+    "speed": "{{kmh}} km/h",
+    "speedUnknown": "Moving",
+    "sourceGps": "Phone GPS",
+    "sourceSimulator": "Simulated GPS",
+    "body": "The screen stays locked while the truck is moving. Talk to AvisAI: it reads documents, notifies the CCO and logs incidents.",
+    "talkHint": "Say “Hey AvisAI” or tap the orb.",
+    "orbLabel": "Talk to AvisAI. State: {{state}}",
+    "unlockHint": "Unlocks by itself when the truck stops.",
+    "demoTitle": "Demo (simulated)",
+    "demoSimulateLabel": "Simulate an utterance",
+    "demoControls": "Demo controls",
+    "demoClose": "Close controls"
   }
 }

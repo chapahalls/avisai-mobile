@@ -14,6 +14,7 @@ import { useVoice } from '../../voice';
 import { useTrip } from '../hooks/useTrip';
 import { useMapMode, type MapMode } from './RouteMap';
 import { colors } from '../../../lib/theme';
+import { useShallow } from 'zustand/react/shallow';
 
 /**
  * Controles da demo (borda tracejada — E8):
@@ -26,8 +27,18 @@ import { colors } from '../../../lib/theme';
 export function DemoControls({ onClose }: { onClose?: () => void }) {
   const { t } = useTranslation();
   const { override, setOverride } = useNetwork();
-  const { phase, ccoWillRespond, setCcoWillRespond, skip, jumpToApproach, jumpToArrival, reset } =
-    useTrip();
+  const { phase, ccoWillRespond, setCcoWillRespond, skip, jumpToApproach, jumpToArrival, reset } = useTrip(
+    // Só os campos usados: o simulador grava o relógio a cada 500 ms e a tela não precisa redesenhar.
+    useShallow((s) => ({
+      phase: s.phase,
+      ccoWillRespond: s.ccoWillRespond,
+      setCcoWillRespond: s.setCcoWillRespond,
+      skip: s.skip,
+      jumpToApproach: s.jumpToApproach,
+      jumpToArrival: s.jumpToArrival,
+      reset: s.reset,
+    })),
+  );
   const preferredVoiceMode = useVoice((s) => s.preferredMode);
   const voiceFallbackReason = useVoice((s) => s.fallbackReason);
   const voiceLastError = useVoice((s) => s.lastError);

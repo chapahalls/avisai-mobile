@@ -8,10 +8,11 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '../components/Icon';
 import { useSession } from '../features/auth';
 import { useOutboxStore } from '../features/outbox';
-import { useStaySummary, useTrip } from '../features/trip';
+import { useDrivingMode, useStaySummary, useTrip } from '../features/trip';
 import { AvisaiDock } from '../features/voice';
 import { LAYOUT } from '../lib/config';
 import { colors } from '../lib/theme';
@@ -23,6 +24,7 @@ import { DocumentsPage } from '../pages/DocumentsPage';
 import { DocumentViewerPage } from '../pages/DocumentViewerPage';
 import { MessagesPage } from '../pages/MessagesPage';
 import { QueuePage } from '../pages/QueuePage';
+import { DrivingLock } from './DrivingLock';
 
 export type MainTabParams = {
   Trip: undefined;
@@ -153,13 +155,18 @@ function MainTabs() {
   );
 }
 
-/** AvisAI flutuante sobre o app logado: esfera nas abas, painel e tela cheia em qualquer tela. */
-function DockLayer({ onTabs, tab }: { onTabs: boolean; tab: string | null }) {
+/**
+ * AvisAI flutuante sobre o app logado, em qualquer tela: a esfera fica onde o motorista a deixou.
+ * No modo direção ela some: a tela de direção já é a conversa por voz.
+ */
+function DockLayer({ tab }: { tab: string | null }) {
   const { t } = useTranslation();
   const bottomInset = useBottomInset();
+  const insets = useSafeAreaInsets();
   const stay = useStaySummary();
   const phase = useTrip((s) => s.phase);
   const speedKmh = useTrip((s) => s.speedKmh);
+  const driving = useDrivingMode((s) => s.driving);
   const moving = phase === 'driving' || phase === 'approaching';
   const contextPill = moving
     ? speedKmh !== null
@@ -169,8 +176,10 @@ function DockLayer({ onTabs, tab }: { onTabs: boolean; tab: string | null }) {
 
   return (
     <AvisaiDock
-      showOrb={onTabs}
-      // Em Mensagens a esfera sobe acima da linha de escrever, senão espreme o campo de texto.
+      showOrb={!driving}
+      safeTop={insets.top}
+      safeBottom={insets.bottom}
+      // Posição inicial (antes de o motorista arrastar): em Mensagens sobe acima da linha de escrever.
       bottomOffset={TAB_BAR_HEIGHT + bottomInset + 12 + (tab === 'Messages' ? LAYOUT.messagesComposerDp : 0)}
       stayTimer={stay.timer}
       stayValue={stay.value}
@@ -183,14 +192,11 @@ function DockLayer({ onTabs, tab }: { onTabs: boolean; tab: string | null }) {
 export function AppNavigation() {
   const session = useSession((s) => s.session);
   const { t } = useTranslation();
-  const [onTabs, setOnTabs] = useState(true);
   const [tab, setTab] = useState<string | null>(null);
 
   const syncRoute = () => {
-    // A esfera só aparece nas abas; telas empilhadas (documento, fila) têm os próprios botões.
     const root = navigationRef.getRootState();
     const top = root?.routes[root.index];
-    setOnTabs(!top || top.name === 'Main');
     const tabs = top?.state;
     setTab(tabs && typeof tabs.index === 'number' ? (tabs.routes[tabs.index]?.name ?? null) : null);
   };
@@ -221,7 +227,8 @@ export function AppNavigation() {
           )}
         </Stack.Navigator>
       </NavigationContainer>
-      {session ? <DockLayer onTabs={onTabs} tab={tab} /> : null}
+      {session ? <DockLayer tab={tab} /> : null}
+      {session ? <DrivingLock /> : null}
     </View>
   );
 }

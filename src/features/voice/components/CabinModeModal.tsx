@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../../../components/Icon';
@@ -23,7 +24,8 @@ export interface CabinModeModalProps {
  * esfera grande (toque = falar / interromper), última fala em fonte grande,
  * mudo, rota de áudio e contador de espera quando houver.
  */
-export function CabinModeModal({
+// memo: o AvisaiDock redesenha a cada nível de áudio; fechada, a conversa não precisa redesenhar junto.
+export const CabinModeModal = memo(function CabinModeModal({
   visible,
   onClose,
   stayTimer,
@@ -117,12 +119,12 @@ export function CabinModeModal({
             <VoiceStateIndicator />
             <View className="flex-row items-center gap-1.5 bg-ink-800 rounded-full px-2.5 py-1">
               <Icon name="speaker" size={13} color={colors.ink[300]} />
-              <Text className="text-ink-300 text-xs font-semibold">
+              <Text className="text-ink-300 text-sm font-semibold">
                 {t(`voice.audioRoute.${audioRoute}`)}
               </Text>
             </View>
             {muted ? (
-              <Text className="text-wait-500 text-xs font-bold">{t('voice.muted')}</Text>
+              <Text className="text-wait-500 text-sm font-bold">{t('voice.muted')}</Text>
             ) : null}
           </View>
 
@@ -133,7 +135,7 @@ export function CabinModeModal({
               }`}
             >
               <Icon name="clock" size={16} color={stayOver ? colors.wait[500] : colors.brand[300]} />
-              <Text className="text-ink-300 text-xs font-bold uppercase">{t('stay.waiting')}</Text>
+              <Text className="text-ink-300 text-sm font-bold uppercase">{t('stay.waiting')}</Text>
               <Text
                 style={{ fontVariant: ['tabular-nums'] }}
                 className={`text-base font-display ${stayOver ? 'text-wait-500' : 'text-ink-50'}`}
@@ -205,7 +207,7 @@ export function CabinModeModal({
               <Text numberOfLines={1} className="text-ink-50 text-base font-semibold">
                 {micLabel}
               </Text>
-              <Text numberOfLines={1} className="text-ink-300 text-xs mt-0.5">
+              <Text numberOfLines={1} className="text-ink-300 text-sm mt-0.5">
                 {t('voice.cabinMode.voiceOnlyWhileMoving')}
               </Text>
             </View>
@@ -228,4 +230,4 @@ export function CabinModeModal({
       </View>
     </Modal>
   );
-}
+});

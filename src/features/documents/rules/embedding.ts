@@ -3,7 +3,7 @@ import { normalize } from '../../../utils/text';
 /**
  * "Embedding" local determinístico (hash de palavras em 64 dimensões).
  * É um mock do modelo de embeddings: permite a busca vetorial no SQLite sem rede.
- * Na versão real: vetores pré-calculados pelo agent-server com o mesmo modelo da pergunta.
+ * Na versão real: vetores pré-calculados pelo rodar-backend com o mesmo modelo da pergunta.
  */
 const DIM = 64;
 

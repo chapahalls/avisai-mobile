@@ -54,6 +54,8 @@ O caminhão parado em torno da janela de descarga combinada com o recebedor. O a
 ### R7. Documentos
 - Números (NF, peso, valor) vêm **só** dos campos extraídos, citando o documento.
 - Sem campo correspondente: "não encontrei". Nunca aproximar.
+- Leitura em voz alta ("lê a nota pra mim", "o que diz o documento complementar"): o agente lê os campos extraídos do documento pedido (sem citar qual, a NF-e). Não lê a chave de acesso. Anexo sem campos: lê nome e descrição e avisa que o resto está no arquivo.
+- O PDF só abre com o caminhão parado (R10). Pedido andando fica guardado e abre sozinho quando ele para.
 
 ### R8. Offline-first
 - Toda escrita vira evento local + item na fila (`outbox`) com `idempotencyKey`.
@@ -64,6 +66,12 @@ O caminhão parado em torno da janela de descarga combinada com o recebedor. O a
 ### R9. Ligação a terceiros
 - O agente se identifica como assistente virtual da transportadora logo no início e não promete nada em nome do CCO.
 - O telefone do recebedor vem do cadastro da rota. No repositório, só números fictícios (E7).
+
+### R10. Modo direção
+- O app decide pela velocidade (GPS do celular; sem GPS, o simulador da rota) se o caminhão está andando, como o Waze.
+- Entra acima de 10 km/h por 4 s seguidos; sai abaixo de 3 km/h por 5 s seguidos. Entre os dois, mantém o estado (anda-e-para não pisca a tela). GPS sem posição nova há 15 s = parado.
+- Andando, uma tela por cima de tudo trava o app (CTB art. 252): só a voz funciona (esfera grande e "Ei AvisAI"). O botão voltar do Android não sai dela.
+- Parado, a tela some sozinha e o que ficou pendente (abrir documento, Documentos, Mensagens) abre.
 
 ## Parâmetros padrão (demo)
 
@@ -77,3 +85,4 @@ O caminhão parado em torno da janela de descarga combinada com o recebedor. O a
 | Distância de aproximação | 8 km |
 | Geocerca | 400 m |
 | Relógio simulado | 1 s real = 1 min |
+| Modo direção | entra > 10 km/h por 4 s · sai < 3 km/h por 5 s |

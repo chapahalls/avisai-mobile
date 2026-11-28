@@ -46,7 +46,7 @@ export function NetworkBanner() {
             />
           )}
         </Svg>
-        <Text numberOfLines={1} className={`${textClass} text-xs font-bold`}>
+        <Text numberOfLines={1} className={`${textClass} text-sm font-bold`}>
           {t(`network.${quality}`)}
         </Text>
       </View>
@@ -55,7 +55,7 @@ export function NetworkBanner() {
           isWeak ? 'bg-ink-950/15' : 'bg-ink-950/30'
         }`}
       >
-        <Text className={`${textClass} text-xs font-semibold`}>
+        <Text className={`${textClass} text-sm font-semibold`}>
           {t('network.queue', { count: pending })}
         </Text>
       </View>

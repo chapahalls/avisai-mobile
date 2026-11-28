@@ -46,7 +46,8 @@ export function Button({
   className = '',
   accessibilityHint,
 }: Props) {
-  const sizeStyles = size === 'sm' ? 'px-4 py-2.5 rounded-xl' : 'px-5 py-4 rounded-2xl';
+  // `sm` é menor só no visual: o alvo de toque continua com 48 dp (padrão de acessibilidade).
+  const sizeStyles = size === 'sm' ? 'px-4 py-2.5 min-h-12 rounded-xl' : 'px-5 py-4 rounded-2xl';
 
   return (
     <Pressable

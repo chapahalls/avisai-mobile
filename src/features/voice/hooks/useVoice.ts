@@ -10,6 +10,7 @@ import { tryExecuteVoiceCommand } from '../../../services/voiceCommands';
 import { hapticBargeIn } from '../../../utils/haptics';
 import type { FieldKey, ReportContext } from '../../report';
 import { agentRespond } from '../api/agentMock';
+import { useAvisaiDock } from './useAvisaiDock';
 import { MockVoiceSession } from '../api/mockVoiceSession';
 import { OfflineVoiceRecorder } from '../api/offlineVoiceRecorder';
 import { createAndStartVoiceSession, getAgoraFallbackReason } from '../api/voiceFactory';
@@ -56,6 +57,8 @@ interface VoiceStore {
   liveTranscript: { who: 'driver' | 'agent'; text: string } | null;
   /** Modo LLM reportado pela sessão ativa no backend (`custom`, `realtime`, `mllm`, etc.). */
   backendLlmMode: string | null;
+  /** Modo direção (chega da viagem pelo agentBus): o agente só lê, o PDF espera o caminhão parar. */
+  driving: boolean;
   clearError: () => void;
   connectAgoraNow: () => Promise<void>;
   startOfflineRecording: () => Promise<void>;
@@ -239,6 +242,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
     bargeInBanner: false,
     liveTranscript: null,
     backendLlmMode: null,
+    driving: false,
 
     clearError: () => set({ lastError: null }),
 
@@ -500,7 +504,7 @@ export const useVoice = create<VoiceStore>((set, get) => {
       thinkTimer = setTimeout(() => {
         thinkTimer = null;
         const { context, collected } = get();
-        const turn = agentRespond(context, text, collected);
+        const turn = agentRespond(context, text, collected, { driving: get().driving });
         const latency = Date.now() - started;
         set({ collected: turn.collected, lastLatencyMs: latency });
 
@@ -739,7 +743,17 @@ export function wireVoiceToBus() {
   });
   const offCtx = agentBus.on('agent:context', ({ context }) => useVoice.getState().setContext(context));
   const offReset = agentBus.on('voice:reset', () => useVoice.getState().reset());
+  // Caminhão andando: painel e conversa (com botões e chips de toque) fecham; a tela de
+  // modo direção assume com a esfera grande, só voz.
+  const offDriving = agentBus.on('trip:driving_mode', ({ driving }) => {
+    useVoice.setState({ driving });
+    if (driving) {
+      useAvisaiDock.getState().closePanel();
+      useAvisaiDock.getState().closeChat();
+    }
+  });
   return () => {
+    offDriving();
     unsubApi();
     offNetwork();
     offSay();
