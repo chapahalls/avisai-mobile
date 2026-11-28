@@ -1,7 +1,8 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Pressable, Text, UIManager, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { BUSINESS } from '../../../lib/config';
+import { useDeviceGps } from '../../../services/deviceGps';
 import { distanceKm } from '../../../utils/geo';
 import { hapticTap } from '../../../utils/haptics';
 import { useTrip } from '../hooks/useTrip';
@@ -62,6 +63,7 @@ export function RouteMapGoogle({
   const phase = useTrip((s) => s.phase);
   const activeRoute = useTrip((s) => s.activeRoute);
   const etaMin = useTrip((s) => s.etaMin);
+  const gpsEnabled = useDeviceGps((s) => s.enabled);
   const leftKm = distanceKm(position, activeRoute.destination.position);
   const computedEta =
     etaMin !== null
@@ -87,6 +89,16 @@ export function RouteMapGoogle({
       },
     ) => void;
   } | null>(null);
+
+  // GPS real do celular ligado (Ajustes): a câmera segue o caminhão, como no Waze.
+  useEffect(() => {
+    if (!gpsEnabled) return;
+    mapRef.current?.animateToRegion?.(
+      { latitude: position.lat, longitude: position.lng, latitudeDelta: 0.01, longitudeDelta: 0.01 },
+      500,
+    );
+  }, [gpsEnabled, position.lat, position.lng]);
+
   const maps = loadRNMaps();
 
   if (!maps) {

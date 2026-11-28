@@ -324,7 +324,8 @@ export interface MensagensStream {
       | 'go_back'
       | 'end_voice'
       | 'logout'
-      | 'open_navigation';
+      | 'open_navigation'
+      | 'exit_driving_mode';
     /** Para `open_screen`. */
     tela?: AppScreen;
     /** Para `open_document`: "NF-e", "CT-e", "MDF-e" ou o nome do anexo. */

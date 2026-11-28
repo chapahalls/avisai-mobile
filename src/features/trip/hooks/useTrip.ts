@@ -5,6 +5,7 @@ import i18n from '../../../lib/i18n';
 import { newId } from '../../../lib/id';
 import { agentBus } from '../../../services/agentBus';
 import { getApiClient, useApiConfig } from '../../../services/api';
+import { useDeviceGps } from '../../../services/deviceGps';
 import type { ReceiverAnswer } from '../../../services/apiClient';
 import type {
   Estadia,
@@ -165,6 +166,8 @@ interface TripState {
   clearRouteAssignedBanner: () => void;
   applyBackendSnapshot: (snap: Snapshot) => void;
   applyBackendPosicao: (pos: MensagensStream['posicao']) => void;
+  /** GPS real do celular ligado (Ajustes): cada posição nova atualiza o mapa direto, sem esperar o backend. */
+  applyDeviceGpsPosition: (pos: { lat: number; lng: number; speedKmh: number | null }) => void;
   applyBackendContador: (estadias: Estadia[]) => void;
   applyBackendTask: (task: TaskCCO) => void;
   applyBackendEvento: (evento: EventoStream) => void;
@@ -395,6 +398,8 @@ export const useTrip = create<TripState>((set, get) => ({
     // Em modo conectado, posição, ETA e fase são a fonte de verdade do GPS/API.
     // O simulador local não pode sobrescrever atualizações que chegam do WebSocket.
     if (useApiConfig.getState().mode === 'http') return;
+    // GPS real do celular ligado (Ajustes): a posição de verdade manda, não o relógio simulado.
+    if (useDeviceGps.getState().enabled) return;
 
     const s = get();
     if (s.phase === 'idle' || s.phase === 'unloaded') return;
@@ -929,6 +934,22 @@ export const useTrip = create<TripState>((set, get) => ({
         phase === 'waiting' || phase === 'unloaded' ? (s.arrivedAtMin ?? s.simMinutes) : s.arrivedAtMin,
       unloadedAtMin: phase === 'unloaded' ? (s.unloadedAtMin ?? s.simMinutes) : s.unloadedAtMin,
     });
+  },
+
+  applyDeviceGpsPosition: ({ lat, lng, speedKmh }) => {
+    const s = get();
+    // Sem viagem ativa, o GPS real só acompanha em segundo plano (useDrivingMode); nada no mapa.
+    if (s.phase === 'idle' || s.phase === 'unloaded') return;
+    const position = { lat, lng };
+    const progress = computeProgressFromPosition(position, s.activeRoute);
+    const leftKm = distanceKm(position, s.activeRoute.destination.position);
+    const reachedDestination = leftKm * 1000 <= BUSINESS.geofenceMeters;
+    const etaMin = reachedDestination
+      ? 0
+      : speedKmh && speedKmh > 3
+        ? Math.max(1, Math.round((leftKm / speedKmh) * 60))
+        : s.etaMin;
+    set({ position, progress, etaMin, speedKmh: speedKmh ?? s.speedKmh });
   },
 
   applyBackendContador: (estadias) => {

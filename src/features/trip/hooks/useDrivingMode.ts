@@ -25,6 +25,8 @@ export const useDrivingMode = create<DrivingModeState>(() => ({
 }));
 
 let detector: DrivingDetector = INITIAL_DRIVING;
+/** Até quando ignorar a velocidade depois de um "sair do modo direção" por voz. */
+let suppressUntil = 0;
 
 /** Uma checagem: lê a velocidade (GPS ou simulador) e atualiza o estado. Exportada para os testes. */
 export function evaluateDrivingMode(now = Date.now()): void {
@@ -40,7 +42,9 @@ export function evaluateDrivingMode(now = Date.now()): void {
     staleFixMs: DRIVING_MODE.staleFixMs,
   });
   const wasDriving = detector.driving;
-  detector = DRIVING_MODE.enabled ? nextDriving(detector, speed.kmh, now, DRIVING_MODE) : INITIAL_DRIVING;
+  const suppressed = now < suppressUntil;
+  detector =
+    DRIVING_MODE.enabled && !suppressed ? nextDriving(detector, speed.kmh, now, DRIVING_MODE) : INITIAL_DRIVING;
 
   const kmh = speed.kmh === null ? null : Math.round(speed.kmh);
   const s = useDrivingMode.getState();
@@ -53,9 +57,23 @@ export function evaluateDrivingMode(now = Date.now()): void {
   }
 }
 
+/**
+ * Comando de voz "sair do modo direção" (como o "não estou dirigindo" do Android Auto): libera a
+ * tela na hora e ignora a velocidade por `manualExitCooldownMs`, senão a próxima checagem (1 s)
+ * trava de novo com o caminhão ainda andando.
+ */
+export function exitDrivingModeManually(now = Date.now()): void {
+  const wasDriving = useDrivingMode.getState().driving;
+  detector = INITIAL_DRIVING;
+  suppressUntil = now + DRIVING_MODE.manualExitCooldownMs;
+  useDrivingMode.setState({ driving: false });
+  if (wasDriving) agentBus.emit('trip:driving_mode', { driving: false });
+}
+
 /** Só para testes: volta ao estado parado. */
 export function resetDrivingModeForTests(): void {
   detector = INITIAL_DRIVING;
+  suppressUntil = 0;
   useDrivingMode.setState({ driving: false, speedKmh: null, source: 'simulator' });
 }
 

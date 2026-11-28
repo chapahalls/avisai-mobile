@@ -197,6 +197,18 @@ function tryStartGps(): boolean {
   }
 }
 
+/** "Sair do modo direção": libera a tela sem esperar o caminhão parar de verdade (R10). */
+function exitDrivingMode(): void {
+  if (isTest()) return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { exitDrivingModeManually } = require('../features/trip') as typeof import('../features/trip');
+    exitDrivingModeManually();
+  } catch {
+    // sem modo direção carregado: nada a fazer
+  }
+}
+
 // ---------- navegação até o destino e recado ao CCO ----------
 
 function openNavigation(): void {
@@ -360,6 +372,10 @@ export function executeClientAction(action: ClientAction, opts: ClientActionOpti
       if (!tryStartGps()) return false;
       toast('voiceCommands.toast.startGps');
       return true;
+    case 'exit_driving_mode':
+      exitDrivingMode();
+      toast('voiceCommands.toast.exitDrivingMode');
+      return true;
     case 'start_trip': {
       const result = startTripOrOpenTracking();
       if (!result) return false;
@@ -376,6 +392,8 @@ const VERB = /\b(abr\w*|mostr\w*|ver|veja|exib\w*|(mud|troc|pass)\w* (pras?|para
 const START_TRIP_RE = /(inici(ar|e)|comec(ar|e)|start).*(viagem|rota|trip|route)/;
 const START_GPS_RE =
   /(inici(ar|e)|ativ(ar|e)|lig(ar|e)|start|enable|turn on).*(gps|localiza[cç][aã]o|rastreamento|tracking|location)/;
+const EXIT_DRIVING_RE =
+  /\bsa(i|ia|ir|indo)\w* (do |de )?modo (de )?(direcao|dirigindo|conducao)\b|\bnao estou (mais )?dirigindo\b|\b(exit|leave|stop) (the )?driving mode\b|\bi'?m not driving\b/;
 const DOC_FIELD_RE = /\b(peso|valor|numero|chave|destinatario|emitente|frete|placa|weight|value|number)\b/;
 const NFE_RE = /\bnota( fiscal)?\b|\bnf-?e\b|\bnf\b|\binvoice\b/;
 const CTE_RE = /\bct-?e\b|\bconhecimento\b/;
@@ -411,6 +429,7 @@ export function tryExecuteVoiceCommand(text: string): boolean {
   if (END_VOICE_RE.test(norm)) return executeClientAction('end_voice');
   if (START_TRIP_RE.test(norm)) return executeClientAction('start_trip');
   if (START_GPS_RE.test(norm)) return executeClientAction('start_gps');
+  if (EXIT_DRIVING_RE.test(norm)) return executeClientAction('exit_driving_mode');
   if (NAVIGATE_RE.test(norm)) return executeClientAction('open_navigation');
   const message = MESSAGE_CCO_RE.exec(norm);
   if (message?.[1]?.trim()) {

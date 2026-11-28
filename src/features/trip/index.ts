@@ -3,6 +3,7 @@ export {
   useDrivingMode,
   evaluateDrivingMode,
   startDrivingModeWatcher,
+  exitDrivingModeManually,
   resetDrivingModeForTests,
   type DrivingModeState,
 } from './hooks/useDrivingMode';

@@ -110,6 +110,16 @@ describe('modo simulado: a fala vira a mesma ação', () => {
     expect(msg()).toBe('Comando de voz: Viagem iniciada');
     expect(tryExecuteVoiceCommand('Iniciar viagem')).toBe(false);
   });
+
+  it('sai do modo direção em pt-BR e en', async () => {
+    expect(tryExecuteVoiceCommand('Sair do modo direção')).toBe(true);
+    expect(msg()).toBe('Comando de voz: saindo do modo direção');
+
+    await i18n.changeLanguage('en');
+    useVoiceCommandToast.getState().clear();
+    expect(tryExecuteVoiceCommand('Exit driving mode')).toBe(true);
+    expect(msg()).toBe('Voice command: exiting driving mode');
+  });
 });
 
 describe('findDocumentByName', () => {

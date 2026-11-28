@@ -8,7 +8,7 @@ import {
 } from '../features/documents/rules/readAloud';
 import type { TripDocument } from '../features/documents/types';
 import { agentRespond } from '../features/voice/api/agentMock';
-import { clampOrb, orbFromRatio, orbToRatio } from '../features/voice/rules/orbPosition';
+import { clampOrb, orbFromRatio, orbToRatio, snapToEdge } from '../features/voice/rules/orbPosition';
 
 vi.mock('react-native', () => ({}));
 vi.mock('react-native-reanimated', () => ({
@@ -48,6 +48,12 @@ describe('esfera do AvisAI solta na tela', () => {
     expect(r).toEqual({ x: 1, y: 0 });
     const rotated = { minX: 8, maxX: 700, minY: 20, maxY: 320 };
     expect(orbFromRatio(r, rotated)).toEqual({ x: 700, y: 20 });
+  });
+
+  it('ao soltar, encosta na lateral mais próxima (como um balão de conversa)', () => {
+    expect(snapToEdge({ x: 100, y: 300 }, b)).toEqual({ x: b.minX, y: 300 }); // mais perto da esquerda
+    expect(snapToEdge({ x: 250, y: 300 }, b)).toEqual({ x: b.maxX, y: 300 }); // mais perto da direita
+    expect(snapToEdge({ x: -50, y: 9999 }, b)).toEqual({ x: b.minX, y: b.maxY }); // fora da tela, continua dentro
   });
 });
 

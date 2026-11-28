@@ -46,8 +46,10 @@ export function RouteMapSvg({
         : 0;
   const svgH = fullScreen ? 420 : H;
 
-  const lats = activeRoute.path.map((p) => p.lat);
-  const lngs = activeRoute.path.map((p) => p.lng);
+  // Inclui a posição atual nos limites: com o GPS real do celular, o caminhão pode estar fora
+  // do trecho mock e, mesmo assim, continua visível no mapa.
+  const lats = [...activeRoute.path.map((p) => p.lat), position.lat];
+  const lngs = [...activeRoute.path.map((p) => p.lng), position.lng];
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs);

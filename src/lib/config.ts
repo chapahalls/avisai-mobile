@@ -95,6 +95,11 @@ export const DRIVING_MODE = {
   staleFixMs: 15000,
   /** Frequência da checagem. */
   tickMs: 1000,
+  /**
+   * Comando de voz "sair do modo direção" (como o "não estou dirigindo" do Android Auto): sai na
+   * hora e ignora a velocidade por este tempo, para não travar de novo no próximo segundo.
+   */
+  manualExitCooldownMs: 2 * 60 * 1000,
 } as const;
 
 /** Esfera flutuante do AvisAI: o motorista arrasta para onde quiser e a posição fica salva. */

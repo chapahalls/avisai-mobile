@@ -36,3 +36,12 @@ export function orbFromRatio(r: OrbRatio, b: OrbBounds): OrbPoint {
     b,
   );
 }
+
+/**
+ * Encosta na lateral mais próxima (esquerda ou direita), como um balão de conversa: ao soltar
+ * o arrasto, a esfera nunca fica solta no meio da tela, só na borda.
+ */
+export function snapToEdge(p: OrbPoint, b: OrbBounds): OrbPoint {
+  const mid = (b.minX + b.maxX) / 2;
+  return clampOrb({ x: p.x <= mid ? b.minX : b.maxX, y: p.y }, b);
+}

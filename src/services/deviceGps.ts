@@ -104,6 +104,17 @@ function loadTaskManager(): ExpoTaskManagerModule | null {
   }
 }
 
+/** Toda posição nova do GPS real alimenta o mapa direto, independente do modo da API (R10). */
+function applyDevicePosition(lat: number, lng: number, speedKmh: number | null) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTrip } = require('../features/trip') as typeof import('../features/trip');
+    useTrip.getState().applyDeviceGpsPosition({ lat, lng, speedKmh });
+  } catch {
+    // O mapa segue com a posição simulada até o estado da viagem carregar.
+  }
+}
+
 function applyBackendPosition(
   lat: number,
   lng: number,
@@ -176,6 +187,7 @@ function handleCoords(coords: GeolocationCoords) {
     lastFixAt: now,
     error: null,
   });
+  applyDevicePosition(lat, lng, speedKmh);
 
   if (now - lastSentAt < 2500) return;
   lastSentAt = now;

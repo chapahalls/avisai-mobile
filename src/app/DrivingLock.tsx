@@ -98,6 +98,7 @@ export function DrivingLock() {
 
         <Text className="text-ink-300 text-base leading-6 text-center">{t('driving.body')}</Text>
         <Text className="text-ink-300 text-sm text-center mt-2">{t('driving.unlockHint')}</Text>
+        <Text className="text-ink-300 text-sm text-center mt-1">{t('driving.exitHint')}</Text>
 
         {showDemo ? (
           <View className="mt-4 border border-dashed border-ink-700 rounded-2xl p-3">
@@ -105,7 +106,7 @@ export function DrivingLock() {
               {t('driving.demoTitle')} · {t('driving.demoSimulateLabel')}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 8 }}>
-              {getQuickUtterances('free', getCurrentLanguage()).map((u) => (
+              {[t('driving.exitPhrase'), ...getQuickUtterances('free', getCurrentLanguage())].map((u) => (
                 <Pressable
                   key={u}
                   onPress={() => {

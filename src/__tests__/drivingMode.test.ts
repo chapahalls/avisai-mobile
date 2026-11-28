@@ -10,6 +10,7 @@ import {
 } from '../features/trip/rules/drivingMode';
 import {
   evaluateDrivingMode,
+  exitDrivingModeManually,
   resetDrivingModeForTests,
   useDrivingMode,
 } from '../features/trip/hooks/useDrivingMode';
@@ -108,6 +109,37 @@ describe('modo direção: estado e aviso pelo agentBus', () => {
     for (let t = t0; t <= t0 + DRIVING_MODE.exitHoldMs; t += 1000) evaluateDrivingMode(t);
     expect(useDrivingMode.getState().driving).toBe(false);
     expect(events).toEqual([true, false]);
+    off();
+    useTrip.setState({ phase: 'idle', speedKmh: null });
+  });
+
+  it('"sair do modo direção" libera na hora e ignora a velocidade até o fim da pausa', () => {
+    const events: boolean[] = [];
+    const off = agentBus.on('trip:driving_mode', ({ driving }) => events.push(driving));
+    useTrip.setState({ phase: 'driving', speedKmh: 80 });
+    for (let t = 0; t <= DRIVING_MODE.enterHoldMs; t += 1000) evaluateDrivingMode(t);
+    expect(useDrivingMode.getState().driving).toBe(true);
+
+    const exitAt = DRIVING_MODE.enterHoldMs + 1000;
+    exitDrivingModeManually(exitAt);
+    expect(useDrivingMode.getState().driving).toBe(false);
+
+    // Caminhão continua a 80 km/h, mas a pausa do comando de voz ignora a velocidade.
+    evaluateDrivingMode(exitAt + DRIVING_MODE.enterHoldMs);
+    expect(useDrivingMode.getState().driving).toBe(false);
+
+    // Pausa acabou: volta a travar com o caminhão ainda andando.
+    const afterCooldown = exitAt + DRIVING_MODE.manualExitCooldownMs + 1000;
+    for (
+      let t = afterCooldown;
+      t <= afterCooldown + DRIVING_MODE.enterHoldMs;
+      t += 1000
+    ) {
+      evaluateDrivingMode(t);
+    }
+    expect(useDrivingMode.getState().driving).toBe(true);
+
+    expect(events).toEqual([true, false, true]);
     off();
     useTrip.setState({ phase: 'idle', speedKmh: null });
   });

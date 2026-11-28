@@ -5,7 +5,14 @@ import { AVISAI_ORB } from '../../../lib/config';
 import { getSetting, setSetting } from '../../../lib/db';
 import { hapticTap } from '../../../utils/haptics';
 import type { AudioSpeaker } from '../api/voiceSession';
-import { clampOrb, orbFromRatio, orbToRatio, type OrbBounds, type OrbRatio } from '../rules/orbPosition';
+import {
+  clampOrb,
+  orbFromRatio,
+  orbToRatio,
+  snapToEdge,
+  type OrbBounds,
+  type OrbRatio,
+} from '../rules/orbPosition';
 import type { VoiceState } from '../types';
 import { AuroraVoiceOrb } from './AuroraVoiceOrb';
 
@@ -85,11 +92,12 @@ export function FloatingOrb({
   const onOpenRef = useRef(onOpen);
   onOpenRef.current = onOpen;
 
-  // Tela girou, barra de abas mudou ou a posição salva mudou: reposiciona.
+  // Tela girou, barra de abas mudou ou a posição salva (encostada na lateral) mudou: deslisa
+  // suavemente até lá, em vez de pular.
   useEffect(() => {
     if (dragging) return;
     current.current = target;
-    pos.setValue(target);
+    Animated.spring(pos, { toValue: target, useNativeDriver: false, bounciness: 0 }).start();
   }, [target.x, target.y, dragging]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const responder = useMemo(
@@ -124,7 +132,9 @@ export function FloatingOrb({
             onOpenRef.current();
             return;
           }
-          const ratio = orbToRatio(current.current, boundsRef.current);
+          // Solta no meio da tela: encosta na lateral mais próxima, como um balão de conversa.
+          const snapped = snapToEdge(current.current, boundsRef.current);
+          const ratio = orbToRatio(snapped, boundsRef.current);
           setSaved(ratio);
           setSetting(AVISAI_ORB.settingKey, JSON.stringify(ratio));
         },
