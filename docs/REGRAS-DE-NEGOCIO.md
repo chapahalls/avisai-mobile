@@ -34,9 +34,9 @@ O caminhão parado em torno da janela de descarga combinada com o recebedor. O a
 - A chegada cria uma Task no CCO e inicia o contador de espera.
 
 ### R4. Escalonamento
-- Sem resposta do CCO, nova notificação a cada intervalo (padrão 20 min), até 3 tentativas.
-- O canal sobe a cada tentativa: push → destaque no painel → ligação para a central.
-- Depois de 3 tentativas sem resposta: o agente avisa CCO e motorista, **liga de novo para o recebedor** e repassa a resposta aos dois.
+- Sem resposta do CCO, nova notificação a cada intervalo (padrão 20 min), até 5 tentativas.
+- O canal sobe a cada tentativa: push → destaque no painel → ligação para a central (a partir da 3ª, mantém ligação).
+- Depois de 5 tentativas sem resposta: o agente avisa CCO e motorista, **liga de novo para o recebedor** e repassa a resposta aos dois.
 - Número de tentativas, intervalo e canais vêm da regra da transportadora.
 
 ### R5. Estadia
@@ -80,7 +80,7 @@ O caminhão parado em torno da janela de descarga combinada com o recebedor. O a
 | Franquia | 5 h |
 | Valor da estadia | R$ 2,50 por t/h |
 | Capacidade do veículo | 30 t |
-| Tentativas ao CCO | 3 |
+| Tentativas ao CCO | 5 |
 | Intervalo entre tentativas | 20 min |
 | Distância de aproximação | 8 km |
 | Geocerca | 400 m |

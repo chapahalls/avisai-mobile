@@ -575,7 +575,7 @@ export const useTrip = create<TripState>((set, get) => ({
           receiver: { kind: 'calling' },
           timeline: appendTimeline(
             curr.timeline,
-            i18n.t('trip.timeline.escalationCallingReceiver'),
+            i18n.t('trip.timeline.escalationCallingReceiver', { max: BUSINESS.maxCcoAttempts }),
             'wait',
             simMinutes,
           ),

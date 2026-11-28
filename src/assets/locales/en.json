@@ -160,7 +160,7 @@
       "ccoTaskCreated": "Task created on Control Center panel",
       "ccoEscalated": "Control Center escalation {{n}}/{{max}} ({{channel}})",
       "ccoAcknowledged": "Control Center acknowledged task",
-      "escalationCallingReceiver": "3/3 no CCO response · calling receiver",
+      "escalationCallingReceiver": "{{max}}/{{max}} no CCO response · calling receiver",
       "centralQuestion": "CCO question: “{{question}}”",
       "centralAnswered": "Reply sent to CCO: “{{answer}}”",
       "documentQueried": "Voice query on document ({{doc}})",

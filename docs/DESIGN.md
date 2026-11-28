@@ -64,7 +64,7 @@ Regra: cor nunca comunica sozinha. Todo estado tem texto ao lado.
 | Indicador de voz | `pronto` → `ouvindo` → `pensando` → `falando` → `interrompido`, com a latência em ms |
 | Banner de rede | topo da tela: "Sem conexão · 3 na fila" / "Rede fraca: só eventos críticos" |
 | Mensagens | cada envio tem 3 trechos (na fila → enviando → entregue); digitar só com o veículo parado, em movimento só voz |
-| Contador de espera | número grande; fica âmbar depois da franquia e mostra a estadia em R$; barra de tentativas ao CCO (1/3, 2/3, 3/3) |
+| Contador de espera | número grande; fica âmbar depois da franquia e mostra a estadia em R$; barra de tentativas ao CCO (1/5 … 5/5) |
 | Card do recebedor | etiqueta: não avisado / ligando… / doca 4, 15:00 / não recebe hoje / não atendeu |
 | Controles da demo | borda tracejada para deixar claro que é simulação: rede, CCO responde, +1 h |
 

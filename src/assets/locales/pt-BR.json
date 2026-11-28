@@ -160,7 +160,7 @@
       "ccoTaskCreated": "Task aberta no painel do CCO",
       "ccoEscalated": "Escalonamento CCO {{n}}/{{max}} ({{channel}})",
       "ccoAcknowledged": "CCO assumiu o atendimento",
-      "escalationCallingReceiver": "3/3 sem resposta do CCO · ligando ao recebedor",
+      "escalationCallingReceiver": "{{max}}/{{max}} sem resposta do CCO · ligando ao recebedor",
       "centralQuestion": "Pergunta do CCO: “{{question}}”",
       "centralAnswered": "Resposta enviada ao CCO: “{{answer}}”",
       "documentQueried": "Consulta por voz ao documento ({{doc}})",

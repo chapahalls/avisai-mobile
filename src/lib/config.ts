@@ -9,7 +9,7 @@ export const BUSINESS = {
   /** Capacidade total do veículo usada no cálculo da estadia (carga_t=28 do seed). */
   truckCapacityTons: 28,
   /** Tentativas de notificação ao CCO antes de o agente ligar para o recebedor. */
-  maxCcoAttempts: 3,
+  maxCcoAttempts: 5,
   /** Intervalo entre tentativas ao CCO, em minutos simulados. */
   ccoAttemptIntervalMin: 20,
   /** Distância (km) que dispara o aviso de aproximação ao CCO e ao recebedor. */
